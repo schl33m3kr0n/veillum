@@ -1,0 +1,50 @@
+# Vellum
+
+Vellum is a page studio for type, drawing, photographs, and motion. Open a spread, write on it, mark it up, develop a picture, then export a raster or SVG.
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
+
+## What you can do
+
+**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, fonts, bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
+
+**Arrange.** Ruler, indent, page margins, and box alignment (left, right, center, justify). Align several objects to each other from Inspect when more than one layer is selected. Square or triangle grid, plus perspective on a layer.
+
+**Draw.** Pencil, pen, and highlighter, plus shape styles (rectangle, ellipse, triangle, hexagon, star, line, arrow) with fill, stroke, dashes, and corners. Bezier curves: click anchors, Enter to commit.
+
+**Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — Vellum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
+
+**Color.** Wheel, hex field, highlighter swatch, recent colors, and named palettes.
+
+**Layers.** Order, lock, hide, blending modes, opacity, transparency, masks (paint a keep-region), borders.
+
+**Motion.** Add keyframes for position, scale, rotation, and opacity. Play interpolates along the timeline.
+
+**Output.** Export PNG, JPEG, WebP, SVG, or a Vellum JSON project. Rasterize flattens the page to a single bitmap layer.
+
+## Shortcuts
+
+| Key | Action |
+| --- | --- |
+| V | Select |
+| T | Text |
+| P / N / H | Pencil / Pen / Highlighter |
+| S | Shape |
+| B | Bezier |
+| I | Eyedropper |
+| M | Mask |
+| Space | Pan |
+| ⌘/Ctrl Z Y | Undo / Redo |
+| ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |
+| ⌘/Ctrl B I U | Bold / Italic / Underline |
+| Delete | Remove layer |
+| Arrows | Nudge |
+
+Double-click a text box to type. Drag images onto the page to place them.
