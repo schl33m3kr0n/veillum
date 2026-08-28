@@ -304,12 +304,13 @@ export default function HtmlStage({
 
     if (store.tool !== "select") return;
     store.select([id], e.shiftKey);
+    if (e.detail >= 2 && layer.type === "text") {
+      store.setEditingText(layer.id);
+      return;
+    }
     if (layer.locked || !p) return;
     drag.current = { id, ox: p.x, oy: p.y, lx: layer.x, ly: layer.y };
     useEditorStore.temporal.getState().pause();
-    if (e.detail === 2 && layer.type === "text") {
-      store.setEditingText(layer.id);
-    }
   };
 
   const onDrop = async (e: React.DragEvent) => {

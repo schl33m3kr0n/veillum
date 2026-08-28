@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { bezierPath, dashArray } from "@/lib/geometry";
 import { displayText, textDecoration } from "@/lib/text";
+import { useEditorStore } from "@/lib/editor-store";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
 import { useProcessedImage } from "./use-processed-image";
 
@@ -57,6 +58,12 @@ export function HtmlLayer({
       data-layer-id={layer.id}
       style={style}
       onPointerDown={(e) => onPointerDown(e, layer.id)}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        if (layer.type !== "text" || layer.locked || tool !== "select") return;
+        useEditorStore.getState().select([layer.id]);
+        useEditorStore.getState().setEditingText(layer.id);
+      }}
     >
       {layer.type === "text" && <TextContent layer={layer} />}
       {layer.type === "image" && <ImageContent layer={layer} />}
