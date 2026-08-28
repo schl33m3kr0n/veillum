@@ -61,6 +61,11 @@ export function LayersPanel() {
       </div>
       <ScrollArea className="flex-1">
         <ul className="p-1">
+          {reversed.length === 0 && (
+            <p className="px-3 py-6 text-sm text-muted-foreground">
+              No layers yet. Draw or place type on the page.
+            </p>
+          )}
           {reversed.map((layer) => (
             <li key={layer.id}>
               <button

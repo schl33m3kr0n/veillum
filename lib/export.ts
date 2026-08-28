@@ -4,28 +4,6 @@ import { displayText } from "./text";
 
 export type ExportFormat = "png" | "jpeg" | "webp" | "svg" | "json";
 
-export async function rasterizeStage(
-  stage: {
-    toDataURL: (config: {
-      pixelRatio?: number;
-      mimeType?: string;
-      quality?: number;
-    }) => string;
-  },
-  format: "png" | "jpeg" | "webp",
-  pixelRatio = 2,
-): Promise<Blob> {
-  const mime =
-    format === "png"
-      ? "image/png"
-      : format === "jpeg"
-        ? "image/jpeg"
-        : "image/webp";
-  const dataUrl = stage.toDataURL({ pixelRatio, mimeType: mime, quality: 0.92 });
-  const res = await fetch(dataUrl);
-  return res.blob();
-}
-
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

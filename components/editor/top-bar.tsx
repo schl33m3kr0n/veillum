@@ -42,7 +42,6 @@ import {
   documentToSvg,
   downloadBlob,
   projectJson,
-  rasterizeStage,
 } from "@/lib/export";
 import { NumberField } from "./fields";
 
@@ -206,6 +205,9 @@ function PlayPause() {
 }
 
 function ExportMenu() {
+  const pageElement = () =>
+    document.querySelector("[data-vellum-page]") as HTMLElement | null;
+
   const exportDoc = async (format: "png" | "jpeg" | "webp" | "svg" | "json") => {
     const { page, layers } = useEditorStore.getState();
     if (format === "json") {
@@ -222,33 +224,28 @@ function ExportMenu() {
       );
       return;
     }
-    const stage = document.querySelector("canvas")?.closest(".konvajs-content")
-      ?.parentElement;
-    void stage;
-    const konva = (await import("konva")).default;
-    const stages = konva.stages;
-    const kstage = stages[0];
-    if (!kstage) return;
-    const blob = await rasterizeStage(kstage, format, 2);
-    downloadBlob(blob, `vellum.${format === "jpeg" ? "jpg" : format}`);
+    const el = pageElement();
+    if (!el) return;
+    const { toCanvas } = await import("html-to-image");
+    const canvas = await toCanvas(el, { pixelRatio: 2, cacheBust: true });
+    const mime =
+      format === "png"
+        ? "image/png"
+        : format === "jpeg"
+          ? "image/jpeg"
+          : "image/webp";
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, mime, 0.92),
+    );
+    if (blob) downloadBlob(blob, `vellum.${format === "jpeg" ? "jpg" : format}`);
   };
 
   const flatten = async () => {
-    const konva = (await import("konva")).default;
-    const kstage = konva.stages[0];
-    if (!kstage) return;
-    const blob = await rasterizeStage(kstage, "png", 2);
-    const url = URL.createObjectURL(blob);
-    const img = new window.Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d")?.drawImage(img, 0, 0);
-      useEditorStore.getState().flattenPage(canvas.toDataURL("image/png"));
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
+    const el = pageElement();
+    if (!el) return;
+    const { toPng } = await import("html-to-image");
+    const dataUrl = await toPng(el, { pixelRatio: 2, cacheBust: true });
+    useEditorStore.getState().flattenPage(dataUrl);
   };
 
   return (

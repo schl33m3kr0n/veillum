@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { seedDocument, useEditorStore } from "@/lib/editor-store";
 import { TopBar } from "./top-bar";
@@ -23,13 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ShapeKind } from "@/lib/types";
-
-const CanvasStage = dynamic(() => import("./canvas-stage"), { ssr: false });
+import HtmlStage from "./html-stage";
 
 export function Studio() {
   useEditorHotkeys();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
+  const [tab, setTab] = useState("properties");
   const tool = useEditorStore((s) => s.tool);
   const shapeKind = useEditorStore((s) => s.shapeKind);
   const zoom = useEditorStore((s) => s.zoom);
@@ -99,7 +97,7 @@ export function Studio() {
           <div className="flex min-w-0 flex-1 flex-col">
             <div ref={workspaceRef} className="relative min-h-0 flex-1">
               {size.width > 0 && (
-                <CanvasStage width={size.width} height={size.height} />
+                <HtmlStage width={size.width} height={size.height} />
               )}
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
@@ -107,25 +105,21 @@ export function Studio() {
             <Timeline />
           </div>
           <aside className="flex w-80 shrink-0 flex-col border-l border-border/70 bg-card">
-            <Tabs defaultValue="properties" className="flex min-h-0 flex-1 flex-col">
-              <TabsList className="mx-2 mt-2 grid grid-cols-3">
+            <Tabs
+              value={tab}
+              onValueChange={setTab}
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              <TabsList className="mx-2 mt-2 grid w-auto grid-cols-3">
                 <TabsTrigger value="properties">Inspect</TabsTrigger>
                 <TabsTrigger value="layers">Layers</TabsTrigger>
                 <TabsTrigger value="color">Color</TabsTrigger>
               </TabsList>
-              <TabsContent value="properties" className="min-h-0 flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <PropertiesPanel />
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="layers" className="min-h-0 flex-1 overflow-hidden">
-                <LayersPanel />
-              </TabsContent>
-              <TabsContent value="color" className="min-h-0 flex-1 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <ColorStudio />
-                </ScrollArea>
-              </TabsContent>
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {tab === "properties" && <PropertiesPanel />}
+                {tab === "layers" && <LayersPanel />}
+                {tab === "color" && <ColorStudio />}
+              </div>
             </Tabs>
           </aside>
         </div>

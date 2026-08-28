@@ -1,0 +1,310 @@
+"use client";
+
+import type { CSSProperties } from "react";
+import { bezierPath, dashArray } from "@/lib/geometry";
+import { displayText, textDecoration } from "@/lib/text";
+import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
+import { useProcessedImage } from "./use-processed-image";
+
+function cssBlend(mode: Layer["blendMode"]): CSSProperties["mixBlendMode"] {
+  if (mode === "source-over") return "normal";
+  return mode as CSSProperties["mixBlendMode"];
+}
+
+export function HtmlLayer({
+  layer,
+  selected,
+  tool,
+  onPointerDown,
+}: {
+  layer: Layer;
+  selected: boolean;
+  tool: string;
+  onPointerDown: (e: React.PointerEvent, id: string) => void;
+}) {
+  const extra =
+    layer.type === "text" && typeof layer.orientation === "number"
+      ? layer.orientation
+      : 0;
+  const interactive = tool === "select" || tool === "instant-alpha";
+  const style: CSSProperties = {
+    position: "absolute",
+    left: layer.x,
+    top: layer.y,
+    width: layer.width,
+    height: layer.height,
+    transform: `rotate(${layer.rotation + extra}deg) scale(${layer.scaleX}, ${layer.scaleY})`,
+    transformOrigin: "top left",
+    opacity: layer.opacity,
+    mixBlendMode: cssBlend(layer.blendMode),
+    visibility: layer.visible ? "visible" : "hidden",
+    pointerEvents: interactive && !layer.locked ? "auto" : "none",
+    cursor: interactive && !layer.locked ? "move" : "default",
+    outline: selected ? "1.5px solid #c45c26" : undefined,
+    outlineOffset: 2,
+    boxSizing: "border-box",
+    overflow: layer.type === "path" || layer.type === "bezier" ? "visible" : "hidden",
+    WebkitMaskImage:
+      layer.maskEnabled && layer.maskSrc ? `url(${layer.maskSrc})` : undefined,
+    maskImage:
+      layer.maskEnabled && layer.maskSrc ? `url(${layer.maskSrc})` : undefined,
+    WebkitMaskSize: "100% 100%",
+    maskSize: "100% 100%",
+  };
+
+  return (
+    <div
+      data-layer-id={layer.id}
+      style={style}
+      onPointerDown={(e) => onPointerDown(e, layer.id)}
+    >
+      {layer.type === "text" && <TextContent layer={layer} />}
+      {layer.type === "image" && <ImageContent layer={layer} />}
+      {layer.type === "shape" && <ShapeContent layer={layer} />}
+      {layer.type === "path" && <PathContent layer={layer} />}
+      {layer.type === "bezier" && <BezierContent layer={layer} />}
+      {layer.borderEnabled && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            border: `${layer.borderWidth}px ${layer.borderDash === "solid" ? "solid" : layer.borderDash === "dot" ? "dotted" : "dashed"} ${layer.borderColor}`,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function TextContent({ layer }: { layer: TextLayer }) {
+  const size =
+    layer.superscript || layer.subscript
+      ? layer.fontSize * 0.62
+      : layer.fontSize;
+  const tracking = layer.letterSpacing + layer.kerning * 0.4;
+  const whiteSpace =
+    layer.orientation === "vertical" ? "pre-wrap" : "pre-wrap";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        padding: layer.padding,
+        paddingLeft: layer.padding + layer.indent,
+        color: layer.color,
+        background: layer.highlight ?? "transparent",
+        fontFamily: `"${layer.fontFamily}", serif`,
+        fontSize: size,
+        fontStyle: layer.italic ? "italic" : "normal",
+        fontWeight: layer.bold ? 700 : 400,
+        lineHeight: layer.lineHeight,
+        letterSpacing: tracking,
+        textAlign: layer.align,
+        textDecoration: textDecoration(layer) || undefined,
+        fontVariantLigatures: layer.ligatures ? "common-ligatures" : "none",
+        fontKerning: layer.kerning !== 0 ? "normal" : "none",
+        fontVariantCaps:
+          layer.capitalization === "small-caps" ? "small-caps" : "normal",
+        verticalAlign: layer.superscript
+          ? "super"
+          : layer.subscript
+            ? "sub"
+            : undefined,
+        writingMode:
+          layer.orientation === "vertical" ? "vertical-rl" : "horizontal-tb",
+        textIndent: layer.firstLineIndent,
+        whiteSpace,
+        overflow: "hidden",
+        userSelect: "none",
+      }}
+    >
+      {displayText(layer)}
+    </div>
+  );
+}
+
+function ImageContent({ layer }: { layer: ImageLayer }) {
+  const image = useProcessedImage(layer);
+  if (!image) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-[#ddd6c8] text-[11px] text-[#7a7268]">
+        Developing…
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={image.src}
+      alt={layer.name}
+      draggable={false}
+      className="h-full w-full object-cover"
+    />
+  );
+}
+
+function ShapeContent({ layer }: { layer: ShapeLayer }) {
+  const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
+  const fill = layer.fillEnabled ? layer.fill : "none";
+  const w = Math.max(1, layer.width);
+  const h = Math.max(1, layer.height);
+  const stroke = layer.strokeWidth > 0 ? layer.stroke : "none";
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      {layer.shape === "rect" && (
+        <rect
+          x={layer.strokeWidth / 2}
+          y={layer.strokeWidth / 2}
+          width={Math.max(0, w - layer.strokeWidth)}
+          height={Math.max(0, h - layer.strokeWidth)}
+          rx={layer.cornerRadius}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+        />
+      )}
+      {layer.shape === "ellipse" && (
+        <ellipse
+          cx={w / 2}
+          cy={h / 2}
+          rx={Math.max(1, w / 2 - layer.strokeWidth / 2)}
+          ry={Math.max(1, h / 2 - layer.strokeWidth / 2)}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+        />
+      )}
+      {layer.shape === "triangle" && (
+        <polygon
+          points={`${w / 2},${layer.strokeWidth} ${w - layer.strokeWidth},${h - layer.strokeWidth} ${layer.strokeWidth},${h - layer.strokeWidth}`}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+        />
+      )}
+      {layer.shape === "hexagon" && (
+        <polygon
+          points={hexPoints(w, h)}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+        />
+      )}
+      {layer.shape === "star" && (
+        <polygon
+          points={starPoints(w, h)}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+        />
+      )}
+      {layer.shape === "line" && (
+        <line
+          x1={0}
+          y1={h / 2}
+          x2={w}
+          y2={h / 2}
+          stroke={layer.stroke}
+          strokeWidth={layer.strokeWidth}
+          strokeDasharray={dash || undefined}
+          strokeLinecap="round"
+        />
+      )}
+      {layer.shape === "arrow" && (
+        <>
+          <line
+            x1={4}
+            y1={h / 2}
+            x2={w - 14}
+            y2={h / 2}
+            stroke={layer.stroke}
+            strokeWidth={layer.strokeWidth}
+            strokeDasharray={dash || undefined}
+          />
+          <polygon
+            points={`${w - 2},${h / 2} ${w - 16},${h / 2 - 8} ${w - 16},${h / 2 + 8}`}
+            fill={layer.stroke}
+          />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function PathContent({ layer }: { layer: PathLayer }) {
+  const pts: string[] = [];
+  for (let i = 0; i < layer.points.length; i += 2) {
+    pts.push(`${layer.points[i]},${layer.points[i + 1]}`);
+  }
+  const w = Math.max(layer.width, 1);
+  const h = Math.max(layer.height, 1);
+  return (
+    <svg
+      width={w}
+      height={h}
+      viewBox={`0 0 ${w} ${h}`}
+      overflow="visible"
+      className="overflow-visible"
+    >
+      <polyline
+        points={pts.join(" ")}
+        fill="none"
+        stroke={layer.stroke}
+        strokeWidth={layer.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={layer.tool === "highlighter" ? 0.85 : 1}
+      />
+    </svg>
+  );
+}
+
+function BezierContent({ layer }: { layer: BezierLayer }) {
+  const d = bezierPath(layer.points, layer.closed);
+  const w = Math.max(layer.width, 1);
+  const h = Math.max(layer.height, 1);
+  return (
+    <svg width={w} height={h} overflow="visible">
+      <path
+        d={d}
+        fill={layer.fillEnabled ? layer.fill : "none"}
+        stroke={layer.stroke}
+        strokeWidth={layer.strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function hexPoints(w: number, h: number): string {
+  const cx = w / 2;
+  const cy = h / 2;
+  const rx = w / 2;
+  const ry = h / 2;
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 3) * i - Math.PI / 6;
+    return `${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`;
+  }).join(" ");
+}
+
+function starPoints(w: number, h: number): string {
+  const cx = w / 2;
+  const cy = h / 2;
+  const outerX = w / 2;
+  const outerY = h / 2;
+  const innerX = w / 5;
+  const innerY = h / 5;
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (Math.PI / 5) * i;
+    const rx = i % 2 === 0 ? outerX : innerX;
+    const ry = i % 2 === 0 ? outerY : innerY;
+    pts.push(`${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`);
+  }
+  return pts.join(" ");
+}

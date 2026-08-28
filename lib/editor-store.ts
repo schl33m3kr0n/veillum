@@ -458,13 +458,17 @@ export function useTemporalStore<T>(
 }
 
 export function seedDocument() {
-  const s = useEditorStore.getState();
-  if (s.layers.length > 0) return;
-  useEditorStore.setState({
-    page: createDefaultPage(),
-    layers: createStarterLayers(),
-  });
-  useEditorStore.temporal.getState().clear();
+  try {
+    const s = useEditorStore.getState();
+    if (s.layers.length > 0) return;
+    useEditorStore.setState({
+      page: createDefaultPage(),
+      layers: createStarterLayers(),
+    });
+    useEditorStore.temporal.getState().clear();
+  } catch (err) {
+    console.error("Could not seed the starter page", err);
+  }
 }
 
 export function primarySelected(): Layer | undefined {

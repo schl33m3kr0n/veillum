@@ -179,7 +179,19 @@ export function createDefaultPage(): Page {
 }
 
 export function createStarterLayers(): Layer[] {
-  const photo = createDemoPhoto();
+  let photo = "";
+  try {
+    photo = createDemoPhoto();
+  } catch (err) {
+    console.error("Demo photo failed", err);
+  }
+  if (!photo) {
+    photo =
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="480"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3a5c"/><stop offset="0.45" stop-color="#d9894b"/><stop offset="1" stop-color="#3d5c3a"/></linearGradient></defs><rect width="720" height="480" fill="url(#g)"/><circle cx="560" cy="128" r="52" fill="#ffe08a"/></svg>`,
+      );
+  }
   return [
     createShapeLayer("rect", {
       name: "Accent bar",
