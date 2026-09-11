@@ -9,6 +9,7 @@ import { samplePixel } from "@/lib/filters";
 import type { BezierPoint, Tool } from "@/lib/types";
 import { HtmlLayer } from "./html-layer";
 import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
+import { ShapeGizmos } from "./shape-gizmos";
 
 const PAGE_X = 80;
 const PAGE_Y = 60;
@@ -432,6 +433,10 @@ export default function HtmlStage({
     selectedLayer?.type === "bezier" && !selectedLayer.locked
       ? selectedLayer
       : null;
+  const editShape =
+    selectedLayer?.type === "shape" && !selectedLayer.locked
+      ? selectedLayer
+      : null;
 
   return (
     <div
@@ -571,6 +576,7 @@ export default function HtmlStage({
             />
           )}
           {editBezier && <BezierEditOverlay layer={editBezier} />}
+          {!playing && editShape && <ShapeGizmos layer={editShape} />}
           {maskPts && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full">
               <polyline
