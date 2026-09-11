@@ -95,6 +95,9 @@ export function useEditorHotkeys() {
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
         store.nudge(0, e.shiftKey ? 10 : 1);
+      } else if (e.key === "]") {
+        e.preventDefault();
+        store.setSidebarOpen(!store.sidebarOpen);
       } else if (meta && e.key === "0") {
         e.preventDefault();
         store.setZoom(1);

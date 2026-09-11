@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { seedDocument, useEditorStore } from "@/lib/editor-store";
 import { TopBar } from "./top-bar";
 import { ToolRail } from "./tool-rail";
@@ -27,6 +29,8 @@ export function Studio() {
   const selectedIds = useEditorStore((s) => s.selectedIds);
   const layers = useEditorStore((s) => s.layers);
   const selected = layers.find((l) => l.id === selectedIds[0]);
+  const sidebarOpen = useEditorStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useEditorStore((s) => s.setSidebarOpen);
 
   useEffect(() => {
     seedDocument();
@@ -75,24 +79,57 @@ export function Studio() {
             </div>
             <Timeline />
           </div>
-          <aside className="flex w-80 shrink-0 flex-col border-l border-border/70 bg-card">
-            <Tabs
-              value={tab}
-              onValueChange={setTab}
-              className="flex min-h-0 flex-1 flex-col"
-            >
-              <TabsList className="mx-2 mt-2 grid w-auto grid-cols-3">
-                <TabsTrigger value="properties">Inspect</TabsTrigger>
-                <TabsTrigger value="layers">Layers</TabsTrigger>
-                <TabsTrigger value="color">Color</TabsTrigger>
-              </TabsList>
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {tab === "properties" && <PropertiesPanel />}
-                {tab === "layers" && <LayersPanel />}
-                {tab === "color" && <ColorStudio />}
-              </div>
-            </Tabs>
-          </aside>
+          {sidebarOpen ? (
+            <aside className="flex w-80 shrink-0 flex-col border-l border-border/70 bg-card">
+              <Tabs
+                value={tab}
+                onValueChange={setTab}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <div className="flex items-center gap-1 px-2 pt-2">
+                  <TabsList className="grid min-w-0 flex-1 grid-cols-3">
+                    <TabsTrigger value="properties">Inspect</TabsTrigger>
+                    <TabsTrigger value="layers">Layers</TabsTrigger>
+                    <TabsTrigger value="color">Color</TabsTrigger>
+                  </TabsList>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label="Hide sidebar"
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <PanelRightClose />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">Hide sidebar ]</TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  {tab === "properties" && <PropertiesPanel />}
+                  {tab === "layers" && <LayersPanel />}
+                  {tab === "color" && <ColorStudio />}
+                </div>
+              </Tabs>
+            </aside>
+          ) : (
+            <aside className="flex w-10 shrink-0 flex-col items-center border-l border-border/70 bg-card pt-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label="Show sidebar"
+                    onClick={() => setSidebarOpen(true)}
+                  >
+                    <PanelRightOpen />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">Show sidebar ]</TooltipContent>
+              </Tooltip>
+            </aside>
+          )}
         </div>
         <footer className="flex h-7 items-center justify-between border-t border-border/70 bg-[#1f1c19] px-3 text-[11px] text-white/60">
           <span>

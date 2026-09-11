@@ -45,7 +45,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |
 | ⌘/Ctrl B I U | Bold / Italic / Underline |
 | Delete | Remove layer |
-| Arrows | Nudge |
+| ] | Show / hide Inspect sidebar |
 
 Double-click a text box to type. Drag images onto the page to place them.
 

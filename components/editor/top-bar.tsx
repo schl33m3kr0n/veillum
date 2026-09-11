@@ -17,6 +17,8 @@ import {
   ClipboardPaste,
   Scissors,
   Download,
+  PanelRightClose,
+  PanelRightOpen,
   Play,
   Square as SquareIcon,
 } from "lucide-react";
@@ -188,6 +190,7 @@ export function TopBar() {
       ))}
       <div className="ml-auto flex items-center gap-1">
         <PlayPause />
+        <SidebarToggle />
         <ExportMenu />
       </div>
     </header>
@@ -204,6 +207,21 @@ function PlayPause() {
     >
       {playing ? <SquareIcon /> : <Play />}
       {playing ? "Stop" : "Play"}
+    </Button>
+  );
+}
+
+function SidebarToggle() {
+  const open = useEditorStore((s) => s.sidebarOpen);
+  return (
+    <Button
+      size="icon-sm"
+      variant="ghost"
+      aria-label={open ? "Hide sidebar" : "Show sidebar"}
+      title={open ? "Hide sidebar ]" : "Show sidebar ]"}
+      onClick={() => useEditorStore.getState().setSidebarOpen(!open)}
+    >
+      {open ? <PanelRightClose /> : <PanelRightOpen />}
     </Button>
   );
 }
