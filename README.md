@@ -49,5 +49,6 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 Double-click a text box to type. Drag images onto the page to place them.
 
-**Symbol die.** A cube in the lower-left uses geometry instead of pips: point (1), pair (2), triangle (3), square (4), star (5), hexagon (6). Click it to roll, or place the facing mark on the page.
+**Symbol die.** Open [http://127.0.0.1:4781/die](http://127.0.0.1:4781/die) (or Die in the studio header). Faces: point (1), pair (2), triangle (3), square (4), star (5), hexagon (6). Click the cube to roll.
+
 

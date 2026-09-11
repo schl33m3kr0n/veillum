@@ -44,6 +44,7 @@ import {
   projectJson,
 } from "@/lib/export";
 import { NumberField } from "./fields";
+import Link from "next/link";
 
 export function TopBar() {
   const undo = useTemporalStore((s) => s.undo);
@@ -67,6 +68,9 @@ export function TopBar() {
         <span className="px-2 font-[family-name:var(--font-fraunces)] text-base tracking-tight">
           Vellum
         </span>
+        <Button size="sm" variant="ghost" asChild>
+          <Link href="/die">Die</Link>
+        </Button>
       </div>
       <Button size="icon-sm" variant="ghost" disabled={!canUndo} onClick={() => undo()}>
         <Undo2 />
