@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/lib/editor-store";
-import { interpolatedLayer, triangleGridLines } from "@/lib/geometry";
+import { interpolatedLayer, nearPoint, triangleGridLines } from "@/lib/geometry";
 import { rgbToHex } from "@/lib/colors";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
 import type { BezierPoint, Tool } from "@/lib/types";
 import { HtmlLayer } from "./html-layer";
+import { BezierDraftOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
 
 const PAGE_X = 80;
 const PAGE_Y = 60;
@@ -53,7 +54,10 @@ export default function HtmlStage({
     h: number;
   } | null>(null);
   const [bezierDraft, setBezierDraft] = useState<BezierPoint[]>([]);
+  const [bezierDragging, setBezierDragging] = useState(false);
   const [maskPts, setMaskPts] = useState<number[] | null>(null);
+  const bezierHandleDrag = useRef(false);
+  const pointer = useEditorStore((s) => s.pointer);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -96,18 +100,37 @@ export default function HtmlStage({
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  const finishBezier = useCallback(() => {
-    if (bezierDraft.length >= 2) {
-      useEditorStore.getState().addBezier(bezierDraft, false);
+  const finishBezier = useCallback((closed = false) => {
+    setBezierDraft((draft) => {
+      if (draft.length >= 2) {
+        useEditorStore.getState().addBezier(draft, closed);
+      }
+      return [];
+    });
+    bezierHandleDrag.current = false;
+    setBezierDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (tool !== "bezier") {
+      setBezierDraft([]);
+      bezierHandleDrag.current = false;
+      setBezierDragging(false);
     }
-    setBezierDraft([]);
-  }, [bezierDraft]);
+  }, [tool]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (tool !== "bezier") return;
-      if (e.key === "Enter") finishBezier();
-      if (e.key === "Escape") setBezierDraft([]);
+      if (e.key === "Enter") {
+        e.preventDefault();
+        finishBezier(false);
+      }
+      if (e.key === "Escape") {
+        setBezierDraft([]);
+        bezierHandleDrag.current = false;
+        setBezierDragging(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -181,11 +204,26 @@ export default function HtmlStage({
     }
 
     if (current === "bezier") {
+      e.stopPropagation();
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      if (e.detail >= 2) {
+        finishBezier(false);
+        return;
+      }
+      if (
+        bezierDraft.length >= 2 &&
+        nearPoint(p.x, p.y, bezierDraft[0].x, bezierDraft[0].y, CLOSE_THRESHOLD)
+      ) {
+        finishBezier(true);
+        return;
+      }
+      drawing.current = true;
+      bezierHandleDrag.current = true;
+      setBezierDragging(true);
       setBezierDraft((d) => [
         ...d,
-        { x: p.x, y: p.y, inX: -30, inY: 0, outX: 30, outY: 0 },
+        { x: p.x, y: p.y, inX: 0, inY: 0, outX: 0, outY: 0 },
       ]);
-      e.stopPropagation();
       return;
     }
 
@@ -220,6 +258,18 @@ export default function HtmlStage({
       store.updateLayer(drag.current.id, {
         x: drag.current.lx + dx,
         y: drag.current.ly + dy,
+      });
+      return;
+    }
+
+    if (bezierHandleDrag.current && p) {
+      setBezierDraft((d) => {
+        if (d.length === 0) return d;
+        const last = d[d.length - 1];
+        const outX = p.x - last.x;
+        const outY = p.y - last.y;
+        const next = { ...last, outX, outY, inX: -outX, inY: -outY };
+        return [...d.slice(0, -1), next];
       });
       return;
     }
@@ -280,6 +330,19 @@ export default function HtmlStage({
     }
     drawing.current = false;
     drag.current = null;
+    bezierHandleDrag.current = false;
+    setBezierDragging(false);
+    setBezierDraft((d) => {
+      if (d.length === 0) return d;
+      const last = d[d.length - 1];
+      if (Math.hypot(last.outX, last.outY) < 4) {
+        return [
+          ...d.slice(0, -1),
+          { ...last, inX: 0, inY: 0, outX: 0, outY: 0 },
+        ];
+      }
+      return d;
+    });
     setDraftPts(null);
     setShapeDraft(null);
     setMaskPts(null);
@@ -489,17 +552,12 @@ export default function HtmlStage({
             />
           )}
           {bezierDraft.length > 0 && (
-            <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
-              <polyline
-                points={bezierDraft.map((b) => `${b.x},${b.y}`).join(" ")}
-                fill="none"
-                stroke={color}
-                strokeWidth={2}
-              />
-              {bezierDraft.map((b, i) => (
-                <circle key={i} cx={b.x} cy={b.y} r={4} fill="#c45c26" />
-              ))}
-            </svg>
+            <BezierDraftOverlay
+              points={bezierDraft}
+              color={color}
+              pointer={pointer}
+              dragging={bezierDragging}
+            />
           )}
           {maskPts && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full">

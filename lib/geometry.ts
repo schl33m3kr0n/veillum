@@ -50,11 +50,68 @@ export function bezierPath(points: BezierPoint[], closed: boolean): string {
     const curr = rest[i];
     d += ` C ${prev.x + prev.outX} ${prev.y + prev.outY} ${curr.x + curr.inX} ${curr.y + curr.inY} ${curr.x} ${curr.y}`;
   }
-  if (closed && points.length > 2) {
+  if (closed && points.length >= 2) {
     const last = points[points.length - 1];
     d += ` C ${last.x + last.outX} ${last.y + last.outY} ${first.x + first.inX} ${first.y + first.inY} ${first.x} ${first.y} Z`;
   }
   return d;
+}
+
+export function boundsOfBezier(points: BezierPoint[], pad = 2): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  if (points.length === 0) return { x: 0, y: 0, width: 8, height: 1 };
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const add = (x: number, y: number) => {
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+  };
+  for (const p of points) {
+    add(p.x, p.y);
+    add(p.x + p.inX, p.y + p.inY);
+    add(p.x + p.outX, p.y + p.outY);
+  }
+  return {
+    x: minX - pad,
+    y: minY - pad,
+    width: Math.max(8, maxX - minX + pad * 2),
+    height: Math.max(8, maxY - minY + pad * 2),
+  };
+}
+
+export function localizeBezier(points: BezierPoint[]): {
+  points: BezierPoint[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  const b = boundsOfBezier(points);
+  return {
+    x: b.x,
+    y: b.y,
+    width: b.width,
+    height: b.height,
+    points: points.map((p) => ({ ...p, x: p.x - b.x, y: p.y - b.y })),
+  };
+}
+
+export function nearPoint(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  threshold = 12,
+): boolean {
+  return Math.hypot(ax - bx, ay - by) <= threshold;
 }
 
 export function boundsOfPoints(points: number[]): {

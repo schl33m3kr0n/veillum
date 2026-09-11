@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { temporal } from "zundo";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
-import { alignLayers, type AlignMode, boundsOfPoints } from "./geometry";
+import { alignLayers, type AlignMode, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
 import {
   createBezierLayer,
   createDefaultPage,
@@ -74,6 +74,11 @@ interface EditorState {
   addShapeAt: (x: number, y: number, w: number, h: number) => string;
   addPath: (tool: "pencil" | "pen" | "highlighter", points: number[]) => string;
   addBezier: (points: BezierPoint[], closed: boolean) => string;
+  setBezierPoints: (
+    id: string,
+    points: BezierPoint[],
+    opts?: { normalize?: boolean },
+  ) => void;
   addImageFromSrc: (
     src: string,
     opts?: { isRaw?: boolean; name?: string; width?: number; height?: number },
@@ -255,28 +260,44 @@ export const useEditorStore = create<EditorState>()(
       },
 
       addBezier: (points, closed) => {
-        const xs = points.map((p) => p.x);
-        const ys = points.map((p) => p.y);
-        const minX = Math.min(...xs);
-        const minY = Math.min(...ys);
-        const maxX = Math.max(...xs);
-        const maxY = Math.max(...ys);
-        const local = points.map((p) => ({
-          ...p,
-          x: p.x - minX,
-          y: p.y - minY,
-        }));
+        const geo = localizeBezier(points);
         const layer = createBezierLayer({
-          points: local,
+          points: geo.points,
           closed,
-          x: minX,
-          y: minY,
-          width: Math.max(8, maxX - minX),
-          height: Math.max(8, maxY - minY),
+          x: geo.x,
+          y: geo.y,
+          width: geo.width,
+          height: geo.height,
           stroke: get().color,
         });
         get().addLayer(layer);
         return layer.id;
+      },
+
+      setBezierPoints: (id, points, opts) => {
+        set((s) => ({
+          layers: s.layers.map((l) => {
+            if (l.id !== id || l.type !== "bezier") return l;
+            if (opts?.normalize) {
+              const geo = localizeBezier(points);
+              return {
+                ...l,
+                points: geo.points,
+                x: l.x + geo.x,
+                y: l.y + geo.y,
+                width: geo.width,
+                height: geo.height,
+              };
+            }
+            const b = boundsOfBezier(points);
+            return {
+              ...l,
+              points,
+              width: Math.max(l.width, b.x + b.width),
+              height: Math.max(l.height, b.y + b.height),
+            };
+          }),
+        }));
       },
 
       addImageFromSrc: (src, opts) => {

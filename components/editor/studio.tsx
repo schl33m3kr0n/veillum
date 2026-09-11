@@ -84,7 +84,7 @@ export function Studio() {
         )}
         {tool === "bezier" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
-            Click to drop anchors. Press Enter to commit the curve, Escape to cancel.
+            Click to place an anchor; drag to pull smooth handles. Click the first point to close. Enter finishes an open curve, Escape cancels. With Select, drag handles — hold Alt to break symmetry.
           </div>
         )}
         {tool === "mask" && (

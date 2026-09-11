@@ -708,6 +708,9 @@ function StrokeFields({
               onCheckedChange={(closed) => update(layer.id, { closed })}
             />
           </div>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Drag diamond anchors and circular handles on the page. Alt-drag a handle to break the smooth pair. Alt-drag an anchor to pull new handles; Alt-click an anchor to make a corner.
+          </p>
         </>
       )}
     </Section>

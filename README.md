@@ -17,7 +17,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Arrange.** Ruler, indent, page margins, and box alignment (left, right, center, justify). Align several objects to each other from Inspect when more than one layer is selected. Square or triangle grid, plus perspective on a layer.
 
-**Draw.** Pencil, pen, and highlighter, plus shape styles (rectangle, ellipse, triangle, hexagon, star, line, arrow) with fill, stroke, dashes, and corners. Bezier curves: click anchors, Enter to commit.
+**Draw.** Pencil, pen, and highlighter, plus shape styles (rectangle, ellipse, triangle, hexagon, star, line, arrow) with fill, stroke, dashes, and corners. Bezier curves: click to place anchors, drag to pull cubic handles, click the first point to close, Enter to finish. With Select, drag anchors and handles (Alt breaks symmetry).
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — Vellum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 
