@@ -32,6 +32,8 @@ interface EditorState {
   selectedIds: string[];
   tool: Tool;
   shapeKind: ShapeKind;
+  shapeStroke: string;
+  shapeFillEnabled: boolean;
   color: string;
   highlight: string;
   zoom: number;
@@ -47,6 +49,8 @@ interface EditorState {
 
   setTool: (tool: Tool) => void;
   setShapeKind: (kind: ShapeKind) => void;
+  setShapeStroke: (color: string) => void;
+  setShapeFillEnabled: (enabled: boolean) => void;
   setColor: (color: string) => void;
   setHighlight: (color: string) => void;
   setZoom: (zoom: number) => void;
@@ -114,6 +118,8 @@ export const useEditorStore = create<EditorState>()(
       selectedIds: [],
       tool: "select",
       shapeKind: "rect",
+      shapeStroke: "#1c1916",
+      shapeFillEnabled: true,
       color: "#1c1916",
       highlight: "#f5d76e",
       zoom: 1,
@@ -129,6 +135,8 @@ export const useEditorStore = create<EditorState>()(
 
       setTool: (tool) => set({ tool, editingTextId: null }),
       setShapeKind: (shapeKind) => set({ shapeKind }),
+      setShapeStroke: (shapeStroke) => set({ shapeStroke }),
+      setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
       setColor: (color) =>
         set((s) => ({ color, recentColors: rememberColor(s.recentColors, color) })),
       setHighlight: (highlight) => set({ highlight }),
@@ -240,6 +248,8 @@ export const useEditorStore = create<EditorState>()(
           width: Math.max(8, w),
           height: Math.max(8, h),
           fill: get().color,
+          stroke: get().shapeStroke,
+          fillEnabled: get().shapeFillEnabled,
         });
         get().addLayer(layer);
         return layer.id;

@@ -13,14 +13,7 @@ import { Timeline } from "./timeline";
 import { Rulers } from "./rulers";
 import { TextOverlay } from "./text-overlay";
 import { useEditorHotkeys } from "./use-hotkeys";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ShapeKind } from "@/lib/types";
+import { ShapeWindow } from "./shape-window";
 import HtmlStage from "./html-stage";
 
 export function Studio() {
@@ -29,7 +22,6 @@ export function Studio() {
   const [size, setSize] = useState({ width: 800, height: 600 });
   const [tab, setTab] = useState("properties");
   const tool = useEditorStore((s) => s.tool);
-  const shapeKind = useEditorStore((s) => s.shapeKind);
   const zoom = useEditorStore((s) => s.zoom);
   const pointer = useEditorStore((s) => s.pointer);
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -56,30 +48,8 @@ export function Studio() {
       <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
         <TopBar />
         {tool === "shape" && (
-          <div className="flex h-9 items-center gap-2 border-b border-border/60 bg-card px-3 text-xs">
-            <span className="text-muted-foreground">Shape</span>
-            <Select
-              value={shapeKind}
-              onValueChange={(v) =>
-                useEditorStore.getState().setShapeKind(v as ShapeKind)
-              }
-            >
-              <SelectTrigger size="sm" className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {["rect", "ellipse", "triangle", "line", "hexagon", "star", "arrow"].map(
-                  (k) => (
-                    <SelectItem key={k} value={k}>
-                      {k}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-            <span className="text-muted-foreground">
-              Drag on the page to draw. Style it in Properties.
-            </span>
+          <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
+            Choose a shape in the Shapes window, then drag on the page to draw it.
           </div>
         )}
         {tool === "bezier" && (
@@ -101,6 +71,7 @@ export function Studio() {
               )}
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
+              {tool === "shape" && <ShapeWindow />}
             </div>
             <Timeline />
           </div>
