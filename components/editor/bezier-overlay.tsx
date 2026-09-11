@@ -128,6 +128,8 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
   } | null>(null);
   const layerRef = useRef(layer);
   layerRef.current = layer;
+  const ox = layer.x;
+  const oy = layer.y;
 
   const clientToLocal = (clientX: number, clientY: number) => {
     const pageEl = document.querySelector("[data-vellum-page]");
@@ -235,67 +237,94 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
 
   return (
     <svg
-      className="absolute overflow-visible"
-      style={{
-        left: 0,
-        top: 0,
-        width: layer.width,
-        height: layer.height,
-        pointerEvents: "none",
-      }}
+      className="absolute inset-0 h-full w-full overflow-visible"
+      style={{ pointerEvents: "none", zIndex: 20 }}
     >
       {layer.points.map((p, i) => {
+        const ax = ox + p.x;
+        const ay = oy + p.y;
+        const inX = ax + p.inX;
+        const inY = ay + p.inY;
+        const outX = ax + p.outX;
+        const outY = ay + p.outY;
         const hasIn = p.inX !== 0 || p.inY !== 0;
         const hasOut = p.outX !== 0 || p.outY !== 0;
         return (
           <g key={i}>
             {(hasIn || hasOut) && (
               <line
-                x1={p.x + p.inX}
-                y1={p.y + p.inY}
-                x2={p.x + p.outX}
-                y2={p.y + p.outY}
+                x1={inX}
+                y1={inY}
+                x2={outX}
+                y2={outY}
                 stroke={HANDLE}
                 strokeWidth={1}
                 pointerEvents="none"
               />
             )}
             {hasIn && (
-              <circle
-                cx={p.x + p.inX}
-                cy={p.y + p.inY}
-                r={4.5}
-                fill="#fff"
-                stroke={HANDLE}
-                strokeWidth={1.25}
-                style={{ cursor: "crosshair", pointerEvents: "auto" }}
-                onPointerDown={(e) => onHandleDown(e, i, "in")}
-              />
+              <>
+                <circle
+                  cx={inX}
+                  cy={inY}
+                  r={11}
+                  fill="transparent"
+                  style={{ cursor: "crosshair", pointerEvents: "auto" }}
+                  onPointerDown={(e) => onHandleDown(e, i, "in")}
+                />
+                <circle
+                  cx={inX}
+                  cy={inY}
+                  r={5}
+                  fill="#fff"
+                  stroke={HANDLE}
+                  strokeWidth={1.5}
+                  pointerEvents="none"
+                />
+              </>
             )}
             {hasOut && (
-              <circle
-                cx={p.x + p.outX}
-                cy={p.y + p.outY}
-                r={4.5}
-                fill="#fff"
-                stroke={HANDLE}
-                strokeWidth={1.25}
-                style={{ cursor: "crosshair", pointerEvents: "auto" }}
-                onPointerDown={(e) => onHandleDown(e, i, "out")}
-              />
+              <>
+                <circle
+                  cx={outX}
+                  cy={outY}
+                  r={11}
+                  fill="transparent"
+                  style={{ cursor: "crosshair", pointerEvents: "auto" }}
+                  onPointerDown={(e) => onHandleDown(e, i, "out")}
+                />
+                <circle
+                  cx={outX}
+                  cy={outY}
+                  r={5}
+                  fill="#fff"
+                  stroke={HANDLE}
+                  strokeWidth={1.5}
+                  pointerEvents="none"
+                />
+              </>
             )}
             <rect
-              x={p.x - 4.5}
-              y={p.y - 4.5}
-              width={9}
-              height={9}
-              fill="#fff"
-              stroke={HANDLE}
-              strokeWidth={1.5}
-              transform={`rotate(45 ${p.x} ${p.y})`}
+              x={ax - 8}
+              y={ay - 8}
+              width={16}
+              height={16}
+              fill="transparent"
+              transform={`rotate(45 ${ax} ${ay})`}
               style={{ cursor: "move", pointerEvents: "auto" }}
               onPointerDown={(e) => onHandleDown(e, i, "anchor")}
               onClick={(e) => onAnchorClick(e, i)}
+            />
+            <rect
+              x={ax - 5}
+              y={ay - 5}
+              width={10}
+              height={10}
+              fill="#fff"
+              stroke={HANDLE}
+              strokeWidth={1.75}
+              transform={`rotate(45 ${ax} ${ay})`}
+              pointerEvents="none"
             />
           </g>
         );

@@ -8,7 +8,7 @@ import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
 import type { BezierPoint, Tool } from "@/lib/types";
 import { HtmlLayer } from "./html-layer";
-import { BezierDraftOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
+import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
 
 const PAGE_X = 80;
 const PAGE_Y = 60;
@@ -104,6 +104,7 @@ export default function HtmlStage({
     setBezierDraft((draft) => {
       if (draft.length >= 2) {
         useEditorStore.getState().addBezier(draft, closed);
+        useEditorStore.getState().setTool("select");
       }
       return [];
     });
@@ -422,6 +423,15 @@ export default function HtmlStage({
   const draftWidth =
     tool === "highlighter" ? 18 : tool === "pen" ? 3 : 2;
 
+  const selectedLayer =
+    tool === "select" && selectedIds.length === 1
+      ? layers.find((l) => l.id === selectedIds[0])
+      : undefined;
+  const editBezier =
+    selectedLayer?.type === "bezier" && !selectedLayer.locked
+      ? selectedLayer
+      : null;
+
   return (
     <div
       ref={boardRef}
@@ -559,6 +569,7 @@ export default function HtmlStage({
               dragging={bezierDragging}
             />
           )}
+          {editBezier && <BezierEditOverlay layer={editBezier} />}
           {maskPts && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full">
               <polyline

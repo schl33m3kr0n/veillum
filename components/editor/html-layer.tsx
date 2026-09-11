@@ -6,7 +6,6 @@ import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
 import { useProcessedImage } from "./use-processed-image";
-import { BezierEditOverlay } from "./bezier-overlay";
 
 function cssBlend(mode: Layer["blendMode"]): CSSProperties["mixBlendMode"] {
   if (mode === "source-over") return "normal";
@@ -71,9 +70,6 @@ export function HtmlLayer({
       {layer.type === "shape" && <ShapeContent layer={layer} />}
       {layer.type === "path" && <PathContent layer={layer} />}
       {layer.type === "bezier" && <BezierContent layer={layer} />}
-      {layer.type === "bezier" && selected && !layer.locked && (
-        <BezierEditOverlay layer={layer} />
-      )}
       {layer.borderEnabled && (
         <div
           className="pointer-events-none absolute inset-0"
