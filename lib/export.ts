@@ -45,25 +45,28 @@ function layerToSvg(layer: Layer): string {
   if (layer.type === "shape") {
     const s = layer as ShapeLayer;
     const fill = s.fillEnabled ? s.fill : "none";
-    const sw = s.strokeWidth;
+    const strokeOn = s.strokeEnabled !== false && s.strokeWidth > 0;
+    const strokePaint = strokeOn ? s.stroke : "none";
+    const sw = strokeOn ? s.strokeWidth : 0;
     const dasharray = dash(s.dash, sw);
     const extra = dasharray ? `stroke-dasharray="${dasharray}"` : "";
     const geo = shapeSvgPoints(s);
     if (s.shape === "ellipse") {
-      return `<ellipse ${t} ${op} cx="${s.width / 2}" cy="${s.height / 2}" rx="${s.width / 2}" ry="${s.height / 2}" fill="${fill}" stroke="${s.stroke}" stroke-width="${sw}" ${extra}/>`;
+      return `<ellipse ${t} ${op} cx="${s.width / 2}" cy="${s.height / 2}" rx="${s.width / 2}" ry="${s.height / 2}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
     }
     if (s.shape === "line") {
-      return `<line ${t} ${op} x1="0" y1="${s.height / 2}" x2="${s.width}" y2="${s.height / 2}" stroke="${s.stroke}" stroke-width="${sw}" ${extra}/>`;
+      return `<line ${t} ${op} x1="0" y1="${s.height / 2}" x2="${s.width}" y2="${s.height / 2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
     }
     if (s.shape === "rect") {
-      return `<rect ${t} ${op} width="${s.width}" height="${s.height}" rx="${s.cornerRadius}" fill="${fill}" stroke="${s.stroke}" stroke-width="${sw}" ${extra}/>`;
+      return `<rect ${t} ${op} width="${s.width}" height="${s.height}" rx="${s.cornerRadius}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
     }
     if (geo.arrow) {
       const a = geo.arrow;
-      return `<g ${t} ${op}><line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="${s.stroke}" stroke-width="${sw}" ${extra}/><polygon points="${a.points}" fill="${s.stroke}"/></g>`;
+      const head = strokeOn ? s.stroke : fill;
+      return `<g ${t} ${op}><line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/><polygon points="${a.points}" fill="${head}"/></g>`;
     }
     if (geo.polygon) {
-      return `<polygon ${t} ${op} points="${geo.polygon}" fill="${fill}" stroke="${s.stroke}" stroke-width="${sw}" stroke-linejoin="round" ${extra}/>`;
+      return `<polygon ${t} ${op} points="${geo.polygon}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" stroke-linejoin="round" ${extra}/>`;
     }
   }
   if (layer.type === "path") {

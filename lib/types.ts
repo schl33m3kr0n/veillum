@@ -186,6 +186,7 @@ export interface ShapeLayer extends LayerBase {
   dash: DashStyle;
   cornerRadius: number;
   fillEnabled: boolean;
+  strokeEnabled: boolean;
   sides: number;
   starPoints: number;
   innerRatio: number;

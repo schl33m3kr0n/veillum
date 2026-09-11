@@ -34,6 +34,7 @@ interface EditorState {
   shapeKind: ShapeKind;
   shapeStroke: string;
   shapeFillEnabled: boolean;
+  shapeStrokeEnabled: boolean;
   shapeStrokeWidth: number;
   shapeCornerRadius: number;
   shapeSides: number;
@@ -57,6 +58,7 @@ interface EditorState {
   setShapeKind: (kind: ShapeKind) => void;
   setShapeStroke: (color: string) => void;
   setShapeFillEnabled: (enabled: boolean) => void;
+  setShapeStrokeEnabled: (enabled: boolean) => void;
   setShapeStrokeWidth: (width: number) => void;
   setShapeCornerRadius: (radius: number) => void;
   setShapeSides: (sides: number) => void;
@@ -132,6 +134,7 @@ export const useEditorStore = create<EditorState>()(
       shapeKind: "rect",
       shapeStroke: "#1c1916",
       shapeFillEnabled: true,
+      shapeStrokeEnabled: true,
       shapeStrokeWidth: 2,
       shapeCornerRadius: 8,
       shapeSides: 6,
@@ -155,6 +158,7 @@ export const useEditorStore = create<EditorState>()(
       setShapeKind: (shapeKind) => set({ shapeKind }),
       setShapeStroke: (shapeStroke) => set({ shapeStroke }),
       setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
+      setShapeStrokeEnabled: (shapeStrokeEnabled) => set({ shapeStrokeEnabled }),
       setShapeStrokeWidth: (shapeStrokeWidth) => set({ shapeStrokeWidth }),
       setShapeCornerRadius: (shapeCornerRadius) => set({ shapeCornerRadius }),
       setShapeSides: (shapeSides) => set({ shapeSides }),
@@ -275,6 +279,7 @@ export const useEditorStore = create<EditorState>()(
           fill: s.color,
           stroke: s.shapeStroke,
           fillEnabled: s.shapeFillEnabled,
+          strokeEnabled: s.shapeStrokeEnabled,
           strokeWidth: s.shapeStrokeWidth,
           cornerRadius: s.shapeKind === "rect" ? s.shapeCornerRadius : 0,
           sides: s.shapeSides,

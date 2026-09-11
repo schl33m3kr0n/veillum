@@ -16,6 +16,7 @@ export function ShapeWindow() {
   const color = useEditorStore((s) => s.color);
   const shapeStroke = useEditorStore((s) => s.shapeStroke);
   const fillEnabled = useEditorStore((s) => s.shapeFillEnabled);
+  const strokeEnabled = useEditorStore((s) => s.shapeStrokeEnabled);
   const setTool = useEditorStore((s) => s.setTool);
   const clearSelection = useEditorStore((s) => s.clearSelection);
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -99,8 +100,12 @@ export function ShapeWindow() {
             >
               <ShapePreview
                 kind={shape.id}
-                fill={fillEnabled ? (editing?.fill ?? color) : "none"}
-                stroke={editing?.stroke ?? shapeStroke}
+                fill={(editing?.fillEnabled ?? fillEnabled) ? (editing?.fill ?? color) : "none"}
+                stroke={
+                  (editing?.strokeEnabled ?? strokeEnabled)
+                    ? (editing?.stroke ?? shapeStroke)
+                    : "none"
+                }
               />
             </button>
           ))}

@@ -17,7 +17,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Arrange.** Ruler, indent, page margins, and box alignment (left, right, center, justify). Align several objects to each other from Inspect when more than one layer is selected. Square or triangle grid, plus perspective on a layer.
 
-**Draw.** Pencil, pen, and highlighter, plus a Shapes window. After you select a shape, adjust corners, polygon sides, star points, inner radius, arrowhead, size, rotation, fill, and stroke.
+**Draw.** Pencil, pen, and highlighter, plus a Shapes window. After you select a shape, adjust corners, polygon sides, star points, inner radius, arrowhead, size, and rotation. Fill and stroke each have a no-color option.
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — Vellum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 

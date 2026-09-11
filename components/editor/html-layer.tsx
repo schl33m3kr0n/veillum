@@ -152,10 +152,11 @@ function ImageContent({ layer }: { layer: ImageLayer }) {
 
 function ShapeContent({ layer }: { layer: ShapeLayer }) {
   const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
-  const fill = layer.fillEnabled ? layer.fill : "none";
+  const fill = layer.fillEnabled ? layer.fill : "transparent";
   const w = Math.max(1, layer.width);
   const h = Math.max(1, layer.height);
-  const stroke = layer.strokeWidth > 0 ? layer.stroke : "none";
+  const strokeOn = layer.strokeEnabled !== false && layer.strokeWidth > 0;
+  const stroke = strokeOn ? layer.stroke : "none";
   const geo = shapeSvgPoints(layer);
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
@@ -200,8 +201,8 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
           y1={h / 2}
           x2={w}
           y2={h / 2}
-          stroke={layer.stroke}
-          strokeWidth={layer.strokeWidth}
+          stroke={strokeOn ? layer.stroke : "transparent"}
+          strokeWidth={strokeOn ? layer.strokeWidth : 12}
           strokeDasharray={dash || undefined}
           strokeLinecap="round"
         />
@@ -213,11 +214,20 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
             y1={geo.arrow.y1}
             x2={geo.arrow.x2}
             y2={geo.arrow.y2}
-            stroke={layer.stroke}
-            strokeWidth={layer.strokeWidth}
+            stroke={strokeOn ? layer.stroke : "transparent"}
+            strokeWidth={strokeOn ? layer.strokeWidth : 12}
             strokeDasharray={dash || undefined}
           />
-          <polygon points={geo.arrow.points} fill={layer.stroke} />
+          <polygon
+            points={geo.arrow.points}
+            fill={
+              strokeOn
+                ? layer.stroke
+                : layer.fillEnabled
+                  ? layer.fill
+                  : "transparent"
+            }
+          />
         </>
       )}
     </svg>

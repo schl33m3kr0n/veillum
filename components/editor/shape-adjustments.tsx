@@ -1,7 +1,5 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -12,6 +10,7 @@ import {
 import { useEditorStore } from "@/lib/editor-store";
 import type { DashStyle, ShapeKind, ShapeLayer } from "@/lib/types";
 import { SHAPE_KINDS } from "@/lib/shapes";
+import { cn } from "@/lib/utils";
 import { Field, SliderField } from "./fields";
 
 export function ShapeAdjustments({
@@ -23,6 +22,7 @@ export function ShapeAdjustments({
 }) {
   const shapeKind = useEditorStore((s) => s.shapeKind);
   const shapeFillEnabled = useEditorStore((s) => s.shapeFillEnabled);
+  const shapeStrokeEnabled = useEditorStore((s) => s.shapeStrokeEnabled);
   const color = useEditorStore((s) => s.color);
   const shapeStroke = useEditorStore((s) => s.shapeStroke);
   const shapeStrokeWidth = useEditorStore((s) => s.shapeStrokeWidth);
@@ -34,6 +34,7 @@ export function ShapeAdjustments({
 
   const kind = layer?.shape ?? shapeKind;
   const fillEnabled = layer?.fillEnabled ?? shapeFillEnabled;
+  const strokeEnabled = layer?.strokeEnabled ?? shapeStrokeEnabled;
   const fill = layer?.fill ?? color;
   const stroke = layer?.stroke ?? shapeStroke;
   const strokeWidth = layer?.strokeWidth ?? shapeStrokeWidth;
@@ -53,6 +54,7 @@ export function ShapeAdjustments({
     if (partial.fill) s.setColor(partial.fill);
     if (partial.stroke) s.setShapeStroke(partial.stroke);
     if (partial.fillEnabled != null) s.setShapeFillEnabled(partial.fillEnabled);
+    if (partial.strokeEnabled != null) s.setShapeStrokeEnabled(partial.strokeEnabled);
     if (partial.strokeWidth != null) s.setShapeStrokeWidth(partial.strokeWidth);
     if (partial.cornerRadius != null) s.setShapeCornerRadius(partial.cornerRadius);
     if (partial.sides != null) s.setShapeSides(partial.sides);
@@ -82,48 +84,33 @@ export function ShapeAdjustments({
           </Select>
         </Field>
       )}
-      <div className="flex items-center justify-between">
-        <Label className="text-[11px]">Fill</Label>
-        <Switch
-          size="sm"
-          checked={fillEnabled}
-          onCheckedChange={(enabled) => patch({ fillEnabled: enabled })}
+      <div className="grid grid-cols-2 gap-2">
+        <PaintField
+          label="Fill"
+          enabled={fillEnabled}
+          color={fill}
+          onEnabled={(enabled) => patch({ fillEnabled: enabled })}
+          onColor={(value) => patch({ fill: value, fillEnabled: true })}
+        />
+        <PaintField
+          label="Stroke"
+          enabled={strokeEnabled}
+          color={stroke}
+          onEnabled={(enabled) => patch({ strokeEnabled: enabled })}
+          onColor={(value) => patch({ stroke: value, strokeEnabled: true })}
         />
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <label className="space-y-1">
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Fill
-          </span>
-          <input
-            type="color"
-            value={fill}
-            disabled={!fillEnabled}
-            onChange={(e) => patch({ fill: e.target.value })}
-            className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5 disabled:opacity-40"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Stroke
-          </span>
-          <input
-            type="color"
-            value={stroke}
-            onChange={(e) => patch({ stroke: e.target.value })}
-            className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5"
-          />
-        </label>
-      </div>
-      <SliderField
-        label="Stroke width"
-        value={strokeWidth}
-        min={0}
-        max={24}
-        step={0.5}
-        onChange={(value) => patch({ strokeWidth: value })}
-      />
-      {!compact && (
+      {strokeEnabled && (
+        <SliderField
+          label="Stroke width"
+          value={strokeWidth}
+          min={0.5}
+          max={24}
+          step={0.5}
+          onChange={(value) => patch({ strokeWidth: value })}
+        />
+      )}
+      {strokeEnabled && !compact && (
         <Field label="Stroke style">
           <Select
             value={dash}
@@ -227,6 +214,65 @@ export function ShapeAdjustments({
           />
         </>
       )}
+    </div>
+  );
+}
+
+function PaintField({
+  label,
+  enabled,
+  color,
+  onEnabled,
+  onColor,
+}: {
+  label: string;
+  enabled: boolean;
+  color: string;
+  onEnabled: (enabled: boolean) => void;
+  onColor: (color: string) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <div className="flex gap-1">
+        <button
+          type="button"
+          title={`No ${label.toLowerCase()}`}
+          aria-pressed={!enabled}
+          onClick={() => onEnabled(false)}
+          className={cn(
+            "relative size-8 shrink-0 overflow-hidden rounded-md border",
+            !enabled
+              ? "border-primary ring-2 ring-primary/35"
+              : "border-border hover:border-primary/50",
+          )}
+        >
+          <span
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "linear-gradient(45deg,#c8c2b6 25%,transparent 25%,transparent 75%,#c8c2b6 75%),linear-gradient(45deg,#c8c2b6 25%,#f7f1e6 25%,#f7f1e6 75%,#c8c2b6 75%)",
+              backgroundSize: "8px 8px",
+              backgroundPosition: "0 0, 4px 4px",
+            }}
+          />
+          <span className="absolute inset-[-20%] rotate-45 border-t-2 border-[#c45c26]" />
+        </button>
+        <input
+          type="color"
+          value={color}
+          title={label}
+          onChange={(e) => onColor(e.target.value)}
+          className={cn(
+            "h-8 min-w-0 flex-1 cursor-pointer rounded-md border bg-background p-0.5",
+            enabled
+              ? "border-primary ring-2 ring-primary/30"
+              : "border-border opacity-70",
+          )}
+        />
+      </div>
     </div>
   );
 }
