@@ -60,7 +60,11 @@ export const metadata: Metadata = {
     "A page studio for type, drawing, photographs, layers, and animation.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="en"

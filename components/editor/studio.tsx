@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import type { ShapeKind } from "@/lib/types";
 import HtmlStage from "./html-stage";
+import { SymbolDie } from "./symbol-die";
 
 export function Studio() {
   useEditorHotkeys();
@@ -101,6 +102,7 @@ export function Studio() {
               )}
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
+              <SymbolDie />
             </div>
             <Timeline />
           </div>
