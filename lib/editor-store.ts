@@ -34,6 +34,12 @@ interface EditorState {
   shapeKind: ShapeKind;
   shapeStroke: string;
   shapeFillEnabled: boolean;
+  shapeStrokeWidth: number;
+  shapeCornerRadius: number;
+  shapeSides: number;
+  shapeStarPoints: number;
+  shapeInnerRatio: number;
+  shapeArrowHead: number;
   color: string;
   highlight: string;
   zoom: number;
@@ -51,6 +57,12 @@ interface EditorState {
   setShapeKind: (kind: ShapeKind) => void;
   setShapeStroke: (color: string) => void;
   setShapeFillEnabled: (enabled: boolean) => void;
+  setShapeStrokeWidth: (width: number) => void;
+  setShapeCornerRadius: (radius: number) => void;
+  setShapeSides: (sides: number) => void;
+  setShapeStarPoints: (points: number) => void;
+  setShapeInnerRatio: (ratio: number) => void;
+  setShapeArrowHead: (size: number) => void;
   setColor: (color: string) => void;
   setHighlight: (color: string) => void;
   setZoom: (zoom: number) => void;
@@ -120,6 +132,12 @@ export const useEditorStore = create<EditorState>()(
       shapeKind: "rect",
       shapeStroke: "#1c1916",
       shapeFillEnabled: true,
+      shapeStrokeWidth: 2,
+      shapeCornerRadius: 8,
+      shapeSides: 6,
+      shapeStarPoints: 5,
+      shapeInnerRatio: 0.4,
+      shapeArrowHead: 16,
       color: "#1c1916",
       highlight: "#f5d76e",
       zoom: 1,
@@ -137,6 +155,12 @@ export const useEditorStore = create<EditorState>()(
       setShapeKind: (shapeKind) => set({ shapeKind }),
       setShapeStroke: (shapeStroke) => set({ shapeStroke }),
       setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
+      setShapeStrokeWidth: (shapeStrokeWidth) => set({ shapeStrokeWidth }),
+      setShapeCornerRadius: (shapeCornerRadius) => set({ shapeCornerRadius }),
+      setShapeSides: (shapeSides) => set({ shapeSides }),
+      setShapeStarPoints: (shapeStarPoints) => set({ shapeStarPoints }),
+      setShapeInnerRatio: (shapeInnerRatio) => set({ shapeInnerRatio }),
+      setShapeArrowHead: (shapeArrowHead) => set({ shapeArrowHead }),
       setColor: (color) =>
         set((s) => ({ color, recentColors: rememberColor(s.recentColors, color) })),
       setHighlight: (highlight) => set({ highlight }),
@@ -242,14 +266,21 @@ export const useEditorStore = create<EditorState>()(
       },
 
       addShapeAt: (x, y, w, h) => {
-        const layer = createShapeLayer(get().shapeKind, {
+        const s = get();
+        const layer = createShapeLayer(s.shapeKind, {
           x,
           y,
           width: Math.max(8, w),
           height: Math.max(8, h),
-          fill: get().color,
-          stroke: get().shapeStroke,
-          fillEnabled: get().shapeFillEnabled,
+          fill: s.color,
+          stroke: s.shapeStroke,
+          fillEnabled: s.shapeFillEnabled,
+          strokeWidth: s.shapeStrokeWidth,
+          cornerRadius: s.shapeKind === "rect" ? s.shapeCornerRadius : 0,
+          sides: s.shapeSides,
+          starPoints: s.shapeStarPoints,
+          innerRatio: s.shapeInnerRatio,
+          arrowHead: s.shapeArrowHead,
         });
         get().addLayer(layer);
         return layer.id;

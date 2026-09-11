@@ -49,7 +49,7 @@ export function Studio() {
         <TopBar />
         {tool === "shape" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
-            Choose a shape in the Shapes window, then drag on the page to draw it.
+            Choose a shape, drag on the page, then use the Adjust sliders on the selected shape.
           </div>
         )}
         {tool === "bezier" && (
@@ -71,7 +71,7 @@ export function Studio() {
               )}
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
-              {tool === "shape" && <ShapeWindow />}
+              {tool === "shape" || selected?.type === "shape" ? <ShapeWindow /> : null}
             </div>
             <Timeline />
           </div>

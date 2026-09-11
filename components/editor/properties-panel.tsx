@@ -21,11 +21,11 @@ import {
   type Layer,
   type ListType,
   type Orientation,
-  type ShapeKind,
   type TextLayer,
 } from "@/lib/types";
 import { AlignCenter, AlignHorizontalJustifyCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter } from "lucide-react";
 import { Field, NumberField, Section, SliderField } from "./fields";
+import { ShapeAdjustments } from "./shape-adjustments";
 
 export function PropertiesPanel() {
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -585,87 +585,9 @@ function ImageFields({ layer }: { layer: ImageLayer }) {
 }
 
 function ShapeFields({ layer }: { layer: Extract<Layer, { type: "shape" }> }) {
-  const update = useEditorStore((s) => s.updateLayer);
-  const setShapeKind = useEditorStore((s) => s.setShapeKind);
   return (
-    <Section title="Shape style">
-      <Field label="Kind">
-        <Select
-          value={layer.shape}
-          onValueChange={(shape) => {
-            update(layer.id, { shape: shape as ShapeKind });
-            setShapeKind(shape as ShapeKind);
-          }}
-        >
-          <SelectTrigger size="sm" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {["rect", "ellipse", "triangle", "line", "hexagon", "star", "arrow"].map(
-              (k) => (
-                <SelectItem key={k} value={k}>
-                  {k}
-                </SelectItem>
-              ),
-            )}
-          </SelectContent>
-        </Select>
-      </Field>
-      <div className="flex items-center justify-between">
-        <span className="text-xs">Fill</span>
-        <Switch
-          checked={layer.fillEnabled}
-          onCheckedChange={(fillEnabled) => update(layer.id, { fillEnabled })}
-        />
-      </div>
-      <Input
-        type="color"
-        value={layer.fill}
-        onChange={(e) => update(layer.id, { fill: e.target.value })}
-        className="h-7 p-1"
-      />
-      <Field label="Stroke">
-        <Input
-          type="color"
-          value={layer.stroke}
-          onChange={(e) => update(layer.id, { stroke: e.target.value })}
-          className="h-7 p-1"
-        />
-      </Field>
-      <SliderField
-        label="Stroke width"
-        value={layer.strokeWidth}
-        min={0}
-        max={24}
-        step={0.5}
-        onChange={(strokeWidth) => update(layer.id, { strokeWidth })}
-      />
-      <Field label="Stroke style">
-        <Select
-          value={layer.dash}
-          onValueChange={(dash) => update(layer.id, { dash: dash as DashStyle })}
-        >
-          <SelectTrigger size="sm" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="solid">Solid</SelectItem>
-            <SelectItem value="dash">Dash</SelectItem>
-            <SelectItem value="dot">Dot</SelectItem>
-            <SelectItem value="dashdot">Dash-dot</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      {layer.shape === "rect" && (
-        <SliderField
-          label="Corners"
-          value={layer.cornerRadius}
-          min={0}
-          max={80}
-          step={1}
-          onChange={(cornerRadius) => update(layer.id, { cornerRadius })}
-        />
-      )}
+    <Section title="Shape">
+      <ShapeAdjustments layer={layer} />
     </Section>
   );
 }

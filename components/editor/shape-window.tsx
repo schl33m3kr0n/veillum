@@ -3,32 +3,25 @@
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useEditorStore } from "@/lib/editor-store";
-import type { ShapeKind } from "@/lib/types";
+import type { ShapeKind, ShapeLayer } from "@/lib/types";
+import { SHAPE_KINDS } from "@/lib/shapes";
 import { cn } from "@/lib/utils";
-
-const SHAPES: { id: ShapeKind; label: string }[] = [
-  { id: "rect", label: "Rectangle" },
-  { id: "ellipse", label: "Ellipse" },
-  { id: "triangle", label: "Triangle" },
-  { id: "hexagon", label: "Hexagon" },
-  { id: "star", label: "Star" },
-  { id: "line", label: "Line" },
-  { id: "arrow", label: "Arrow" },
-];
+import { ShapeAdjustments } from "./shape-adjustments";
 
 export function ShapeWindow() {
+  const tool = useEditorStore((s) => s.tool);
   const shapeKind = useEditorStore((s) => s.shapeKind);
   const setShapeKind = useEditorStore((s) => s.setShapeKind);
   const color = useEditorStore((s) => s.color);
-  const setColor = useEditorStore((s) => s.setColor);
   const shapeStroke = useEditorStore((s) => s.shapeStroke);
-  const setShapeStroke = useEditorStore((s) => s.setShapeStroke);
   const fillEnabled = useEditorStore((s) => s.shapeFillEnabled);
-  const setFillEnabled = useEditorStore((s) => s.setShapeFillEnabled);
   const setTool = useEditorStore((s) => s.setTool);
+  const clearSelection = useEditorStore((s) => s.clearSelection);
+  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const layers = useEditorStore((s) => s.layers);
+  const selected = layers.find((l) => l.id === selectedIds[0]);
+  const editing = selected?.type === "shape" ? selected : null;
 
   const [pos, setPos] = useState({ x: 16, y: 16 });
   const drag = useRef<{
@@ -56,9 +49,16 @@ export function ShapeWindow() {
     drag.current = null;
   };
 
+  const pickKind = (id: ShapeKind) => {
+    setShapeKind(id);
+    if (editing) {
+      useEditorStore.getState().updateLayer(editing.id, { shape: id });
+    }
+  };
+
   return (
     <div
-      className="absolute z-30 w-[232px] overflow-hidden rounded-xl border border-border/80 bg-card shadow-2xl"
+      className="absolute z-30 w-[248px] overflow-hidden rounded-xl border border-border/80 bg-card shadow-2xl"
       style={{ left: pos.x, top: pos.y }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -68,77 +68,49 @@ export function ShapeWindow() {
         onPointerMove={onTitleMove}
         onPointerUp={onTitleUp}
       >
-        <span>Shapes</span>
+        <span>{editing ? "Adjust shape" : "Shapes"}</span>
         <Button
           size="icon-xs"
           variant="ghost"
           className="size-6 text-white/70 hover:bg-white/10 hover:text-white"
           aria-label="Close shapes"
-          onClick={() => setTool("select")}
+          onClick={() => {
+            if (tool === "shape") setTool("select");
+            else clearSelection();
+          }}
         >
           <X />
         </Button>
       </div>
-      <div className="space-y-3 p-3">
+      <div className="max-h-[min(70vh,520px)] space-y-3 overflow-y-auto p-3">
         <div className="grid grid-cols-4 gap-1.5">
-          {SHAPES.map((shape) => (
+          {SHAPE_KINDS.map((shape) => (
             <button
               key={shape.id}
               type="button"
               title={shape.label}
-              onClick={() => setShapeKind(shape.id)}
+              onClick={() => pickKind(shape.id)}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-lg border bg-[#f7f1e6] transition-colors",
-                shapeKind === shape.id
+                (editing?.shape ?? shapeKind) === shape.id
                   ? "border-primary ring-2 ring-primary/30"
                   : "border-border/70 hover:border-primary/50",
               )}
             >
               <ShapePreview
                 kind={shape.id}
-                fill={fillEnabled ? color : "none"}
-                stroke={shapeStroke}
+                fill={fillEnabled ? (editing?.fill ?? color) : "none"}
+                stroke={editing?.stroke ?? shapeStroke}
               />
             </button>
           ))}
         </div>
         <p className="text-[11px] leading-snug text-muted-foreground">
-          {SHAPES.find((s) => s.id === shapeKind)?.label}. Drag on the page to
-          draw it.
+          {editing
+            ? "Sliders rewrite the selected shape. Change kind, fill, geometry, and size here."
+            : `${SHAPE_KINDS.find((s) => s.id === shapeKind)?.label}. Drag on the page to draw it.`}
         </p>
-        <div className="flex items-center justify-between">
-          <Label className="text-[11px]">Fill</Label>
-          <Switch
-            size="sm"
-            checked={fillEnabled}
-            onCheckedChange={setFillEnabled}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <label className="space-y-1">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Fill
-            </span>
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              disabled={!fillEnabled}
-              className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5 disabled:opacity-40"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Stroke
-            </span>
-            <input
-              type="color"
-              value={shapeStroke}
-              onChange={(e) => setShapeStroke(e.target.value)}
-              className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5"
-            />
-          </label>
-        </div>
+        <ShapeAdjustments layer={editing} compact />
       </div>
     </div>
   );
@@ -159,39 +131,17 @@ function ShapePreview({
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden>
       {kind === "rect" && (
-        <rect
-          x={6}
-          y={8}
-          width={28}
-          height={24}
-          rx={3}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={sw}
-        />
+        <rect x={6} y={8} width={28} height={24} rx={3} fill={fill} stroke={stroke} strokeWidth={sw} />
       )}
       {kind === "ellipse" && (
-        <ellipse
-          cx={20}
-          cy={20}
-          rx={14}
-          ry={11}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={sw}
-        />
+        <ellipse cx={20} cy={20} rx={14} ry={11} fill={fill} stroke={stroke} strokeWidth={sw} />
       )}
       {kind === "triangle" && (
-        <polygon
-          points="20,6 34,34 6,34"
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={sw}
-        />
+        <polygon points="20,6 34,34 6,34" fill={fill} stroke={stroke} strokeWidth={sw} />
       )}
       {kind === "hexagon" && (
         <polygon
-          points={hexPoints(20, 20, 15, 13)}
+          points="20,6 32,13 32,27 20,34 8,27 8,13"
           fill={fill}
           stroke={stroke}
           strokeWidth={sw}
@@ -199,33 +149,18 @@ function ShapePreview({
       )}
       {kind === "star" && (
         <polygon
-          points={starPoints(20, 20, 15, 6)}
+          points="20,6 23,16 34,16 25,22 28,33 20,26 12,33 15,22 6,16 17,16"
           fill={fill}
           stroke={stroke}
           strokeWidth={sw}
         />
       )}
       {kind === "line" && (
-        <line
-          x1={6}
-          y1={20}
-          x2={34}
-          y2={20}
-          stroke={stroke}
-          strokeWidth={2.5}
-          strokeLinecap="round"
-        />
+        <line x1={6} y1={20} x2={34} y2={20} stroke={stroke} strokeWidth={2.5} strokeLinecap="round" />
       )}
       {kind === "arrow" && (
         <>
-          <line
-            x1={6}
-            y1={20}
-            x2={26}
-            y2={20}
-            stroke={stroke}
-            strokeWidth={2.5}
-          />
+          <line x1={6} y1={20} x2={26} y2={20} stroke={stroke} strokeWidth={2.5} />
           <polygon points="34,20 24,14 24,26" fill={stroke} />
         </>
       )}
@@ -233,19 +168,4 @@ function ShapePreview({
   );
 }
 
-function hexPoints(cx: number, cy: number, rx: number, ry: number): string {
-  return Array.from({ length: 6 }, (_, i) => {
-    const a = (Math.PI / 3) * i - Math.PI / 6;
-    return `${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`;
-  }).join(" ");
-}
-
-function starPoints(cx: number, cy: number, outer: number, inner: number): string {
-  const pts: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outer : inner;
-    const a = (Math.PI / 5) * i - Math.PI / 2;
-    pts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
-  }
-  return pts.join(" ");
-}
+export type { ShapeLayer };

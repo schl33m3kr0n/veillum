@@ -105,6 +105,10 @@ export function createShapeLayer(
     dash: "solid",
     cornerRadius: shape === "rect" ? 8 : 0,
     fillEnabled: true,
+    sides: 6,
+    starPoints: 5,
+    innerRatio: 0.4,
+    arrowHead: 16,
     ...overrides,
   };
 }

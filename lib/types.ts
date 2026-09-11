@@ -186,6 +186,10 @@ export interface ShapeLayer extends LayerBase {
   dash: DashStyle;
   cornerRadius: number;
   fillEnabled: boolean;
+  sides: number;
+  starPoints: number;
+  innerRatio: number;
+  arrowHead: number;
 }
 
 export interface PathLayer extends LayerBase {

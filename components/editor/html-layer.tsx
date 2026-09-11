@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { bezierPath, dashArray } from "@/lib/geometry";
+import { shapeSvgPoints } from "@/lib/shapes";
 import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
@@ -155,6 +156,7 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
   const w = Math.max(1, layer.width);
   const h = Math.max(1, layer.height);
   const stroke = layer.strokeWidth > 0 ? layer.stroke : "none";
+  const geo = shapeSvgPoints(layer);
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
       {layer.shape === "rect" && (
@@ -182,31 +184,14 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
           strokeDasharray={dash || undefined}
         />
       )}
-      {layer.shape === "triangle" && (
+      {geo.polygon && (
         <polygon
-          points={`${w / 2},${layer.strokeWidth} ${w - layer.strokeWidth},${h - layer.strokeWidth} ${layer.strokeWidth},${h - layer.strokeWidth}`}
+          points={geo.polygon}
           fill={fill}
           stroke={stroke}
           strokeWidth={layer.strokeWidth}
           strokeDasharray={dash || undefined}
-        />
-      )}
-      {layer.shape === "hexagon" && (
-        <polygon
-          points={hexPoints(w, h)}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={layer.strokeWidth}
-          strokeDasharray={dash || undefined}
-        />
-      )}
-      {layer.shape === "star" && (
-        <polygon
-          points={starPoints(w, h)}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={layer.strokeWidth}
-          strokeDasharray={dash || undefined}
+          strokeLinejoin="round"
         />
       )}
       {layer.shape === "line" && (
@@ -221,21 +206,18 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
           strokeLinecap="round"
         />
       )}
-      {layer.shape === "arrow" && (
+      {geo.arrow && (
         <>
           <line
-            x1={4}
-            y1={h / 2}
-            x2={w - 14}
-            y2={h / 2}
+            x1={geo.arrow.x1}
+            y1={geo.arrow.y1}
+            x2={geo.arrow.x2}
+            y2={geo.arrow.y2}
             stroke={layer.stroke}
             strokeWidth={layer.strokeWidth}
             strokeDasharray={dash || undefined}
           />
-          <polygon
-            points={`${w - 2},${h / 2} ${w - 16},${h / 2 - 8} ${w - 16},${h / 2 + 8}`}
-            fill={layer.stroke}
-          />
+          <polygon points={geo.arrow.points} fill={layer.stroke} />
         </>
       )}
     </svg>
@@ -297,30 +279,3 @@ function BezierContent({ layer }: { layer: BezierLayer }) {
   );
 }
 
-function hexPoints(w: number, h: number): string {
-  const cx = w / 2;
-  const cy = h / 2;
-  const rx = w / 2;
-  const ry = h / 2;
-  return Array.from({ length: 6 }, (_, i) => {
-    const a = (Math.PI / 3) * i - Math.PI / 6;
-    return `${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`;
-  }).join(" ");
-}
-
-function starPoints(w: number, h: number): string {
-  const cx = w / 2;
-  const cy = h / 2;
-  const outerX = w / 2;
-  const outerY = h / 2;
-  const innerX = w / 5;
-  const innerY = h / 5;
-  const pts: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const a = -Math.PI / 2 + (Math.PI / 5) * i;
-    const rx = i % 2 === 0 ? outerX : innerX;
-    const ry = i % 2 === 0 ? outerY : innerY;
-    pts.push(`${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`);
-  }
-  return pts.join(" ");
-}
