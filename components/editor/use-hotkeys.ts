@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useEditorStore, useTemporalStore } from "@/lib/editor-store";
+import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
 
 export function useEditorHotkeys() {
   const undo = useTemporalStore((s) => s.undo);
@@ -20,12 +20,14 @@ export function useEditorHotkeys() {
 
       if (meta && e.key.toLowerCase() === "z") {
         e.preventDefault();
+        resumeHistory();
         if (e.shiftKey) redo();
         else undo();
         return;
       }
       if (meta && e.key.toLowerCase() === "y") {
         e.preventDefault();
+        resumeHistory();
         redo();
         return;
       }

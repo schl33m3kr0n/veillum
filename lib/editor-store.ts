@@ -504,7 +504,7 @@ export const useEditorStore = create<EditorState>()(
       },
     }),
     {
-      limit: 60,
+      limit: 80,
       partialize: (s) =>
         ({
           page: s.page,
@@ -524,8 +524,16 @@ export function useTemporalStore<T>(
 ) {
   return useStoreWithEqualityFn(
     useEditorStore.temporal,
-    selector!,
+    selector ?? ((s) => s as T),
   );
+}
+
+export function pauseHistory() {
+  useEditorStore.temporal.getState().pause();
+}
+
+export function resumeHistory() {
+  useEditorStore.temporal.getState().resume();
 }
 
 export function seedDocument() {

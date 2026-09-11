@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/lib/editor-store";
+import { pauseHistory, resumeHistory } from "@/lib/editor-store";
 
 export function Field({
   label,
@@ -58,8 +58,8 @@ export function SliderField({
         max={max}
         step={step}
         onValueChange={(v) => onChange(v[0] ?? value)}
-        onPointerDown={() => useEditorStore.temporal.getState().pause()}
-        onPointerUp={() => useEditorStore.temporal.getState().resume()}
+        onPointerDown={() => pauseHistory()}
+        onPointerUp={() => resumeHistory()}
       />
     </div>
   );

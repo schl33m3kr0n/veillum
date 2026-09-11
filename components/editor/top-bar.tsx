@@ -38,7 +38,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Toggle } from "@/components/ui/toggle";
-import { useEditorStore, useTemporalStore } from "@/lib/editor-store";
+import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { FONT_OPTIONS, type TextAlign, type TextLayer } from "@/lib/types";
 import {
   documentToSvg,
@@ -74,12 +79,40 @@ export function TopBar() {
           <Link href="/die">Die</Link>
         </Button>
       </div>
-      <Button size="icon-sm" variant="ghost" disabled={!canUndo} onClick={() => undo()}>
-        <Undo2 />
-      </Button>
-      <Button size="icon-sm" variant="ghost" disabled={!canRedo} onClick={() => redo()}>
-        <Redo2 />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            disabled={!canUndo}
+            aria-label="Undo"
+            onClick={() => {
+              resumeHistory();
+              undo();
+            }}
+          >
+            <Undo2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Undo ⌘Z</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            disabled={!canRedo}
+            aria-label="Redo"
+            onClick={() => {
+              resumeHistory();
+              redo();
+            }}
+          >
+            <Redo2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Redo ⌘⇧Z</TooltipContent>
+      </Tooltip>
       <Separator orientation="vertical" className="mx-1 h-6" />
       <Button size="icon-sm" variant="ghost" onClick={() => useEditorStore.getState().cut()}>
         <Scissors />

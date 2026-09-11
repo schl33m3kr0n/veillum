@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { seedDocument, useEditorStore } from "@/lib/editor-store";
+import { HistoryGuard } from "./history-guard";
 import { TopBar } from "./top-bar";
 import { ToolRail } from "./tool-rail";
 import { PropertiesPanel } from "./properties-panel";
@@ -49,6 +50,7 @@ export function Studio() {
 
   return (
     <TooltipProvider delayDuration={200}>
+      <HistoryGuard />
       <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
         <TopBar />
         {tool === "shape" && (

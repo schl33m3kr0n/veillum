@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore } from "@/lib/editor-store";
+import { useEditorStore, pauseHistory, resumeHistory } from "@/lib/editor-store";
 import type { TextLayer } from "@/lib/types";
 
 export function TextOverlay() {
@@ -30,9 +30,10 @@ export function TextOverlay() {
       ref={ref}
       autoFocus
       value={layer.text}
-      onChange={(e) =>
-        useEditorStore.getState().updateLayer(layer.id, { text: e.target.value })
-      }
+      onChange={(e) => {
+        pauseHistory();
+        useEditorStore.getState().updateLayer(layer.id, { text: e.target.value });
+      }}
       onPointerDown={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -40,7 +41,10 @@ export function TextOverlay() {
           useEditorStore.getState().setEditingText(null);
         }
       }}
-      onBlur={() => useEditorStore.getState().setEditingText(null)}
+      onBlur={() => {
+        resumeHistory();
+        useEditorStore.getState().setEditingText(null);
+      }}
       className="absolute z-20 resize-none border border-primary bg-[#f7f1e6]/95 p-2 shadow-lg outline-none"
       style={{
         left,
