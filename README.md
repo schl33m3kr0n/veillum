@@ -41,6 +41,8 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | I | Eyedropper |
 | M | Mask |
 | Space | Pan |
+| ⌘/Ctrl + scroll or pinch | Zoom toward the cursor |
+| ⌘/Ctrl + / − | Zoom toward the pointer |
 | ⌘/Ctrl Z | Undo |
 | ⌘/Ctrl Shift Z or ⌘/Ctrl Y | Redo |
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |

@@ -69,6 +69,7 @@ interface EditorState {
   setColor: (color: string) => void;
   setHighlight: (color: string) => void;
   setZoom: (zoom: number) => void;
+  zoomToward: (zoom: number, screenX: number, screenY: number) => void;
   setPan: (x: number, y: number) => void;
   setPointer: (x: number, y: number) => void;
   setPlayhead: (t: number) => void;
@@ -172,6 +173,17 @@ export const useEditorStore = create<EditorState>()(
         set((s) => ({ color, recentColors: rememberColor(s.recentColors, color) })),
       setHighlight: (highlight) => set({ highlight }),
       setZoom: (zoom) => set({ zoom: Math.max(0.15, Math.min(4, zoom)) }),
+      zoomToward: (zoom, screenX, screenY) =>
+        set((s) => {
+          const next = Math.max(0.15, Math.min(4, zoom));
+          const lx = (screenX - s.panX) / s.zoom;
+          const ly = (screenY - s.panY) / s.zoom;
+          return {
+            zoom: next,
+            panX: screenX - lx * next,
+            panY: screenY - ly * next,
+          };
+        }),
       setPan: (panX, panY) => set({ panX, panY }),
       setPointer: (x, y) => set({ pointer: { x, y } }),
       setPlayhead: (playhead) => set({ playhead }),

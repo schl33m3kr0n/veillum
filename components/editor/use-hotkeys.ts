@@ -106,10 +106,18 @@ export function useEditorHotkeys() {
         store.setPan(0, 0);
       } else if (meta && (e.key === "=" || e.key === "+")) {
         e.preventDefault();
-        store.setZoom(store.zoom * 1.15);
+        store.zoomToward(
+          store.zoom * 1.15,
+          store.panX + (80 + store.pointer.x) * store.zoom,
+          store.panY + (60 + store.pointer.y) * store.zoom,
+        );
       } else if (meta && e.key === "-") {
         e.preventDefault();
-        store.setZoom(store.zoom / 1.15);
+        store.zoomToward(
+          store.zoom / 1.15,
+          store.panX + (80 + store.pointer.x) * store.zoom,
+          store.panY + (60 + store.pointer.y) * store.zoom,
+        );
       }
     };
     window.addEventListener("keydown", onKey);

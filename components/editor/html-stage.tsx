@@ -95,7 +95,13 @@ export default function HtmlStage({
       e.preventDefault();
       const store = useEditorStore.getState();
       if (e.ctrlKey || e.metaKey) {
-        store.setZoom(store.zoom * (e.deltaY > 0 ? 0.92 : 1.08));
+        const rect = el.getBoundingClientRect();
+        const factor = Math.exp(-e.deltaY * 0.01);
+        store.zoomToward(
+          store.zoom * factor,
+          e.clientX - rect.left,
+          e.clientY - rect.top,
+        );
       } else {
         store.setPan(store.panX - e.deltaX, store.panY - e.deltaY);
       }
