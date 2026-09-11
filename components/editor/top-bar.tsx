@@ -25,13 +25,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -44,13 +37,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { FONT_OPTIONS, type TextAlign, type TextLayer } from "@/lib/types";
+import { type TextAlign, type TextLayer } from "@/lib/types";
 import {
   documentToSvg,
   downloadBlob,
   projectJson,
 } from "@/lib/export";
 import { NumberField } from "./fields";
+import { FontSelect } from "./font-select";
 import Link from "next/link";
 
 export function TopBar() {
@@ -124,22 +118,12 @@ export function TopBar() {
         <ClipboardPaste />
       </Button>
       <Separator orientation="vertical" className="mx-1 h-6" />
-      <Select
+      <FontSelect
         value={text?.fontFamily ?? "Newsreader"}
-        onValueChange={(v) => patchText({ fontFamily: v as TextLayer["fontFamily"] })}
+        onValueChange={(fontFamily) => patchText({ fontFamily })}
         disabled={!text}
-      >
-        <SelectTrigger size="sm" className="w-40">
-          <SelectValue placeholder="Font" />
-        </SelectTrigger>
-        <SelectContent>
-          {FONT_OPTIONS.map((f) => (
-            <SelectItem key={f.family} value={f.family}>
-              {f.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        className="w-44"
+      />
       <NumberField
         value={text?.fontSize ?? 16}
         onChange={(v) => patchText({ fontSize: v })}

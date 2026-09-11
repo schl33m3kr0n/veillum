@@ -5,6 +5,7 @@ import { bezierPath, dashArray } from "@/lib/geometry";
 import { shapeSvgPoints } from "@/lib/shapes";
 import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
+import { cssFontFamily } from "@/lib/fonts";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
 import { useProcessedImage } from "./use-processed-image";
 
@@ -100,7 +101,7 @@ function TextContent({ layer }: { layer: TextLayer }) {
         paddingLeft: layer.padding + layer.indent,
         color: layer.color,
         background: layer.highlight ?? "transparent",
-        fontFamily: `"${layer.fontFamily}", serif`,
+        fontFamily: cssFontFamily(layer.fontFamily),
         fontSize: size,
         fontStyle: layer.italic ? "italic" : "normal",
         fontWeight: layer.bold ? 700 : 400,

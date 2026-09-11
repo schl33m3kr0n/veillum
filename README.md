@@ -13,7 +13,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 ## What you can do
 
-**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, fonts, bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
+**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (editorial serifs, grotesques, display, script, and mono — each name previews in its own face), bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
 
 **Arrange.** Ruler, indent, page margins, and box alignment (left, right, center, justify). Align several objects to each other from Inspect when more than one layer is selected. Square or triangle grid, plus perspective on a layer.
 

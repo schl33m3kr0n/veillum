@@ -1,58 +1,6 @@
 import type { Metadata } from "next";
-import {
-  Bebas_Neue,
-  Cormorant_Garamond,
-  Fraunces,
-  Instrument_Sans,
-  JetBrains_Mono,
-  Libre_Baskerville,
-  Newsreader,
-  Outfit,
-} from "next/font/google";
+import { fontVariables, instrument } from "./fonts";
 import "./globals.css";
-
-const instrument = Instrument_Sans({
-  subsets: ["latin"],
-  variable: "--font-instrument",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-newsreader",
-});
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-cormorant",
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-});
-
-const libre = Libre_Baskerville({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-libre",
-});
-
-const bebas = Bebas_Neue({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-bebas",
-});
 
 export const metadata: Metadata = {
   title: "Vellum — design studio",
@@ -68,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full antialiased" suppressHydrationWarning>
       <body
-        className={`${instrument.variable} ${fraunces.variable} ${newsreader.variable} ${jetbrains.variable} ${cormorant.variable} ${outfit.variable} ${libre.variable} ${bebas.variable} ${instrument.className} h-full overflow-hidden`}
+        className={`${fontVariables} ${instrument.className} h-full overflow-hidden`}
         suppressHydrationWarning
       >
         {children}

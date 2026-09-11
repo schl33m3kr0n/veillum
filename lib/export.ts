@@ -40,7 +40,7 @@ function layerToSvg(layer: Layer): string {
     const deco = [l.underline ? "underline" : "", l.strikethrough ? "line-through" : ""]
       .filter(Boolean)
       .join(" ");
-    return `<text ${t} ${op} fill="${l.color}" font-family="${l.fontFamily}" font-size="${l.fontSize}" font-weight="${weight}" font-style="${style}" letter-spacing="${l.letterSpacing}" text-decoration="${deco}">${text}</text>`;
+    return `<text ${t} ${op} fill="${l.color}" font-family="${escapeXml(l.fontFamily)}" font-size="${l.fontSize}" font-weight="${weight}" font-style="${style}" letter-spacing="${l.letterSpacing}" text-decoration="${deco}">${text}</text>`;
   }
   if (layer.type === "shape") {
     const s = layer as ShapeLayer;

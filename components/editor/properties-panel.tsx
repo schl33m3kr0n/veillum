@@ -13,7 +13,6 @@ import {
 import { useEditorStore } from "@/lib/editor-store";
 import {
   BLEND_MODES,
-  FONT_OPTIONS,
   type Anchor,
   type Capitalization,
   type DashStyle,
@@ -25,6 +24,7 @@ import {
 } from "@/lib/types";
 import { AlignCenter, AlignHorizontalJustifyCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter } from "lucide-react";
 import { Field, NumberField, Section, SliderField } from "./fields";
+import { FontSelect } from "./font-select";
 import { ShapeAdjustments } from "./shape-adjustments";
 
 export function PropertiesPanel() {
@@ -331,25 +331,11 @@ function TextFields({ layer }: { layer: TextLayer }) {
           className="min-h-24 w-full rounded-md border border-input bg-transparent p-2 text-sm"
         />
         <Field label="Font">
-          <Select
+          <FontSelect
             value={layer.fontFamily}
-            onValueChange={(fontFamily) =>
-              update(layer.id, {
-                fontFamily: fontFamily as TextLayer["fontFamily"],
-              })
-            }
-          >
-            <SelectTrigger size="sm" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {FONT_OPTIONS.map((f) => (
-                <SelectItem key={f.family} value={f.family}>
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onValueChange={(fontFamily) => update(layer.id, { fontFamily })}
+            className="w-full"
+          />
         </Field>
         <SliderField
           label="Size"

@@ -6,6 +6,7 @@ import { interpolatedLayer, nearPoint, triangleGridLines } from "@/lib/geometry"
 import { rgbToHex } from "@/lib/colors";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
+import { cssFontFamily } from "@/lib/fonts";
 import type { BezierPoint, Tool } from "@/lib/types";
 import { HtmlLayer } from "./html-layer";
 import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
@@ -488,7 +489,7 @@ export default function HtmlStage({
                 top: 14,
                 width: page.width - page.margins.left - page.margins.right,
                 color: page.header.color,
-                fontFamily: page.header.fontFamily,
+                fontFamily: cssFontFamily(page.header.fontFamily),
                 fontSize: page.header.fontSize,
               }}
             >
@@ -503,7 +504,7 @@ export default function HtmlStage({
                 bottom: 12,
                 width: page.width - page.margins.left - page.margins.right,
                 color: page.footer.color,
-                fontFamily: page.footer.fontFamily,
+                fontFamily: cssFontFamily(page.footer.fontFamily),
                 fontSize: page.footer.fontSize,
               }}
             >

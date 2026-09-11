@@ -1,12 +1,34 @@
 export const FONT_OPTIONS = [
-  { label: "Instrument Sans", family: "Instrument Sans" },
-  { label: "Fraunces", family: "Fraunces" },
-  { label: "Newsreader", family: "Newsreader" },
-  { label: "Libre Baskerville", family: "Libre Baskerville" },
-  { label: "Cormorant Garamond", family: "Cormorant Garamond" },
-  { label: "Outfit", family: "Outfit" },
-  { label: "Bebas Neue", family: "Bebas Neue" },
-  { label: "JetBrains Mono", family: "JetBrains Mono" },
+  { label: "Newsreader", family: "Newsreader", group: "Editorial" },
+  { label: "Fraunces", family: "Fraunces", group: "Editorial" },
+  { label: "Libre Baskerville", family: "Libre Baskerville", group: "Editorial" },
+  { label: "Cormorant Garamond", family: "Cormorant Garamond", group: "Editorial" },
+  { label: "Spectral", family: "Spectral", group: "Editorial" },
+  { label: "Young Serif", family: "Young Serif", group: "Editorial" },
+  { label: "Instrument Serif", family: "Instrument Serif", group: "Editorial" },
+  { label: "Playfair Display", family: "Playfair Display", group: "Editorial" },
+  { label: "DM Serif Display", family: "DM Serif Display", group: "Editorial" },
+  { label: "Instrument Sans", family: "Instrument Sans", group: "Sans" },
+  { label: "Outfit", family: "Outfit", group: "Sans" },
+  { label: "Figtree", family: "Figtree", group: "Sans" },
+  { label: "Space Grotesk", family: "Space Grotesk", group: "Sans" },
+  { label: "Bricolage Grotesque", family: "Bricolage Grotesque", group: "Sans" },
+  { label: "Syne", family: "Syne", group: "Sans" },
+  { label: "Bebas Neue", family: "Bebas Neue", group: "Display" },
+  { label: "Archivo Black", family: "Archivo Black", group: "Display" },
+  { label: "Unbounded", family: "Unbounded", group: "Display" },
+  { label: "Cinzel", family: "Cinzel", group: "Display" },
+  { label: "Cinzel Decorative", family: "Cinzel Decorative", group: "Display" },
+  { label: "Great Vibes", family: "Great Vibes", group: "Script" },
+  { label: "JetBrains Mono", family: "JetBrains Mono", group: "Mono" },
+] as const;
+
+export const FONT_GROUPS = [
+  "Editorial",
+  "Sans",
+  "Display",
+  "Script",
+  "Mono",
 ] as const;
 
 export type FontFamily = (typeof FONT_OPTIONS)[number]["family"];
