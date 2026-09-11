@@ -57,6 +57,8 @@ export default function HtmlStage({
   const [bezierDragging, setBezierDragging] = useState(false);
   const [maskPts, setMaskPts] = useState<number[] | null>(null);
   const bezierHandleDrag = useRef(false);
+  const bezierDraftRef = useRef<BezierPoint[]>([]);
+  bezierDraftRef.current = bezierDraft;
   const pointer = useEditorStore((s) => s.pointer);
 
   useEffect(() => {
@@ -101,15 +103,14 @@ export default function HtmlStage({
   }, []);
 
   const finishBezier = useCallback((closed = false) => {
-    setBezierDraft((draft) => {
-      if (draft.length >= 2) {
-        useEditorStore.getState().addBezier(draft, closed);
-        useEditorStore.getState().setTool("select");
-      }
-      return [];
-    });
+    const draft = bezierDraftRef.current;
     bezierHandleDrag.current = false;
     setBezierDragging(false);
+    setBezierDraft([]);
+    if (draft.length < 2) return;
+    const store = useEditorStore.getState();
+    store.addBezier(draft, closed);
+    store.setTool("select");
   }, []);
 
   useEffect(() => {
