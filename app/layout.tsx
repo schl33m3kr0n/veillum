@@ -66,17 +66,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`dark ${instrument.variable} ${fraunces.variable} ${newsreader.variable} ${jetbrains.variable} ${cormorant.variable} ${outfit.variable} ${libre.variable} ${bebas.variable} h-full antialiased`}
-    >
-      <body className={`${instrument.className} h-full overflow-hidden`}>
-        <span
-          aria-hidden
-          className={`${fraunces.className} ${newsreader.className} ${jetbrains.className} ${cormorant.className} ${outfit.className} ${libre.className} ${bebas.className} hidden`}
-        >
-          Aa
-        </span>
+    <html lang="en" className="dark h-full antialiased" suppressHydrationWarning>
+      <body
+        className={`${instrument.variable} ${fraunces.variable} ${newsreader.variable} ${jetbrains.variable} ${cormorant.variable} ${outfit.variable} ${libre.variable} ${bebas.variable} ${instrument.className} h-full overflow-hidden`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
