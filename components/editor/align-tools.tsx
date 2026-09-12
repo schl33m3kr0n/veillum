@@ -10,6 +10,8 @@ import {
   AlignVerticalJustifyCenter,
   AlignVerticalSpaceAround,
   ChevronDown,
+  UnfoldHorizontal,
+  UnfoldVertical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +39,8 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
     useEditorStore.getState().alignSelected(mode, resolved);
   const distribute = (axis: "horizontal" | "vertical") =>
     useEditorStore.getState().distributeSelected(axis);
+  const match = (dim: "width" | "height") =>
+    useEditorStore.getState().matchSelected(dim, resolved);
 
   return (
     <DropdownMenu>
@@ -120,6 +124,21 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
             </DropdownMenuGroup>
           </>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <AlignItem
+            label="Match width"
+            onSelect={() => match("width")}
+          >
+            <UnfoldHorizontal />
+          </AlignItem>
+          <AlignItem
+            label="Match height"
+            onSelect={() => match("height")}
+          >
+            <UnfoldVertical />
+          </AlignItem>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Align to</DropdownMenuLabel>
         <DropdownMenuRadioGroup

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useEditorStore } from "@/lib/editor-store";
 import type { Layer } from "@/lib/types";
+import { snapAabbResize } from "@/lib/snap";
 import {
   groupAabb,
   localToPage,
@@ -80,11 +81,25 @@ function SingleGizmo({ layer }: { layer: Layer }) {
       }
       const local = pageToLocal(origin, page.x, page.y);
       const next = resizeFromHandle(kind, local.x, local.y, origin, shift);
-      s.updateLayer(origin.id, next);
+      const others = s.layers.filter((l) => l.id !== origin.id && l.visible);
+      const snapped = snapAabbResize(
+        { left: next.x, top: next.y, width: next.width, height: next.height },
+        kind,
+        others,
+        s.page,
+      );
+      s.updateLayer(origin.id, {
+        x: snapped.left,
+        y: snapped.top,
+        width: snapped.width,
+        height: snapped.height,
+      });
+      s.setSnapGuides(snapped.guides);
     };
     const onUp = () => {
       if (!drag.current) return;
       drag.current = null;
+      useEditorStore.getState().setSnapGuides([]);
       useEditorStore.temporal.getState().resume();
     };
     window.addEventListener("pointermove", onMove);
@@ -151,20 +166,36 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
         return;
       }
       const nextBox = resizeGroupFromHandle(kind, page.x, page.y, box, lock);
-      const sx = nextBox.width / Math.max(1, box.width);
-      const sy = nextBox.height / Math.max(1, box.height);
+      const others = s.layers.filter(
+        (l) => !origins.some((o) => o.id === l.id) && l.visible,
+      );
+      const snapped = snapAabbResize(
+        {
+          left: nextBox.left,
+          top: nextBox.top,
+          width: nextBox.width,
+          height: nextBox.height,
+        },
+        kind,
+        others,
+        s.page,
+      );
+      const sx = snapped.width / Math.max(1, box.width);
+      const sy = snapped.height / Math.max(1, box.height);
       for (const origin of origins) {
         s.updateLayer(origin.id, {
-          x: nextBox.left + (origin.x - box.left) * sx,
-          y: nextBox.top + (origin.y - box.top) * sy,
+          x: snapped.left + (origin.x - box.left) * sx,
+          y: snapped.top + (origin.y - box.top) * sy,
           width: Math.max(8, origin.width * sx),
           height: Math.max(8, origin.height * sy),
         });
       }
+      s.setSnapGuides(snapped.guides);
     };
     const onUp = () => {
       if (!drag.current) return;
       drag.current = null;
+      useEditorStore.getState().setSnapGuides([]);
       useEditorStore.temporal.getState().resume();
     };
     window.addEventListener("pointermove", onMove);

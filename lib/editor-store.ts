@@ -5,6 +5,8 @@ import { temporal } from "zundo";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
 import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
+import { layerAabb } from "./transform";
+import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
   createDefaultPage,
@@ -55,6 +57,7 @@ interface EditorState {
   recentColors: string[];
   sidebarOpen: boolean;
   timelineOpen: boolean;
+  snapGuides: SnapGuide[];
 
   setTool: (tool: Tool) => void;
   setShapeKind: (kind: ShapeKind) => void;
@@ -78,6 +81,7 @@ interface EditorState {
   setPlaying: (p: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
   setTimelineOpen: (open: boolean) => void;
+  setSnapGuides: (guides: SnapGuide[]) => void;
   select: (ids: string[], additive?: boolean) => void;
   clearSelection: () => void;
   setEditingText: (id: string | null) => void;
@@ -112,6 +116,7 @@ interface EditorState {
   paste: () => void;
 
   alignSelected: (mode: AlignMode, target?: AlignTarget) => void;
+  matchSelected: (dim: "width" | "height", target?: AlignTarget) => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
@@ -161,6 +166,7 @@ export const useEditorStore = create<EditorState>()(
       recentColors: ["#1c1916", "#c45c26", "#d4a054", "#f7f1e6", "#8aa39b"],
       sidebarOpen: true,
       timelineOpen: true,
+      snapGuides: [],
 
       setTool: (tool) => set({ tool, editingTextId: null }),
       setShapeKind: (shapeKind) => set({ shapeKind }),
@@ -195,6 +201,7 @@ export const useEditorStore = create<EditorState>()(
       setPlaying: (playing) => set({ playing }),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       setTimelineOpen: (timelineOpen) => set({ timelineOpen }),
+      setSnapGuides: (snapGuides) => set({ snapGuides }),
       select: (ids, additive) =>
         set((s) => ({
           selectedIds: additive
@@ -423,6 +430,50 @@ export const useEditorStore = create<EditorState>()(
           const map = new Map(aligned.map((l) => [l.id, l]));
           return {
             layers: s.layers.map((l) => map.get(l.id) ?? l),
+          };
+        }),
+
+      matchSelected: (dim, target = "selection") =>
+        set((s) => {
+          const order = s.selectedIds
+            .map((id) => s.layers.find((l) => l.id === id))
+            .filter((l): l is Layer => !!l && !l.locked);
+          if (order.length === 0) return s;
+          const resolved =
+            order.length < 2 && target === "selection" ? "page" : target;
+          let width = 0;
+          let height = 0;
+          let apply = order;
+          if (resolved === "selection") {
+            if (order.length < 2) return s;
+            const key = layerAabb(order[0]);
+            width = key.right - key.left;
+            height = key.bottom - key.top;
+            apply = order.slice(1);
+          } else {
+            const frame = alignFrame(s.page, order, resolved);
+            width = frame.right - frame.left;
+            height = frame.bottom - frame.top;
+          }
+          const ids = new Set(apply.map((l) => l.id));
+          return {
+            layers: s.layers.map((l) => {
+              if (!ids.has(l.id)) return l;
+              const box = layerAabb(l);
+              const bw = Math.max(1, box.right - box.left);
+              const bh = Math.max(1, box.bottom - box.top);
+              return {
+                ...l,
+                width:
+                  dim === "width"
+                    ? Math.max(8, l.width * (width / bw))
+                    : l.width,
+                height:
+                  dim === "height"
+                    ? Math.max(8, l.height * (height / bh))
+                    : l.height,
+              };
+            }),
           };
         }),
 

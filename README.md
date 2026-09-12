@@ -15,7 +15,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (including Avenir, Futura, Century Gothic, Calisto, Bodoni, Cooper Black, Montserrat, Oswald, Barlow Condensed, Impact, Campfire, and Flames), plus import of a .ttf/.otf/.woff you own. Bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
 
-**Arrange.** Ruler, indent, page margins, and box alignment. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, and other objects. Align to the page, the margin box, or the selection, and distribute three or more objects. Square or triangle grid, plus perspective on a layer.
+**Arrange.** Ruler, indent, page margins, and box alignment. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, other objects, and matching widths or heights. Align to the page, the margin box, or the selection, match width or height, and distribute three or more objects. Square or triangle grid, plus perspective on a layer.
 
 **Draw.** Pencil, pen, and highlighter, plus a Shapes window. Selected shapes keep yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
 

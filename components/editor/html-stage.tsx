@@ -12,7 +12,7 @@ import { HtmlLayer } from "./html-layer";
 import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
 import { ShapeAdjustGizmos } from "./shape-gizmos";
 import { TransformGizmos } from "./transform-gizmos";
-import { snapMovingLayers, type SnapGuide } from "@/lib/snap";
+import { snapMovingLayers } from "@/lib/snap";
 
 const PAGE_X = 80;
 const PAGE_Y = 60;
@@ -37,6 +37,7 @@ export default function HtmlStage({
   const color = useEditorStore((s) => s.color);
   const highlight = useEditorStore((s) => s.highlight);
   const shapeKind = useEditorStore((s) => s.shapeKind);
+  const guides = useEditorStore((s) => s.snapGuides);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -48,7 +49,6 @@ export default function HtmlStage({
     oy: number;
     origins: { id: string; x: number; y: number }[];
   } | null>(null);
-  const [guides, setGuides] = useState<SnapGuide[]>([]);
 
   const [draftPts, setDraftPts] = useState<number[] | null>(null);
   const [shapeDraft, setShapeDraft] = useState<{
@@ -277,7 +277,7 @@ export default function HtmlStage({
       for (const [id, pos] of positions) {
         store.updateLayer(id, pos);
       }
-      setGuides(nextGuides);
+      store.setSnapGuides(nextGuides);
       return;
     }
 
@@ -349,7 +349,7 @@ export default function HtmlStage({
     }
     drawing.current = false;
     drag.current = null;
-    setGuides([]);
+    store.setSnapGuides([]);
     bezierHandleDrag.current = false;
     setBezierDragging(false);
     setBezierDraft((d) => {
@@ -638,8 +638,34 @@ export default function HtmlStage({
           {editShape && <ShapeAdjustGizmos layer={editShape} />}
           {guides.length > 0 && (
             <svg className="absolute inset-0 h-full w-full overflow-visible">
-              {guides.map((guide, i) =>
-                guide.axis === "x" ? (
+              {guides.map((guide, i) => {
+                if (guide.span) {
+                  const a = guide.span.start;
+                  const b = guide.span.end;
+                  if (guide.axis === "y") {
+                    return (
+                      <g key={`span-${i}`}>
+                        <line x1={a} y1={guide.pos} x2={b} y2={guide.pos} stroke="#fff" strokeWidth={4} />
+                        <line x1={a} y1={guide.pos - 5} x2={a} y2={guide.pos + 5} stroke="#fff" strokeWidth={4} />
+                        <line x1={b} y1={guide.pos - 5} x2={b} y2={guide.pos + 5} stroke="#fff" strokeWidth={4} />
+                        <line x1={a} y1={guide.pos} x2={b} y2={guide.pos} stroke="#ff4fa3" strokeWidth={2} />
+                        <line x1={a} y1={guide.pos - 5} x2={a} y2={guide.pos + 5} stroke="#ff4fa3" strokeWidth={2} />
+                        <line x1={b} y1={guide.pos - 5} x2={b} y2={guide.pos + 5} stroke="#ff4fa3" strokeWidth={2} />
+                      </g>
+                    );
+                  }
+                  return (
+                    <g key={`span-${i}`}>
+                      <line x1={guide.pos} y1={a} x2={guide.pos} y2={b} stroke="#fff" strokeWidth={4} />
+                      <line x1={guide.pos - 5} y1={a} x2={guide.pos + 5} y2={a} stroke="#fff" strokeWidth={4} />
+                      <line x1={guide.pos - 5} y1={b} x2={guide.pos + 5} y2={b} stroke="#fff" strokeWidth={4} />
+                      <line x1={guide.pos} y1={a} x2={guide.pos} y2={b} stroke="#ff4fa3" strokeWidth={2} />
+                      <line x1={guide.pos - 5} y1={a} x2={guide.pos + 5} y2={a} stroke="#ff4fa3" strokeWidth={2} />
+                      <line x1={guide.pos - 5} y1={b} x2={guide.pos + 5} y2={b} stroke="#ff4fa3" strokeWidth={2} />
+                    </g>
+                  );
+                }
+                return guide.axis === "x" ? (
                   <g key={`x-${i}`}>
                     <line
                       x1={guide.pos}
@@ -677,8 +703,8 @@ export default function HtmlStage({
                       strokeWidth={2}
                     />
                   </g>
-                ),
-              )}
+                );
+              })}
             </svg>
           )}
         </div>
