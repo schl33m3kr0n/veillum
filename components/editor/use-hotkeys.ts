@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
 import { isCombinable } from "@/lib/combine";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
+import { toggleFullscreen } from "@/lib/fullscreen";
 
 export function useEditorHotkeys() {
   const undo = useTemporalStore((s) => s.undo);
@@ -30,6 +31,11 @@ export function useEditorHotkeys() {
           e.preventDefault();
           store.setStartOpen(false);
         }
+        return;
+      }
+      if (!meta && !typing && (e.key === "f" || e.key === "F")) {
+        e.preventDefault();
+        void toggleFullscreen();
         return;
       }
       if (store.startOpen) return;

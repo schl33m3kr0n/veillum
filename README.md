@@ -41,6 +41,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 | I | Eyedropper |
 | M | Mask |
 | Space | Pan |
+| F | Full screen |
 | ⌘/Ctrl + scroll or pinch | Zoom toward the cursor |
 | ⌘/Ctrl + / − | Zoom toward the pointer |
 | ⌘/Ctrl N | New page / templates |

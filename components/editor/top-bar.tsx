@@ -7,7 +7,10 @@ import {
   ClipboardPaste,
   Scissors,
   Download,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -29,6 +32,7 @@ import {
 } from "@/lib/export";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
+import { isFullscreen, toggleFullscreen } from "@/lib/fullscreen";
 import Link from "next/link";
 
 export function TopBar() {
@@ -36,6 +40,14 @@ export function TopBar() {
   const redo = useTemporalStore((s) => s.redo);
   const canUndo = useTemporalStore((s) => s.pastStates.length > 0);
   const canRedo = useTemporalStore((s) => s.futureStates.length > 0);
+  const [full, setFull] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setFull(isFullscreen());
+    sync();
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
+  }, []);
 
   return (
     <header className="flex h-11 shrink-0 items-center gap-1 border-b border-border/70 bg-card px-2">
@@ -102,6 +114,19 @@ export function TopBar() {
       <AlignTools compact />
       <CombineTools compact />
       <div className="ml-auto flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label={full ? "Exit full screen" : "Full screen"}
+              onClick={() => void toggleFullscreen()}
+            >
+              {full ? <Minimize2 /> : <Maximize2 />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{full ? "Exit full screen F" : "Full screen F"}</TooltipContent>
+        </Tooltip>
         <ExportMenu />
       </div>
     </header>
