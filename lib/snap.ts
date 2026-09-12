@@ -23,23 +23,27 @@ function uniqueNear(values: number[], value: number, threshold: number): number 
 }
 
 export function pageSnapLines(page: Page): { xs: number[]; ys: number[] } {
-  const ml = page.margins.left;
-  const mr = page.width - page.margins.right;
-  const mt = page.margins.top;
-  const mb = page.height - page.margins.bottom;
-  return {
-    xs: [0, page.width / 2, page.width, ml, (ml + mr) / 2, mr],
-    ys: [0, page.height / 2, page.height, mt, (mt + mb) / 2, mb],
-  };
+  const xs = [0, page.width / 2, page.width];
+  const ys = [0, page.height / 2, page.height];
+  if (page.marginsVisible !== false) {
+    const ml = page.margins.left;
+    const mr = page.width - page.margins.right;
+    const mt = page.margins.top;
+    const mb = page.height - page.margins.bottom;
+    xs.push(ml, (ml + mr) / 2, mr);
+    ys.push(mt, (mt + mb) / 2, mb);
+  }
+  return { xs, ys };
 }
 
 export function pageSizes(page: Page): { widths: number[]; heights: number[] } {
-  const innerW = page.width - page.margins.left - page.margins.right;
-  const innerH = page.height - page.margins.top - page.margins.bottom;
-  return {
-    widths: [page.width, innerW],
-    heights: [page.height, innerH],
-  };
+  const widths = [page.width];
+  const heights = [page.height];
+  if (page.marginsVisible !== false) {
+    widths.push(page.width - page.margins.left - page.margins.right);
+    heights.push(page.height - page.margins.top - page.margins.bottom);
+  }
+  return { widths, heights };
 }
 
 function otherBoxes(others: Layer[]) {
@@ -61,19 +65,20 @@ function dimensionGuides(
   const mw = moving.right - moving.left;
   const mh = moving.bottom - moving.top;
   const guides: SnapGuide[] = [];
-  const sizes = pageSizes(page);
   const boxes = [
     ...otherBoxes(others),
     { left: 0, right: page.width, top: 0, bottom: page.height, width: page.width, height: page.height },
-    {
+  ];
+  if (page.marginsVisible !== false) {
+    boxes.push({
       left: page.margins.left,
       right: page.width - page.margins.right,
       top: page.margins.top,
       bottom: page.height - page.margins.bottom,
-      width: sizes.widths[1],
-      height: sizes.heights[1],
-    },
-  ];
+      width: page.width - page.margins.left - page.margins.right,
+      height: page.height - page.margins.top - page.margins.bottom,
+    });
+  }
 
   const widthHits = boxes.filter((b) => Math.abs(b.width - mw) <= THRESHOLD);
   if (widthHits.length > 0) {

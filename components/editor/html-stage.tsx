@@ -743,15 +743,17 @@ export default function HtmlStage({
                 stroke="rgba(28,25,22,0.12)"
               />
             ))}
-            <rect
-              x={page.margins.left}
-              y={page.margins.top}
-              width={page.width - page.margins.left - page.margins.right}
-              height={page.height - page.margins.top - page.margins.bottom}
-              fill="none"
-              stroke="rgba(196,92,38,0.35)"
-              strokeDasharray="6 4"
-            />
+            {page.marginsVisible !== false && (
+              <rect
+                x={page.margins.left}
+                y={page.margins.top}
+                width={page.width - page.margins.left - page.margins.right}
+                height={page.height - page.margins.top - page.margins.bottom}
+                fill="none"
+                stroke="rgba(196,92,38,0.35)"
+                strokeDasharray="6 4"
+              />
+            )}
           </svg>
           {visible.map((layer) =>
             editingTextId === layer.id ? null : (

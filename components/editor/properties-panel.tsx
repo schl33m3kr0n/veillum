@@ -72,9 +72,16 @@ export function PropertiesPanel() {
             className="h-7 p-1"
           />
         </Field>
-        <p className="mt-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-          Margins
-        </p>
+        <div className="mt-2 flex items-center justify-between">
+          <label htmlFor="margins-visible" className="text-xs">
+            Margins
+          </label>
+          <Switch
+            id="margins-visible"
+            checked={page.marginsVisible !== false}
+            onCheckedChange={(marginsVisible) => updatePage({ marginsVisible })}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-2">
           {(["top", "right", "bottom", "left"] as const).map((side) => (
             <Field key={side} label={side}>

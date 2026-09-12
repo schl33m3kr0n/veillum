@@ -180,6 +180,7 @@ export function createDefaultPage(): Page {
     height: 720,
     background: "#f7f1e6",
     margins: { top: 56, right: 56, bottom: 64, left: 56 },
+    marginsVisible: true,
     header: {
       enabled: true,
       text: "veillum  ·  Studio",

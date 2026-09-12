@@ -44,6 +44,7 @@ export function pageFromSize(preset: PageSizePreset): Page {
     background: dark ? "#11100e" : "#f7f1e6",
     header: { ...base.header, enabled: print, text: "veillum" },
     footer: { ...base.footer, enabled: print, text: "Page 1" },
+    marginsVisible: print,
     margins: print
       ? { top: 56, right: 56, bottom: 64, left: 56 }
       : { top: 40, right: 40, bottom: 40, left: 40 },

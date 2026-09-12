@@ -333,6 +333,7 @@ export interface Page {
   height: number;
   background: string;
   margins: { top: number; right: number; bottom: number; left: number };
+  marginsVisible: boolean;
   header: HeaderFooter;
   footer: HeaderFooter;
   grid: { type: GridType; size: number; visible: boolean };
