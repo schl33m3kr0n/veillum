@@ -43,6 +43,7 @@ import {
   Lilita_One,
   Montserrat,
   Oswald,
+  Barlow_Condensed,
   Questrial,
 } from "next/font/google";
 import localFont from "next/font/local";
@@ -120,6 +121,13 @@ const cooper = Lilita_One({
 const oswald = Oswald({
   subsets: ["latin"],
   variable: "--font-oswald",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-barlow-condensed",
 });
 
 const impact = Anton({
@@ -341,6 +349,7 @@ export const fontVariables = [
   montserrat.variable,
   cooper.variable,
   oswald.variable,
+  barlowCondensed.variable,
   impact.variable,
   libre.variable,
   bebas.variable,

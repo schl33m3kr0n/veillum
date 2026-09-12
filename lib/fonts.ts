@@ -47,6 +47,8 @@ const STACKS: Record<BundledFont, string> = {
   "Cooper Black":
     '"Cooper Black", "Cooper Black Std", CooperBlack, var(--font-cooper), sans-serif',
   Oswald: 'var(--font-oswald), "Oswald", sans-serif',
+  "Barlow Condensed":
+    'var(--font-barlow-condensed), "Barlow Condensed", sans-serif',
   Impact:
     'Impact, Haettenschweiler, "Arial Narrow Bold", var(--font-impact), sans-serif',
   "Great Vibes": 'var(--font-great-vibes), "Great Vibes", cursive',

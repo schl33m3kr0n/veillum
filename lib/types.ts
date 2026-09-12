@@ -32,6 +32,7 @@ export const FONT_OPTIONS = [
   { label: "Campfire", family: "Campfire", group: "Display" },
   { label: "Cooper Black", family: "Cooper Black", group: "Display" },
   { label: "Oswald", family: "Oswald", group: "Display" },
+  { label: "Barlow Condensed", family: "Barlow Condensed", group: "Display" },
   { label: "Impact", family: "Impact", group: "Display" },
   { label: "Great Vibes", family: "Great Vibes", group: "Script" },
   { label: "Rubik Glitch", family: "Rubik Glitch", group: "Experimental" },
