@@ -1,6 +1,7 @@
-import type { FontFamily } from "./types";
+import type { BundledFont } from "./types";
+import { hasCustomFont } from "./custom-fonts";
 
-const STACKS: Record<FontFamily, string> = {
+const STACKS: Record<BundledFont, string> = {
   Newsreader: 'var(--font-newsreader), "Newsreader", serif',
   Fraunces: 'var(--font-fraunces), "Fraunces", serif',
   "Libre Baskerville": 'var(--font-libre), "Libre Baskerville", serif',
@@ -23,6 +24,7 @@ const STACKS: Record<FontFamily, string> = {
   Cinzel: 'var(--font-cinzel), "Cinzel", serif',
   "Cinzel Decorative":
     'var(--font-cinzel-decorative), "Cinzel Decorative", serif',
+  Campfire: 'var(--font-campfire), "Campfire", "Solway", serif',
   "Great Vibes": 'var(--font-great-vibes), "Great Vibes", cursive',
   "Rubik Glitch": 'var(--font-rubik-glitch), "Rubik Glitch", sans-serif',
   Monoton: 'var(--font-monoton), "Monoton", sans-serif',
@@ -42,5 +44,6 @@ const STACKS: Record<FontFamily, string> = {
 };
 
 export function cssFontFamily(family: string): string {
-  return STACKS[family as FontFamily] ?? `"${family}", serif`;
+  if (hasCustomFont(family)) return `"${family}", serif`;
+  return STACKS[family as BundledFont] ?? `"${family}", serif`;
 }

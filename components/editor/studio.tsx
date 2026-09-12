@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { seedDocument, useEditorStore } from "@/lib/editor-store";
+import { restoreCustomFonts } from "@/lib/custom-fonts";
 import { HistoryGuard } from "./history-guard";
 import { TopBar } from "./top-bar";
 import { ToolRail } from "./tool-rail";
@@ -34,6 +35,7 @@ export function Studio() {
   const setSidebarOpen = useEditorStore((s) => s.setSidebarOpen);
 
   useEffect(() => {
+    void restoreCustomFonts();
     seedDocument();
   }, []);
 

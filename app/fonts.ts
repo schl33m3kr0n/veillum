@@ -35,6 +35,7 @@ import {
   Rubik_Glitch,
   Shrikhand,
   Silkscreen,
+  Solway,
 } from "next/font/google";
 
 export const instrument = Instrument_Sans({
@@ -165,6 +166,12 @@ const youngSerif = Young_Serif({
   variable: "--font-young-serif",
 });
 
+const campfire = Solway({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-campfire",
+});
+
 const rubikGlitch = Rubik_Glitch({
   subsets: ["latin"],
   weight: "400",
@@ -281,6 +288,7 @@ export const fontVariables = [
   figtree.variable,
   greatVibes.variable,
   youngSerif.variable,
+  campfire.variable,
   rubikGlitch.variable,
   monoton.variable,
   orbitron.variable,

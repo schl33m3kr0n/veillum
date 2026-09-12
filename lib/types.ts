@@ -19,6 +19,7 @@ export const FONT_OPTIONS = [
   { label: "Unbounded", family: "Unbounded", group: "Display" },
   { label: "Cinzel", family: "Cinzel", group: "Display" },
   { label: "Cinzel Decorative", family: "Cinzel Decorative", group: "Display" },
+  { label: "Campfire", family: "Campfire", group: "Display" },
   { label: "Great Vibes", family: "Great Vibes", group: "Script" },
   { label: "Rubik Glitch", family: "Rubik Glitch", group: "Experimental" },
   { label: "Monoton", family: "Monoton", group: "Experimental" },
@@ -46,7 +47,8 @@ export const FONT_GROUPS = [
   "Mono",
 ] as const;
 
-export type FontFamily = (typeof FONT_OPTIONS)[number]["family"];
+export type BundledFont = (typeof FONT_OPTIONS)[number]["family"];
+export type FontFamily = BundledFont | (string & {});
 
 export type Tool =
   | "select"
