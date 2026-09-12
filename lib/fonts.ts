@@ -40,6 +40,7 @@ const STACKS: Record<BundledFont, string> = {
   "Pixelify Sans": 'var(--font-pixelify), "Pixelify Sans", sans-serif',
   Audiowide: 'var(--font-audiowide), "Audiowide", sans-serif',
   Creepster: 'var(--font-creepster), "Creepster", cursive',
+  Flames: 'var(--font-flames), "Flames", cursive',
   "JetBrains Mono": 'var(--font-jetbrains), "JetBrains Mono", monospace',
 };
 

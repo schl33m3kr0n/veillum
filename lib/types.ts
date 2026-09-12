@@ -35,6 +35,7 @@ export const FONT_OPTIONS = [
   { label: "Pixelify Sans", family: "Pixelify Sans", group: "Experimental" },
   { label: "Audiowide", family: "Audiowide", group: "Experimental" },
   { label: "Creepster", family: "Creepster", group: "Experimental" },
+  { label: "Flames", family: "Flames", group: "Experimental" },
   { label: "JetBrains Mono", family: "JetBrains Mono", group: "Mono" },
 ] as const;
 

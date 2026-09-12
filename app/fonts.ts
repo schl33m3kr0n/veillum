@@ -37,6 +37,7 @@ import {
   Silkscreen,
   Solway,
 } from "next/font/google";
+import localFont from "next/font/local";
 
 export const instrument = Instrument_Sans({
   subsets: ["latin"],
@@ -172,6 +173,12 @@ const campfire = Solway({
   variable: "--font-campfire",
 });
 
+const flames = localFont({
+  src: "../fonts/Flames.ttf",
+  variable: "--font-flames",
+  display: "swap",
+});
+
 const rubikGlitch = Rubik_Glitch({
   subsets: ["latin"],
   weight: "400",
@@ -289,6 +296,7 @@ export const fontVariables = [
   greatVibes.variable,
   youngSerif.variable,
   campfire.variable,
+  flames.variable,
   rubikGlitch.variable,
   monoton.variable,
   orbitron.variable,
