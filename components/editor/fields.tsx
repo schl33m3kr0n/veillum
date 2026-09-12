@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -76,14 +77,39 @@ export function NumberField({
   className?: string;
   step?: number;
 }) {
+  const current = Number.isFinite(value) ? value : 0;
+  const nudge = (dir: 1 | -1) => onChange(current + dir * step);
+
   return (
-    <Input
-      type="number"
-      step={step}
-      value={Number.isFinite(value) ? value : 0}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className={cn("h-7 text-xs tabular-nums", className)}
-    />
+    <div className={cn("relative min-w-0", className)}>
+      <Input
+        type="number"
+        step={step}
+        value={current}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-7 pr-5 text-xs tabular-nums text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <div className="absolute inset-y-px right-px flex w-4 flex-col overflow-hidden rounded-[calc(var(--radius-lg)-2px)] bg-transparent">
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Increase"
+          className="flex flex-1 items-center justify-center text-foreground hover:bg-foreground/10"
+          onClick={() => nudge(1)}
+        >
+          <ChevronUp className="size-3" strokeWidth={2.5} />
+        </button>
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Decrease"
+          className="flex flex-1 items-center justify-center text-foreground hover:bg-foreground/10"
+          onClick={() => nudge(-1)}
+        >
+          <ChevronDown className="size-3" strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
   );
 }
 
