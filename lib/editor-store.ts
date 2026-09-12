@@ -21,6 +21,7 @@ import type {
   Anchor,
   BezierPoint,
   FillStyle,
+  FillStop,
   Layer,
   Page,
   ShapeKind,
@@ -48,6 +49,7 @@ interface EditorState {
   shapeFillEnabled: boolean;
   shapeFillStyle: FillStyle;
   shapeFillTo: string;
+  shapeFillStops: FillStop[];
   shapeFillAngle: number;
   shapeStrokeEnabled: boolean;
   shapeStrokeWidth: number;
@@ -84,6 +86,7 @@ interface EditorState {
   setShapeFillEnabled: (enabled: boolean) => void;
   setShapeFillStyle: (style: FillStyle) => void;
   setShapeFillTo: (color: string) => void;
+  setShapeFillStops: (stops: FillStop[]) => void;
   setShapeFillAngle: (angle: number) => void;
   setShapeStrokeEnabled: (enabled: boolean) => void;
   setShapeStrokeWidth: (width: number) => void;
@@ -181,6 +184,10 @@ export const useEditorStore = create<EditorState>()(
       shapeFillEnabled: true,
       shapeFillStyle: "solid" as FillStyle,
       shapeFillTo: "#f4d8a8",
+      shapeFillStops: [
+        { color: "#c45c26", pos: 0 },
+        { color: "#f4d8a8", pos: 1 },
+      ],
       shapeFillAngle: 0,
       shapeStrokeEnabled: true,
       shapeStrokeWidth: 2,
@@ -249,6 +256,7 @@ export const useEditorStore = create<EditorState>()(
       setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
       setShapeFillStyle: (shapeFillStyle) => set({ shapeFillStyle }),
       setShapeFillTo: (shapeFillTo) => set({ shapeFillTo }),
+      setShapeFillStops: (shapeFillStops) => set({ shapeFillStops }),
       setShapeFillAngle: (shapeFillAngle) => set({ shapeFillAngle }),
       setShapeStrokeEnabled: (shapeStrokeEnabled) => set({ shapeStrokeEnabled }),
       setShapeStrokeWidth: (shapeStrokeWidth) => set({ shapeStrokeWidth }),
@@ -389,6 +397,7 @@ export const useEditorStore = create<EditorState>()(
           fillEnabled: s.shapeFillEnabled,
           fillStyle: s.shapeFillStyle,
           fillTo: s.shapeFillTo,
+          fillStops: s.shapeFillStops,
           fillAngle: s.shapeFillAngle,
           strokeEnabled: s.shapeStrokeEnabled,
           strokeWidth: s.shapeStrokeWidth,
@@ -497,6 +506,7 @@ export const useEditorStore = create<EditorState>()(
           fillEnabled: s.shapeFillEnabled,
           fillStyle: s.shapeFillStyle,
           fillTo: s.shapeFillTo,
+          fillStops: s.shapeFillStops,
           fillAngle: s.shapeFillAngle,
           strokeEnabled: s.shapeStrokeEnabled,
           strokeWidth: s.shapeStrokeWidth,
@@ -523,6 +533,7 @@ export const useEditorStore = create<EditorState>()(
           shapeFillEnabled: layer.fillEnabled,
           shapeFillStyle: layer.fillStyle,
           shapeFillTo: layer.fillTo,
+          shapeFillStops: layer.fillStops,
           shapeFillAngle: layer.fillAngle,
           shapeStrokeEnabled: layer.strokeEnabled,
           shapeStrokeWidth: layer.strokeWidth,

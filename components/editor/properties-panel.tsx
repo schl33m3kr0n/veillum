@@ -16,7 +16,6 @@ import {
   type Anchor,
   type Capitalization,
   type DashStyle,
-  type FillStyle,
   type ImageLayer,
   type Layer,
   type ListType,
@@ -24,6 +23,8 @@ import {
   type TextLayer,
 } from "@/lib/types";
 import { Field, NumberField, Section, SliderField } from "./fields";
+import { FillStylePicker } from "./fill-style-picker";
+import { GradientStopsEditor } from "./gradient-stops";
 import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
@@ -588,23 +589,24 @@ function StrokeFields({
             />
           </div>
           {layer.fillEnabled && (
-            <Field label="Fill style">
-              <Select
-                value={layer.fillStyle}
-                onValueChange={(fillStyle) =>
-                  update(layer.id, { fillStyle: fillStyle as FillStyle })
-                }
-              >
-                <SelectTrigger size="sm" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="solid">Solid</SelectItem>
-                  <SelectItem value="linear">Lateral</SelectItem>
-                  <SelectItem value="radial">Radial</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
+            <>
+              <Field label="Fill style">
+                <FillStylePicker
+                  value={layer.fillStyle}
+                  stops={layer.fillStops}
+                  angle={layer.fillAngle}
+                  onChange={(fillStyle) => update(layer.id, { fillStyle })}
+                />
+              </Field>
+              {layer.fillStyle !== "solid" && (
+                <GradientStopsEditor
+                  fill={layer.fill}
+                  fillTo={layer.fillTo}
+                  fillStops={layer.fillStops}
+                  onChange={(next) => update(layer.id, next)}
+                />
+              )}
+            </>
           )}
           <div className="flex items-center justify-between">
             <span className="text-xs">Closed</span>

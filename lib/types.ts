@@ -151,7 +151,15 @@ export type Anchor =
   | "bottom-right";
 export type GridType = "none" | "square" | "triangle" | "radial";
 export type DashStyle = "solid" | "dash" | "dot" | "dashdot";
-export type FillStyle = "solid" | "linear" | "radial";
+export type FillStyle =
+  | "solid"
+  | "linear"
+  | "radial"
+  | "diamond"
+  | "conic"
+  | "reflected";
+
+export type FillStop = { color: string; pos: number };
 
 export interface ImageAdjustments {
   exposure: number;
@@ -269,6 +277,7 @@ export interface ShapeLayer extends LayerBase {
   fillStyle: FillStyle;
   fillTo: string;
   fillAngle: number;
+  fillStops: FillStop[];
   strokeEnabled: boolean;
   sides: number;
   starPoints: number;
@@ -300,6 +309,7 @@ export interface BezierLayer extends LayerBase {
   fillStyle: FillStyle;
   fillTo: string;
   fillAngle: number;
+  fillStops: FillStop[];
 }
 
 export type Layer =
@@ -331,6 +341,7 @@ export interface Page {
 
 export interface Palette {
   name: string;
+  group?: string;
   colors: string[];
 }
 
@@ -376,25 +387,6 @@ export const DEFAULT_INSTANT_ALPHA: InstantAlpha = {
   tolerance: 40,
   enabled: false,
 };
-
-export const PALETTES: Palette[] = [
-  {
-    name: "Ink & Paper",
-    colors: ["#1c1916", "#4a4238", "#c45c26", "#d4a054", "#f4efe4", "#8aa39b"],
-  },
-  {
-    name: "Print",
-    colors: ["#0f172a", "#1d4ed8", "#b91c1c", "#fbbf24", "#f8fafc", "#64748b"],
-  },
-  {
-    name: "Night",
-    colors: ["#0b1020", "#1e293b", "#38bdf8", "#a78bfa", "#f472b6", "#e2e8f0"],
-  },
-  {
-    name: "Earth",
-    colors: ["#2c1810", "#6b3f2a", "#c4a574", "#7d8b6a", "#e8dcc8", "#4a5d4e"],
-  },
-];
 
 export function defaultAdjustments(): ImageAdjustments {
   return { ...DEFAULT_ADJUSTMENTS };

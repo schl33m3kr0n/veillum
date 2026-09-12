@@ -15,6 +15,8 @@ import { TransformGizmos } from "./transform-gizmos";
 import { snapMovingLayers } from "@/lib/snap";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
+import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
+import { applyStudioColor } from "@/lib/apply-color";
 
 export default function HtmlStage({
   width,
@@ -37,6 +39,14 @@ export default function HtmlStage({
   const highlight = useEditorStore((s) => s.highlight);
   const shapeKind = useEditorStore((s) => s.shapeKind);
   const guides = useEditorStore((s) => s.snapGuides);
+  const colorSnap = useRef<HTMLCanvasElement | null>(null);
+  const [colorShot, setColorShot] = useState<HTMLCanvasElement | null>(null);
+  const [loupe, setLoupe] = useState<{
+    pageX: number;
+    pageY: number;
+    screenX: number;
+    screenY: number;
+  } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -87,6 +97,34 @@ export default function HtmlStage({
       window.removeEventListener("keyup", onKey);
     };
   }, []);
+
+  useEffect(() => {
+    if (tool !== "eyedropper") {
+      colorSnap.current = null;
+      setColorShot(null);
+      setLoupe(null);
+      return;
+    }
+    let live = true;
+    const capture = async () => {
+      const el = pageRef.current;
+      if (!el) return;
+      try {
+        const { toCanvas } = await import("html-to-image");
+        const canvas = await toCanvas(el, { pixelRatio: 1, cacheBust: true });
+        if (live) {
+          colorSnap.current = canvas;
+          setColorShot(canvas);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    void capture();
+    return () => {
+      live = false;
+    };
+  }, [tool]);
 
   const pagePoint = useCallback(
     (clientX: number, clientY: number) => {
@@ -233,22 +271,27 @@ export default function HtmlStage({
     if (current === "pan") return;
 
     if (current === "eyedropper") {
-      const pageEl = pageRef.current;
-      if (pageEl) {
-        const { toCanvas } = await import("html-to-image");
-        const snap = await toCanvas(pageEl, { pixelRatio: 1, cacheBust: true });
-        const ctx = snap.getContext("2d");
-        if (ctx) {
-          const pix = ctx.getImageData(
-            Math.max(0, Math.round(p.x)),
-            Math.max(0, Math.round(p.y)),
-            1,
-            1,
-          ).data;
-          store.setColor(rgbToHex(pix[0], pix[1], pix[2]));
+      const snap = colorSnap.current;
+      const hex = snap && p ? sampleCanvasHex(snap, p.x, p.y) : null;
+      if (hex) {
+        applyStudioColor(hex);
+      } else {
+        const pageEl = pageRef.current;
+        if (pageEl) {
+          const { toCanvas } = await import("html-to-image");
+          const shot = await toCanvas(pageEl, { pixelRatio: 1, cacheBust: true });
+          const ctx = shot.getContext("2d");
+          if (ctx) {
+            const pix = ctx.getImageData(
+              Math.max(0, Math.round(p.x)),
+              Math.max(0, Math.round(p.y)),
+              1,
+              1,
+            ).data;
+            applyStudioColor(rgbToHex(pix[0], pix[1], pix[2]));
+          }
         }
       }
-      store.setTool("select");
       e.stopPropagation();
       return;
     }
@@ -319,6 +362,21 @@ export default function HtmlStage({
     const p = pagePoint(e.clientX, e.clientY);
     if (p) useEditorStore.getState().setPointer(p.x, p.y);
     const store = useEditorStore.getState();
+
+    if (store.tool === "eyedropper") {
+      const board = boardRef.current;
+      if (p && board) {
+        const rect = board.getBoundingClientRect();
+        setLoupe({
+          pageX: p.x,
+          pageY: p.y,
+          screenX: e.clientX - rect.left,
+          screenY: e.clientY - rect.top,
+        });
+      } else {
+        setLoupe(null);
+      }
+    }
 
     if (drag.current?.id === "__pan") {
       const origin = drag.current.origins[0];
@@ -824,6 +882,15 @@ export default function HtmlStage({
           )}
         </div>
       </div>
+      {tool === "eyedropper" && loupe && (
+        <ColorLoupe
+          snapshot={colorShot}
+          pageX={loupe.pageX}
+          pageY={loupe.pageY}
+          screenX={loupe.screenX}
+          screenY={loupe.screenY}
+        />
+      )}
       <span className="sr-only">{shapeKind}</span>
     </div>
   );

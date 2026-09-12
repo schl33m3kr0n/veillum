@@ -1,29 +1,82 @@
-import { gradientSpec, type Fillable } from "@/lib/fill";
+"use client";
+
+import { useMemo } from "react";
+import {
+  rasterFillDataUrl,
+  resolveStops,
+  usesRasterFill,
+  usesSvgGradient,
+  type Fillable,
+  gradientId,
+} from "@/lib/fill";
 
 export function FillDefs({ layer }: { layer: Fillable }) {
-  const spec = gradientSpec(layer);
-  if (!spec) return null;
-  const stops = (
-    <>
-      <stop offset="0" stopColor={spec.from} />
-      <stop offset="1" stopColor={spec.to} />
-    </>
-  );
+  const style = layer.fillStyle ?? "solid";
+  const stops = resolveStops(layer);
+  const id = gradientId(layer.id);
+  const angle = layer.fillAngle ?? 0;
+  const raster = useMemo(() => {
+    if (!usesRasterFill(style) || typeof document === "undefined") return "";
+    return rasterFillDataUrl(
+      style,
+      stops,
+      angle,
+      layer.width ?? 96,
+      layer.height ?? 96,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [style, angle, layer.width, layer.height, JSON.stringify(stops)]);
+
+  if (!layer.fillEnabled || style === "solid") return null;
+
+  if (usesRasterFill(style) && raster) {
+    return (
+      <defs>
+        <pattern id={id} patternUnits="objectBoundingBox" width={1} height={1}>
+          <image href={raster} width={1} height={1} preserveAspectRatio="none" />
+        </pattern>
+      </defs>
+    );
+  }
+
+  if (!usesSvgGradient(style)) {
+    return (
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+          {stops.map((s, i) => (
+            <stop key={i} offset={s.pos} stopColor={s.color} />
+          ))}
+        </linearGradient>
+      </defs>
+    );
+  }
+
+  const rad = (angle * Math.PI) / 180;
+  const span = style === "reflected" ? 0.28 : 0.5;
+  const x1 = 0.5 - Math.cos(rad) * span;
+  const y1 = 0.5 - Math.sin(rad) * span;
+  const x2 = 0.5 + Math.cos(rad) * span;
+  const y2 = 0.5 + Math.sin(rad) * span;
+  const stopNodes = stops.map((s, i) => (
+    <stop key={i} offset={s.pos} stopColor={s.color} />
+  ));
+
   return (
     <defs>
-      {spec.kind === "radial" ? (
-        <radialGradient id={spec.id} cx="0.5" cy="0.5" r="0.75">
-          {stops}
+      {style === "radial" ? (
+        <radialGradient id={id} cx="0.5" cy="0.5" r="0.75">
+          {stopNodes}
         </radialGradient>
       ) : (
         <linearGradient
-          id={spec.id}
-          x1={spec.x1}
-          y1={spec.y1}
-          x2={spec.x2}
-          y2={spec.y2}
+          id={id}
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          spreadMethod={style === "reflected" ? "reflect" : "pad"}
         >
-          {stops}
+          {stopNodes}
         </linearGradient>
       )}
     </defs>

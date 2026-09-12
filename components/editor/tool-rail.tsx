@@ -35,7 +35,7 @@ const TOOLS: { id: Tool; label: string; shortcut: string; icon: typeof Type }[] 
   { id: "highlighter", label: "Highlighter", shortcut: "H", icon: Highlighter },
   { id: "shape", label: "Elements", shortcut: "S", icon: Square },
   { id: "bezier", label: "Bezier curve", shortcut: "B", icon: Spline },
-  { id: "eyedropper", label: "Color picker", shortcut: "I", icon: Pipette },
+  { id: "eyedropper", label: "Color", shortcut: "I", icon: Pipette },
   { id: "instant-alpha", label: "Instant Alpha", shortcut: "A", icon: WandSparkles },
   { id: "mask", label: "Mask brush", shortcut: "M", icon: Lasso },
 ];

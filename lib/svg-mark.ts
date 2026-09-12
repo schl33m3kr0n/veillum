@@ -15,7 +15,7 @@ export function resolveSvgPaint(
   if (paint === "accent") return ACCENT;
   if (paint === "fill") {
     if (!layer.fillEnabled) return "none";
-    if (layer.id && (layer.fillStyle === "linear" || layer.fillStyle === "radial")) {
+    if (layer.id && layer.fillStyle && layer.fillStyle !== "solid") {
       return fillPaint({
         id: layer.id,
         fill: layer.fill,

@@ -21,6 +21,7 @@ import { TextFormatBar } from "./text-format-bar";
 import { StartScreen } from "./start-screen";
 import { useEditorHotkeys } from "./use-hotkeys";
 import { ShapeWindow } from "./shape-window";
+import { ColorWindow } from "./color-window";
 import HtmlStage from "./html-stage";
 
 export function Studio() {
@@ -85,6 +86,7 @@ export function Studio() {
               <TextOverlay />
               <TextFormatBar />
               {tool === "shape" || selected?.type === "shape" ? <ShapeWindow /> : null}
+              <ColorWindow />
             </div>
             <Timeline />
           </div>

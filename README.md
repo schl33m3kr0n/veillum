@@ -21,7 +21,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 
-**Color.** Wheel, hex field, highlighter swatch, recent colors, and named palettes. Shape fills can be solid, lateral (linear), or radial, with a second stop and an angle for lateral gradients.
+**Color.** I opens Color: a dark panel with the wheel, hex, highlighter, recent swatches, and grouped palettes. Hover the page for a pixel magnifier; click to sample. Shape fills include solid, linear, radial, diamond, angular, and reflect — shown as previews — with two to five gradient colors whose lengths you can adjust (even by default).
 
 **Layers.** Order, lock, hide, blending modes, opacity, transparency, masks (paint a keep-region), borders.
 
@@ -38,7 +38,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 | P / N / H | Pencil / Pen / Highlighter |
 | S | Elements |
 | B | Bezier |
-| I | Eyedropper |
+| I | Color |
 | M | Mask |
 | Space | Pan |
 | F | Full screen |

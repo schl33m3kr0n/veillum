@@ -269,6 +269,7 @@ export function combineLayers(layers: Layer[], mode: CombineMode): ShapeLayer | 
     fillStyle: "fillStyle" in top ? top.fillStyle : "solid",
     fillTo: "fillTo" in top ? top.fillTo : "#f4d8a8",
     fillAngle: "fillAngle" in top ? top.fillAngle : 0,
+    fillStops: "fillStops" in top ? top.fillStops : undefined,
     stroke: top.type === "shape" ? top.stroke : top.stroke,
     strokeEnabled: top.type === "shape" ? top.strokeEnabled : true,
     strokeWidth: top.type === "shape" ? top.strokeWidth : top.strokeWidth,

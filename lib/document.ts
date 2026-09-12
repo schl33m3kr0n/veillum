@@ -108,6 +108,10 @@ export function createShapeLayer(
     fillStyle: "solid",
     fillTo: "#f4d8a8",
     fillAngle: 0,
+    fillStops: [
+      { color: "#c45c26", pos: 0 },
+      { color: "#f4d8a8", pos: 1 },
+    ],
     strokeEnabled: true,
     sides: 6,
     starPoints: 5,
@@ -162,6 +166,10 @@ export function createBezierLayer(
     fillStyle: "solid",
     fillTo: "#f4d8a8",
     fillAngle: 0,
+    fillStops: [
+      { color: "#d4a054", pos: 0 },
+      { color: "#f4d8a8", pos: 1 },
+    ],
     ...overrides,
   };
 }
