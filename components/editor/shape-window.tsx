@@ -268,6 +268,8 @@ function ElementPreview({
       fill={item.defaults?.fillEnabled === false ? "none" : fill}
       stroke={item.defaults?.strokeEnabled === false ? "none" : stroke}
       sides={item.defaults?.sides}
+      square={item.id === "square"}
+      circle={item.id === "circle"}
     />
   );
 }
@@ -277,11 +279,15 @@ function ShapePreview({
   fill,
   stroke,
   sides,
+  square,
+  circle,
 }: {
   kind: ShapeKind;
   fill: string;
   stroke: string;
   sides?: number;
+  square?: boolean;
+  circle?: boolean;
 }) {
   const w = 40;
   const h = 40;
@@ -293,12 +299,18 @@ function ShapePreview({
   }).join(" ");
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden>
-      {kind === "rect" && (
-        <rect x={6} y={8} width={28} height={24} rx={3} fill={fill} stroke={stroke} strokeWidth={sw} />
-      )}
-      {kind === "ellipse" && (
-        <ellipse cx={20} cy={20} rx={14} ry={11} fill={fill} stroke={stroke} strokeWidth={sw} />
-      )}
+      {kind === "rect" &&
+        (square ? (
+          <rect x={8} y={8} width={24} height={24} rx={0} fill={fill} stroke={stroke} strokeWidth={sw} />
+        ) : (
+          <rect x={6} y={8} width={28} height={24} rx={3} fill={fill} stroke={stroke} strokeWidth={sw} />
+        ))}
+      {kind === "ellipse" &&
+        (circle ? (
+          <circle cx={20} cy={20} r={13} fill={fill} stroke={stroke} strokeWidth={sw} />
+        ) : (
+          <ellipse cx={20} cy={20} rx={14} ry={11} fill={fill} stroke={stroke} strokeWidth={sw} />
+        ))}
       {kind === "triangle" && (
         <polygon points="20,6 34,34 6,34" fill={fill} stroke={stroke} strokeWidth={sw} />
       )}

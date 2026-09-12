@@ -106,6 +106,8 @@ function TextContent({ layer }: { layer: TextLayer }) {
         paddingLeft: layer.padding + layer.indent,
         color: layer.color,
         background: layer.highlight ?? "transparent",
+        boxDecorationBreak: "clone",
+        WebkitBoxDecorationBreak: "clone",
         fontFamily: cssFontFamily(layer.fontFamily),
         fontSize: size,
         fontStyle: layer.italic ? "italic" : "normal",

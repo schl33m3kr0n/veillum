@@ -1,19 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { resumeHistory } from "@/lib/editor-store";
+import { endHistoryGesture } from "@/lib/editor-store";
 
-/** Resume history if a drag ended without the original pointerup (lost capture). */
+/** Commit a paused drag if the pointer was cancelled or the window lost focus. */
 export function HistoryGuard() {
   useEffect(() => {
-    const resume = () => resumeHistory();
-    window.addEventListener("pointerup", resume);
-    window.addEventListener("pointercancel", resume);
-    window.addEventListener("blur", resume);
+    const end = () => endHistoryGesture();
+    window.addEventListener("pointercancel", end);
+    window.addEventListener("blur", end);
     return () => {
-      window.removeEventListener("pointerup", resume);
-      window.removeEventListener("pointercancel", resume);
-      window.removeEventListener("blur", resume);
+      window.removeEventListener("pointercancel", end);
+      window.removeEventListener("blur", end);
     };
   }, []);
   return null;

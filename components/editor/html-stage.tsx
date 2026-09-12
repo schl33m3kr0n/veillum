@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useEditorStore } from "@/lib/editor-store";
+import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import { interpolatedLayer, nearPoint, radialGrid, triangleGridLines } from "@/lib/geometry";
 import { rgbToHex } from "@/lib/colors";
 import { extractRawPreview } from "@/lib/raw";
@@ -374,7 +374,9 @@ export default function HtmlStage({
   };
 
   const onPointerUp = () => {
-    useEditorStore.temporal.getState().resume();
+    if (drag.current && drag.current.id !== "__pan") {
+      endHistoryGesture();
+    }
     const store = useEditorStore.getState();
     if (draftPts && draftPts.length >= 4) {
       const t = store.tool;
@@ -485,7 +487,8 @@ export default function HtmlStage({
       oy: p.y,
       origins: moving.map((l) => ({ id: l.id, x: l.x, y: l.y })),
     };
-    useEditorStore.temporal.getState().pause();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    beginHistoryGesture();
   };
 
   const onDrop = async (e: React.DragEvent) => {
@@ -569,6 +572,7 @@ export default function HtmlStage({
       onPointerDown={onBoardPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
     >

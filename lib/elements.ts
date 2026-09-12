@@ -68,7 +68,9 @@ function mark(
 
 export const ELEMENT_CATALOG: CatalogElement[] = [
   { id: "rect", label: "Rectangle", group: "Basics", kind: "shape", shape: "rect", width: 180, height: 120 },
+  { id: "square", label: "Square", group: "Basics", kind: "shape", shape: "rect", width: 140, height: 140, defaults: { cornerRadius: 0 } },
   { id: "ellipse", label: "Ellipse", group: "Basics", kind: "shape", shape: "ellipse", width: 160, height: 120 },
+  { id: "circle", label: "Circle", group: "Basics", kind: "shape", shape: "ellipse", width: 140, height: 140 },
   { id: "triangle", label: "Triangle", group: "Basics", kind: "shape", shape: "triangle", width: 140, height: 128 },
   { id: "diamond", label: "Diamond", group: "Basics", kind: "shape", shape: "hexagon", width: 120, height: 140, defaults: { sides: 4 } },
   { id: "polygon", label: "Hexagon", group: "Basics", kind: "shape", shape: "hexagon", width: 140, height: 140, defaults: { sides: 6 } },

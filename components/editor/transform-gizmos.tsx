@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore } from "@/lib/editor-store";
+import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import type { Layer } from "@/lib/types";
 import { snapAabbResize } from "@/lib/snap";
 import {
@@ -100,13 +100,15 @@ function SingleGizmo({ layer }: { layer: Layer }) {
       if (!drag.current) return;
       drag.current = null;
       useEditorStore.getState().setSnapGuides([]);
-      useEditorStore.temporal.getState().resume();
+      endHistoryGesture();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [layer.id]);
 
@@ -126,7 +128,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
       ? (Math.atan2(page.y - center.y, page.x - center.x) * 180) / Math.PI + 90
       : 0;
     drag.current = { kind, origin, startAngle, shift: e.shiftKey };
-    useEditorStore.temporal.getState().pause();
+    beginHistoryGesture();
   };
 
   return (
@@ -196,13 +198,15 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
       if (!drag.current) return;
       drag.current = null;
       useEditorStore.getState().setSnapGuides([]);
-      useEditorStore.temporal.getState().resume();
+      endHistoryGesture();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [layers.map((l) => l.id).join(",")]);
 
@@ -233,7 +237,7 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
       startAngle,
       shift: e.shiftKey,
     };
-    useEditorStore.temporal.getState().pause();
+    beginHistoryGesture();
   };
 
   return <GizmoSvg box={box} rotation={0} onStart={start} />;

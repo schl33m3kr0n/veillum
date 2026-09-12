@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore, pauseHistory, resumeHistory } from "@/lib/editor-store";
+import { useEditorStore, beginHistoryGesture, endHistoryGesture } from "@/lib/editor-store";
 import { cssFontFamily, cssFontWeight } from "@/lib/fonts";
 import type { TextLayer } from "@/lib/types";
 
@@ -17,8 +17,11 @@ export function TextOverlay() {
   );
 
   useEffect(() => {
+    if (!editingTextId) return;
+    beginHistoryGesture();
     ref.current?.focus();
     ref.current?.select();
+    return () => endHistoryGesture();
   }, [editingTextId]);
 
   if (!layer) return null;
@@ -32,7 +35,6 @@ export function TextOverlay() {
       autoFocus
       value={layer.text}
       onChange={(e) => {
-        pauseHistory();
         useEditorStore.getState().updateLayer(layer.id, { text: e.target.value });
       }}
       onPointerDown={(e) => e.stopPropagation()}
@@ -43,7 +45,6 @@ export function TextOverlay() {
         }
       }}
       onBlur={() => {
-        resumeHistory();
         useEditorStore.getState().setEditingText(null);
       }}
       className="absolute z-20 resize-none border border-primary bg-[#f7f1e6]/95 p-2 shadow-lg outline-none"

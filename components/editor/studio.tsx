@@ -17,6 +17,7 @@ import { ColorStudio } from "./color-studio";
 import { Timeline } from "./timeline";
 import { Rulers } from "./rulers";
 import { TextOverlay } from "./text-overlay";
+import { TextFormatBar } from "./text-format-bar";
 import { useEditorHotkeys } from "./use-hotkeys";
 import { ShapeWindow } from "./shape-window";
 import HtmlStage from "./html-stage";
@@ -81,6 +82,7 @@ export function Studio() {
               )}
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
+              <TextFormatBar />
               {tool === "shape" || selected?.type === "shape" ? <ShapeWindow /> : null}
             </div>
             <Timeline />

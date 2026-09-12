@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore } from "@/lib/editor-store";
+import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import type { ShapeLayer } from "@/lib/types";
 import { pieGeometry, wedgeFromLocal } from "@/lib/shapes";
 import { localToPage, pageToLocal } from "@/lib/transform";
@@ -70,13 +70,15 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     const onUp = () => {
       if (!drag.current) return;
       drag.current = null;
-      useEditorStore.temporal.getState().resume();
+      endHistoryGesture();
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [layer.id]);
 
@@ -84,7 +86,7 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     e.stopPropagation();
     e.preventDefault();
     drag.current = { kind, origin: { ...layerRef.current } };
-    useEditorStore.temporal.getState().pause();
+    beginHistoryGesture();
   };
 
   const w = layer.width;

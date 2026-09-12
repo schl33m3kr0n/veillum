@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { bezierPath, nearPoint } from "@/lib/geometry";
-import { useEditorStore } from "@/lib/editor-store";
+import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import type { BezierLayer, BezierPoint } from "@/lib/types";
 
 const HANDLE = "#c45c26";
@@ -192,20 +192,22 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
     const onUp = () => {
       if (!drag.current) return;
       drag.current = null;
-      useEditorStore.temporal.getState().resume();
       const current = useEditorStore
         .getState()
         .layers.find((l) => l.id === layer.id);
       if (current?.type === "bezier") {
         commit(current.points, true);
       }
+      endHistoryGesture();
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     return () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
     };
   }, [layer.id]);
 
@@ -223,7 +225,7 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
       origin: { ...p },
       alt: e.altKey,
     };
-    useEditorStore.temporal.getState().pause();
+    beginHistoryGesture();
   };
 
   const onAnchorClick = (e: React.MouseEvent, index: number) => {

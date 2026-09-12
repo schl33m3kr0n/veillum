@@ -1,16 +1,6 @@
 "use client";
 
 import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  Superscript,
-  Subscript,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
   Undo2,
   Redo2,
   Copy,
@@ -26,21 +16,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Toggle } from "@/components/ui/toggle";
 import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { type TextAlign, type TextLayer } from "@/lib/types";
 import {
   documentToSvg,
   downloadBlob,
   projectJson,
 } from "@/lib/export";
-import { NumberField } from "./fields";
-import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
 import Link from "next/link";
@@ -50,16 +36,6 @@ export function TopBar() {
   const redo = useTemporalStore((s) => s.redo);
   const canUndo = useTemporalStore((s) => s.pastStates.length > 0);
   const canRedo = useTemporalStore((s) => s.futureStates.length > 0);
-  const selectedIds = useEditorStore((s) => s.selectedIds);
-  const layers = useEditorStore((s) => s.layers);
-  const text = layers.find(
-    (l): l is TextLayer => l.id === selectedIds[0] && l.type === "text",
-  );
-  const update = useEditorStore((s) => s.updateLayer);
-
-  const patchText = (partial: Partial<TextLayer>) => {
-    if (text) update(text.id, partial);
-  };
 
   return (
     <header className="flex h-11 shrink-0 items-center gap-1 border-b border-border/70 bg-card px-2">
@@ -115,95 +91,6 @@ export function TopBar() {
       <Button size="icon-sm" variant="ghost" onClick={() => useEditorStore.getState().paste()}>
         <ClipboardPaste />
       </Button>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      <FontSelect
-        value={text?.fontFamily ?? "Newsreader"}
-        onValueChange={(fontFamily) => patchText({ fontFamily })}
-        disabled={!text}
-        className="w-44"
-      />
-      <NumberField
-        value={text?.fontSize ?? 16}
-        onChange={(v) => patchText({ fontSize: v })}
-        className="w-16"
-        steppers={false}
-      />
-      <Toggle
-        size="sm"
-        pressed={!!text?.bold}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ bold: v })}
-        aria-label="Bold"
-      >
-        <Bold />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={!!text?.italic}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ italic: v })}
-        aria-label="Italic"
-      >
-        <Italic />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={!!text?.underline}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ underline: v })}
-        aria-label="Underline"
-      >
-        <Underline />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={!!text?.strikethrough}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ strikethrough: v })}
-        aria-label="Strikethrough"
-      >
-        <Strikethrough />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={!!text?.superscript}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ superscript: v, subscript: v ? false : text?.subscript })}
-        aria-label="Superscript"
-      >
-        <Superscript />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={!!text?.subscript}
-        disabled={!text}
-        onPressedChange={(v) => patchText({ subscript: v, superscript: v ? false : text?.superscript })}
-        aria-label="Subscript"
-      >
-        <Subscript />
-      </Toggle>
-      <Separator orientation="vertical" className="mx-1 h-6" />
-      {(
-        [
-          ["left", AlignLeft],
-          ["center", AlignCenter],
-          ["right", AlignRight],
-          ["justify", AlignJustify],
-        ] as const
-      ).map(([align, Icon]) => (
-        <Toggle
-          key={align}
-          size="sm"
-          pressed={text?.align === align}
-          disabled={!text}
-          onPressedChange={() =>
-            useEditorStore.getState().setTextAlign(align as TextAlign)
-          }
-          aria-label={align}
-        >
-          <Icon />
-        </Toggle>
-      ))}
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
       <CombineTools compact />

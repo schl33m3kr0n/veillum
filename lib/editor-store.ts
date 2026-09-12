@@ -730,11 +730,59 @@ export function useTemporalStore<T>(
   );
 }
 
+type HistorySlice = { page: Page; layers: Layer[] };
+
+let gestureDepth = 0;
+let gestureSnapshot: HistorySlice | null = null;
+
+function historySlice(s: { page: Page; layers: Layer[] }): HistorySlice {
+  return { page: s.page, layers: s.layers };
+}
+
+/** Pause undo while a pointer drag is in progress. Nested calls share one snapshot. */
+export function beginHistoryGesture() {
+  if (gestureDepth === 0) {
+    gestureSnapshot = historySlice(useEditorStore.getState());
+    useEditorStore.temporal.getState().pause();
+  }
+  gestureDepth += 1;
+}
+
+/** Resume undo and record a single step from the gesture start to the live page. */
+export function endHistoryGesture() {
+  if (gestureDepth === 0) {
+    useEditorStore.temporal.getState().resume();
+    return;
+  }
+  gestureDepth -= 1;
+  if (gestureDepth > 0) return;
+  const snap = gestureSnapshot;
+  gestureSnapshot = null;
+  const temporal = useEditorStore.temporal.getState() as TemporalState<EditorState> & {
+    _handleSet: (
+      pastState: HistorySlice,
+      replace: undefined,
+      currentState: HistorySlice,
+    ) => void;
+  };
+  temporal.resume();
+  if (!snap) return;
+  const current = historySlice(useEditorStore.getState());
+  if (snap.page === current.page && snap.layers === current.layers) return;
+  temporal._handleSet(snap, undefined, current);
+}
+
 export function pauseHistory() {
-  useEditorStore.temporal.getState().pause();
+  beginHistoryGesture();
 }
 
 export function resumeHistory() {
+  if (gestureDepth > 0) {
+    gestureDepth = 1;
+    endHistoryGesture();
+    return;
+  }
+  gestureSnapshot = null;
   useEditorStore.temporal.getState().resume();
 }
 
