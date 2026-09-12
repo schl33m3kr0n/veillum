@@ -31,6 +31,8 @@ export function ShapeAdjustments({
   const shapeStarPoints = useEditorStore((s) => s.shapeStarPoints);
   const shapeInnerRatio = useEditorStore((s) => s.shapeInnerRatio);
   const shapeArrowHead = useEditorStore((s) => s.shapeArrowHead);
+  const shapeWedge = useEditorStore((s) => s.shapeWedge);
+  const shapeTrackFill = useEditorStore((s) => s.shapeTrackFill);
 
   const kind = layer?.shape ?? shapeKind;
   const fillEnabled = layer?.fillEnabled ?? shapeFillEnabled;
@@ -44,6 +46,8 @@ export function ShapeAdjustments({
   const starPoints = layer?.starPoints ?? shapeStarPoints;
   const innerRatio = layer?.innerRatio ?? shapeInnerRatio;
   const arrowHead = layer?.arrowHead ?? shapeArrowHead;
+  const wedge = layer?.wedge ?? shapeWedge;
+  const trackFill = layer?.trackFill ?? shapeTrackFill;
 
   const patch = (partial: Partial<ShapeLayer>) => {
     const s = useEditorStore.getState();
@@ -61,6 +65,8 @@ export function ShapeAdjustments({
     if (partial.starPoints != null) s.setShapeStarPoints(partial.starPoints);
     if (partial.innerRatio != null) s.setShapeInnerRatio(partial.innerRatio);
     if (partial.arrowHead != null) s.setShapeArrowHead(partial.arrowHead);
+    if (partial.wedge != null) s.setShapeWedge(partial.wedge);
+    if (partial.trackFill != null) s.setShapeTrackFill(partial.trackFill);
   };
 
   return (
@@ -170,6 +176,31 @@ export function ShapeAdjustments({
             onChange={(value) => patch({ innerRatio: value })}
             format={(v) => `${Math.round(v * 100)}%`}
           />
+        </>
+      )}
+      {kind === "pie" && (
+        <>
+          <SliderField
+            label="Wedge"
+            value={wedge * 100}
+            min={2}
+            max={98}
+            step={1}
+            onChange={(value) => patch({ wedge: value / 100 })}
+            format={(v) => `${Math.round(v)}%`}
+          />
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Rest
+            </span>
+            <input
+              type="color"
+              value={trackFill}
+              title="Rest"
+              onChange={(e) => patch({ trackFill: e.target.value })}
+              className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5"
+            />
+          </div>
         </>
       )}
       {kind === "arrow" && (

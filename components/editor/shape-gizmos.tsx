@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useEditorStore } from "@/lib/editor-store";
 import type { ShapeLayer } from "@/lib/types";
+import { pieGeometry, wedgeFromLocal } from "@/lib/shapes";
 import { localToPage, pageToLocal } from "@/lib/transform";
 
 const YELLOW = "#e8b923";
 
-type AdjHandle = "radius" | "inner" | "head";
+type AdjHandle = "radius" | "inner" | "head" | "wedge";
 
 export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
   const drag = useRef<{ kind: AdjHandle; origin: ShapeLayer } | null>(null);
@@ -51,6 +52,17 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
         });
         return;
       }
+      if (kind === "wedge") {
+        s.updateLayer(origin.id, {
+          wedge: wedgeFromLocal(
+            local.x,
+            local.y,
+            origin.width / 2,
+            origin.height / 2,
+          ),
+        });
+        return;
+      }
       s.updateLayer(origin.id, {
         arrowHead: Math.max(8, Math.min(origin.width * 0.6, origin.width - local.x)),
       });
@@ -88,8 +100,12 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     };
   })();
   const headX = w - (layer.arrowHead ?? 16);
+  const pie = pieGeometry(w, h, layer.wedge ?? 0.38, 0);
   const show =
-    layer.shape === "rect" || layer.shape === "star" || layer.shape === "arrow";
+    layer.shape === "rect" ||
+    layer.shape === "star" ||
+    layer.shape === "arrow" ||
+    layer.shape === "pie";
   if (!show) return null;
 
   return (
@@ -122,6 +138,15 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
           ly={h / 2}
           title="Arrowhead"
           onPointerDown={(e) => start(e, "head")}
+        />
+      )}
+      {layer.shape === "pie" && (
+        <YellowHandle
+          layer={layer}
+          lx={pie.handleX}
+          ly={pie.handleY}
+          title="Wedge"
+          onPointerDown={(e) => start(e, "wedge")}
         />
       )}
     </svg>

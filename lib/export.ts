@@ -1,6 +1,6 @@
 import { cssFontWeight } from "./fonts";
 import { bezierPath } from "./geometry";
-import { shapeSvgPoints } from "./shapes";
+import { shapeSvgPoints, pieGeometry } from "./shapes";
 import { svgNodesToMarkup } from "./svg-mark";
 import type { BezierLayer, Layer, Page, PathLayer, ShapeLayer, TextLayer } from "./types";
 import { displayText } from "./text";
@@ -55,6 +55,16 @@ function layerToSvg(layer: Layer): string {
     const geo = shapeSvgPoints(s);
     if (s.shape === "svg") {
       return `<g ${t} ${op}>${svgNodesToMarkup(s)}</g>`;
+    }
+    if (s.shape === "pie") {
+      const pie = pieGeometry(s.width, s.height, s.wedge ?? 0.38, 0);
+      const rest = s.trackFill || "#efe6d8";
+      const wedge = s.fillEnabled
+        ? pie.full
+          ? `<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="${fill}"/>`
+          : `<path d="${pie.d}" fill="${fill}"/>`
+        : "";
+      return `<g ${t} ${op}><ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="${rest}"/>${wedge}<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="none" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/></g>`;
     }
     if (s.shape === "ellipse") {
       return `<ellipse ${t} ${op} cx="${s.width / 2}" cy="${s.height / 2}" rx="${s.width / 2}" ry="${s.height / 2}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;

@@ -87,6 +87,7 @@ export type ShapeKind =
   | "hexagon"
   | "star"
   | "arrow"
+  | "pie"
   | "svg";
 
 export type SvgPaint = "fill" | "stroke" | "none" | "accent";
@@ -269,6 +270,8 @@ export interface ShapeLayer extends LayerBase {
   starPoints: number;
   innerRatio: number;
   arrowHead: number;
+  wedge: number;
+  trackFill: string;
   svgViewBox?: string;
   svgNodes?: SvgNode[];
 }

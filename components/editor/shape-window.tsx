@@ -319,6 +319,12 @@ function ShapePreview({
           <polygon points="34,20 24,14 24,26" fill={stroke} />
         </>
       )}
+      {kind === "pie" && (
+        <>
+          <circle cx={20} cy={20} r={13} fill="#efe6d8" stroke={stroke} strokeWidth={sw} />
+          <path d="M20 20 L20 7 A13 13 0 0 1 31.5 27 Z" fill={fill} />
+        </>
+      )}
     </svg>
   );
 }

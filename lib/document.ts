@@ -110,6 +110,8 @@ export function createShapeLayer(
     starPoints: 5,
     innerRatio: 0.4,
     arrowHead: 16,
+    wedge: 0.38,
+    trackFill: "#efe6d8",
     svgViewBox: "0 0 64 64",
     svgNodes: [],
     ...overrides,

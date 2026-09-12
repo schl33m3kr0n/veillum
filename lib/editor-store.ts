@@ -6,6 +6,7 @@ import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
 import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
 import { layerAabb } from "./transform";
+import { clampWedge } from "./shapes";
 import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
@@ -48,6 +49,8 @@ interface EditorState {
   shapeStarPoints: number;
   shapeInnerRatio: number;
   shapeArrowHead: number;
+  shapeWedge: number;
+  shapeTrackFill: string;
   color: string;
   highlight: string;
   zoom: number;
@@ -75,6 +78,8 @@ interface EditorState {
   setShapeStarPoints: (points: number) => void;
   setShapeInnerRatio: (ratio: number) => void;
   setShapeArrowHead: (size: number) => void;
+  setShapeWedge: (wedge: number) => void;
+  setShapeTrackFill: (color: string) => void;
   setColor: (color: string) => void;
   setHighlight: (color: string) => void;
   setZoom: (zoom: number) => void;
@@ -166,6 +171,8 @@ export const useEditorStore = create<EditorState>()(
       shapeStarPoints: 5,
       shapeInnerRatio: 0.4,
       shapeArrowHead: 16,
+      shapeWedge: 0.38,
+      shapeTrackFill: "#efe6d8",
       color: "#1c1916",
       highlight: "#f5d76e",
       zoom: 1,
@@ -193,6 +200,8 @@ export const useEditorStore = create<EditorState>()(
       setShapeStarPoints: (shapeStarPoints) => set({ shapeStarPoints }),
       setShapeInnerRatio: (shapeInnerRatio) => set({ shapeInnerRatio }),
       setShapeArrowHead: (shapeArrowHead) => set({ shapeArrowHead }),
+      setShapeWedge: (shapeWedge) => set({ shapeWedge: clampWedge(shapeWedge) }),
+      setShapeTrackFill: (shapeTrackFill) => set({ shapeTrackFill }),
       setColor: (color) =>
         set((s) => ({ color, recentColors: rememberColor(s.recentColors, color) })),
       setHighlight: (highlight) => set({ highlight }),
@@ -328,6 +337,8 @@ export const useEditorStore = create<EditorState>()(
           starPoints: s.shapeStarPoints,
           innerRatio: s.shapeInnerRatio,
           arrowHead: s.shapeArrowHead,
+          wedge: s.shapeWedge,
+          trackFill: s.shapeTrackFill,
         });
         get().addLayer(layer);
         return layer.id;
@@ -431,6 +442,8 @@ export const useEditorStore = create<EditorState>()(
           starPoints: s.shapeStarPoints,
           innerRatio: s.shapeInnerRatio,
           arrowHead: s.shapeArrowHead,
+          wedge: s.shapeWedge,
+          trackFill: s.shapeTrackFill,
           ...defaults,
         });
         get().addLayer(layer);
@@ -442,6 +455,8 @@ export const useEditorStore = create<EditorState>()(
           shapeStarPoints: layer.starPoints,
           shapeInnerRatio: layer.innerRatio,
           shapeArrowHead: layer.arrowHead,
+          shapeWedge: layer.wedge,
+          shapeTrackFill: layer.trackFill,
           shapeFillEnabled: layer.fillEnabled,
           shapeStrokeEnabled: layer.strokeEnabled,
           shapeStrokeWidth: layer.strokeWidth,

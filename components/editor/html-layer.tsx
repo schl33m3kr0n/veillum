@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { bezierPath, dashArray } from "@/lib/geometry";
-import { shapeSvgPoints } from "@/lib/shapes";
+import { pieGeometry, shapeSvgPoints } from "@/lib/shapes";
 import { resolveSvgPaint, svgMarkViewBox, svgNodeStrokeWidth } from "@/lib/svg-mark";
 import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
@@ -258,6 +258,48 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
           strokeDasharray={dash || undefined}
         />
       )}
+      {layer.shape === "pie" && (() => {
+        const pad = layer.strokeWidth / 2;
+        const pie = pieGeometry(w, h, layer.wedge ?? 0.38, pad);
+        return (
+          <>
+            <ellipse
+              cx={pie.cx}
+              cy={pie.cy}
+              rx={pie.rx}
+              ry={pie.ry}
+              fill={layer.trackFill || "#efe6d8"}
+              stroke="none"
+            />
+            {layer.fillEnabled && (
+              pie.full ? (
+                <ellipse
+                  cx={pie.cx}
+                  cy={pie.cy}
+                  rx={pie.rx}
+                  ry={pie.ry}
+                  fill={fill}
+                  stroke="none"
+                />
+              ) : (
+                <path d={pie.d} fill={fill} stroke="none" />
+              )
+            )}
+            {strokeOn && (
+              <ellipse
+                cx={pie.cx}
+                cy={pie.cy}
+                rx={pie.rx}
+                ry={pie.ry}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={layer.strokeWidth}
+                strokeDasharray={dash || undefined}
+              />
+            )}
+          </>
+        );
+      })()}
       {geo.polygon && (
         <polygon
           points={geo.polygon}

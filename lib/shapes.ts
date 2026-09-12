@@ -16,6 +16,7 @@ export const SHAPE_KINDS: { id: ShapeKind; label: string }[] = [
   { id: "star", label: "Star" },
   { id: "line", label: "Line" },
   { id: "arrow", label: "Arrow" },
+  { id: "pie", label: "Pie" },
 ];
 
 export function polygonPoints(
@@ -77,6 +78,58 @@ export function arrowGeometry(
     y2: y,
     points: `${w - 1},${y} ${w - size},${y - size / 2} ${w - size},${y + size / 2}`,
   };
+}
+
+export function clampWedge(value: number): number {
+  if (!Number.isFinite(value)) return 0.38;
+  return Math.min(0.98, Math.max(0.02, value));
+}
+
+export function pieGeometry(
+  w: number,
+  h: number,
+  fraction: number,
+  inset = 0,
+): {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  d: string;
+  handleX: number;
+  handleY: number;
+  full: boolean;
+} {
+  const cx = w / 2;
+  const cy = h / 2;
+  const rx = Math.max(1, w / 2 - inset);
+  const ry = Math.max(1, h / 2 - inset);
+  const wedge = clampWedge(fraction);
+  const start = -Math.PI / 2;
+  const sweep = wedge * Math.PI * 2;
+  const end = start + sweep;
+  const x0 = cx + rx * Math.cos(start);
+  const y0 = cy + ry * Math.sin(start);
+  const x1 = cx + rx * Math.cos(end);
+  const y1 = cy + ry * Math.sin(end);
+  const large = sweep > Math.PI ? 1 : 0;
+  return {
+    cx,
+    cy,
+    rx,
+    ry,
+    d: `M ${cx} ${cy} L ${x0} ${y0} A ${rx} ${ry} 0 ${large} 1 ${x1} ${y1} Z`,
+    handleX: x1,
+    handleY: y1,
+    full: wedge >= 0.97,
+  };
+}
+
+export function wedgeFromLocal(x: number, y: number, cx: number, cy: number): number {
+  let ang = Math.atan2(y - cy, x - cx) + Math.PI / 2;
+  if (ang < 0) ang += Math.PI * 2;
+  if (ang >= Math.PI * 2) ang -= Math.PI * 2;
+  return clampWedge(ang / (Math.PI * 2));
 }
 
 export function shapeSvgPoints(layer: Pick<ShapeLayer, "shape" | "width" | "height" | "strokeWidth" | "sides" | "starPoints" | "innerRatio" | "arrowHead">) {

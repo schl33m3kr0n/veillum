@@ -77,6 +77,7 @@ export const ELEMENT_CATALOG: CatalogElement[] = [
   { id: "star", label: "Star", group: "Basics", kind: "shape", shape: "star", width: 140, height: 140, defaults: { starPoints: 5, innerRatio: 0.4 } },
   { id: "line", label: "Line", group: "Basics", kind: "shape", shape: "line", width: 200, height: 24 },
   { id: "arrow", label: "Arrow", group: "Basics", kind: "shape", shape: "arrow", width: 200, height: 48 },
+  { id: "pie", label: "Pie", group: "Basics", kind: "shape", shape: "pie", width: 160, height: 160, defaults: { wedge: 0.38, trackFill: "#efe6d8", strokeEnabled: true, strokeWidth: 1.5 } },
 
   { id: "frame-rect", label: "Frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 0 } },
   { id: "frame-round", label: "Round frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 24 } },
