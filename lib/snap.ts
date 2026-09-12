@@ -75,7 +75,7 @@ function dimensionGuides(
     },
   ];
 
-  const widthHits = boxes.filter((b) => Math.abs(b.width - mw) <= 0.75);
+  const widthHits = boxes.filter((b) => Math.abs(b.width - mw) <= THRESHOLD);
   if (widthHits.length > 0) {
     guides.push({
       axis: "y",
@@ -94,7 +94,7 @@ function dimensionGuides(
     }
   }
 
-  const heightHits = boxes.filter((b) => Math.abs(b.height - mh) <= 0.75);
+  const heightHits = boxes.filter((b) => Math.abs(b.height - mh) <= THRESHOLD);
   if (heightHits.length > 0) {
     guides.push({
       axis: "x",
@@ -252,13 +252,18 @@ export function snapAabbResize(
         });
       }
     }
-    cands.sort((a, b) => a.dist - b.dist);
+    cands.sort((a, b) => {
+      if (a.size !== b.size) return a.size ? -1 : 1;
+      return a.dist - b.dist;
+    });
     const best = cands[0];
     if (best) {
       left = best.left;
       width = best.width;
-      if (best.edge !== undefined) guides.push({ axis: "x", pos: best.edge });
     }
+    const newEdge = handle.includes("e") ? left + width : left;
+    const aligned = uniqueNear(xs, newEdge, THRESHOLD);
+    if (aligned !== null) guides.push({ axis: "x", pos: aligned });
   }
 
   if (moveH) {
@@ -285,13 +290,18 @@ export function snapAabbResize(
         });
       }
     }
-    cands.sort((a, b) => a.dist - b.dist);
+    cands.sort((a, b) => {
+      if (a.size !== b.size) return a.size ? -1 : 1;
+      return a.dist - b.dist;
+    });
     const best = cands[0];
     if (best) {
       top = best.top;
       height = best.height;
-      if (best.edge !== undefined) guides.push({ axis: "y", pos: best.edge });
     }
+    const newEdge = handle.includes("s") ? top + height : top;
+    const aligned = uniqueNear(ys, newEdge, THRESHOLD);
+    if (aligned !== null) guides.push({ axis: "y", pos: aligned });
   }
 
   guides.push(

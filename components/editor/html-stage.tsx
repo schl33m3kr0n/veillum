@@ -629,7 +629,7 @@ export default function HtmlStage({
             top: PAGE_PAD_Y,
             width: page.width,
             height: page.height,
-            zIndex: 20,
+            zIndex: 22,
           }}
         >
           {gizmoLayers.length > 0 && <TransformGizmos layers={gizmoLayers} />}
