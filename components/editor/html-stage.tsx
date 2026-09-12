@@ -634,35 +634,53 @@ export default function HtmlStage({
             zIndex: 20,
           }}
         >
+          {gizmoLayers.length > 0 && <TransformGizmos layers={gizmoLayers} />}
+          {editShape && <ShapeAdjustGizmos layer={editShape} />}
           {guides.length > 0 && (
             <svg className="absolute inset-0 h-full w-full overflow-visible">
               {guides.map((guide, i) =>
                 guide.axis === "x" ? (
-                  <line
-                    key={`x-${i}`}
-                    x1={guide.pos}
-                    y1={-40}
-                    x2={guide.pos}
-                    y2={page.height + 40}
-                    stroke="#f5b4c0"
-                    strokeWidth={1}
-                  />
+                  <g key={`x-${i}`}>
+                    <line
+                      x1={guide.pos}
+                      y1={-48}
+                      x2={guide.pos}
+                      y2={page.height + 48}
+                      stroke="#fff"
+                      strokeWidth={4}
+                    />
+                    <line
+                      x1={guide.pos}
+                      y1={-48}
+                      x2={guide.pos}
+                      y2={page.height + 48}
+                      stroke="#ff4fa3"
+                      strokeWidth={2}
+                    />
+                  </g>
                 ) : (
-                  <line
-                    key={`y-${i}`}
-                    x1={-40}
-                    y1={guide.pos}
-                    x2={page.width + 40}
-                    y2={guide.pos}
-                    stroke="#f5b4c0"
-                    strokeWidth={1}
-                  />
+                  <g key={`y-${i}`}>
+                    <line
+                      x1={-48}
+                      y1={guide.pos}
+                      x2={page.width + 48}
+                      y2={guide.pos}
+                      stroke="#fff"
+                      strokeWidth={4}
+                    />
+                    <line
+                      x1={-48}
+                      y1={guide.pos}
+                      x2={page.width + 48}
+                      y2={guide.pos}
+                      stroke="#ff4fa3"
+                      strokeWidth={2}
+                    />
+                  </g>
                 ),
               )}
             </svg>
           )}
-          {gizmoLayers.length > 0 && <TransformGizmos layers={gizmoLayers} />}
-          {editShape && <ShapeAdjustGizmos layer={editShape} />}
         </div>
       </div>
       <span className="sr-only">{shapeKind}</span>

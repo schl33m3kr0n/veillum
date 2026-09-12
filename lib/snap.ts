@@ -3,7 +3,7 @@ import { groupAabb, layerAabb } from "./transform";
 
 export type SnapGuide = { axis: "x" | "y"; pos: number };
 
-const THRESHOLD = 6;
+const THRESHOLD = 10;
 
 function uniqueNear(values: number[], value: number, threshold: number): number | null {
   let best: number | null = null;
