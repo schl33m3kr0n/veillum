@@ -17,7 +17,7 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
       if (!drag.current) return;
-      const pageEl = document.querySelector("[data-vellum-page]");
+      const pageEl = document.querySelector("[data-veillum-page]");
       if (!pageEl) return;
       const zoom = useEditorStore.getState().zoom;
       const rect = pageEl.getBoundingClientRect();

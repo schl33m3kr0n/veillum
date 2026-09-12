@@ -70,7 +70,7 @@ export function TopBar() {
     <header className="flex h-11 shrink-0 items-center gap-1 border-b border-border/70 bg-card px-2">
       <div className="flex items-center gap-1 pr-2">
         <span className="px-2 font-[family-name:var(--font-fraunces)] text-base tracking-tight">
-          Vellum
+          veillum
         </span>
         <Button size="sm" variant="ghost" asChild>
           <Link href="/die">Die</Link>
@@ -266,21 +266,21 @@ function SidebarToggle() {
 
 function ExportMenu() {
   const pageElement = () =>
-    document.querySelector("[data-vellum-page]") as HTMLElement | null;
+    document.querySelector("[data-veillum-page]") as HTMLElement | null;
 
   const exportDoc = async (format: "png" | "jpeg" | "webp" | "svg" | "json") => {
     const { page, layers } = useEditorStore.getState();
     if (format === "json") {
       downloadBlob(
         new Blob([projectJson(page, layers)], { type: "application/json" }),
-        "vellum.json",
+        "veillum.json",
       );
       return;
     }
     if (format === "svg") {
       downloadBlob(
         new Blob([documentToSvg(page, layers)], { type: "image/svg+xml" }),
-        "vellum.svg",
+        "veillum.svg",
       );
       return;
     }
@@ -297,7 +297,7 @@ function ExportMenu() {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, mime, 0.92),
     );
-    if (blob) downloadBlob(blob, `vellum.${format === "jpeg" ? "jpg" : format}`);
+    if (blob) downloadBlob(blob, `veillum.${format === "jpeg" ? "jpg" : format}`);
   };
 
   const flatten = async () => {
@@ -322,7 +322,7 @@ function ExportMenu() {
         <DropdownMenuItem onClick={() => exportDoc("webp")}>WebP</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("svg")}>SVG</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("json")}>
-          Vellum JSON
+          veillum JSON
         </DropdownMenuItem>
         <DropdownMenuItem onClick={flatten}>Rasterize page</DropdownMenuItem>
       </DropdownMenuContent>

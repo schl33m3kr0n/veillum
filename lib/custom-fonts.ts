@@ -3,7 +3,7 @@ export type CustomFont = {
   dataUrl: string;
 };
 
-const KEY = "vellum-custom-fonts";
+const KEY = "veillum-custom-fonts";
 const MAX_FONTS = 12;
 const MAX_BYTES = 2_500_000;
 

@@ -30,7 +30,7 @@ const HANDLES: { id: HandleId; x: number; y: number; cursor: string; kind: "corn
   ];
 
 function clientToPage(clientX: number, clientY: number) {
-  const pageEl = document.querySelector("[data-vellum-page]");
+  const pageEl = document.querySelector("[data-veillum-page]");
   if (!pageEl) return null;
   const zoom = useEditorStore.getState().zoom;
   const rect = pageEl.getBoundingClientRect();

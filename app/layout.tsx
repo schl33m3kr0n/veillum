@@ -3,7 +3,7 @@ import { fontVariables, instrument } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vellum — design studio",
+  title: "veillum — design studio",
   description:
     "A page studio for type, drawing, photographs, layers, and animation.",
 };

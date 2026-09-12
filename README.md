@@ -1,6 +1,6 @@
-# Vellum
+# veillum
 
-Vellum is a page studio for type, drawing, photographs, and motion. Open a spread, write on it, mark it up, develop a picture, then export a raster or SVG.
+veillum is a page studio for type, drawing, photographs, and motion. Open a spread, write on it, mark it up, develop a picture, then export a raster or SVG.
 
 ## Run locally
 
@@ -19,7 +19,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Draw.** Pencil, pen, and highlighter, plus a Shapes window. Selected shapes keep yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
 
-**Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — Vellum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
+**Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 
 **Color.** Wheel, hex field, highlighter swatch, recent colors, and named palettes.
 
@@ -27,7 +27,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Motion.** Add keyframes for position, scale, rotation, and opacity. Play interpolates along the timeline.
 
-**Output.** Export PNG, JPEG, WebP, SVG, or a Vellum JSON project. Rasterize flattens the page to a single bitmap layer.
+**Output.** Export PNG, JPEG, WebP, SVG, or a veillum JSON project. Rasterize flattens the page to a single bitmap layer.
 
 ## Shortcuts
 

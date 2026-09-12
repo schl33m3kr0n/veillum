@@ -132,7 +132,7 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
   const oy = layer.y;
 
   const clientToLocal = (clientX: number, clientY: number) => {
-    const pageEl = document.querySelector("[data-vellum-page]");
+    const pageEl = document.querySelector("[data-veillum-page]");
     if (!pageEl) return null;
     const zoom = useEditorStore.getState().zoom;
     const rect = pageEl.getBoundingClientRect();

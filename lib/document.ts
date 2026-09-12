@@ -164,7 +164,7 @@ export function createDefaultPage(): Page {
     margins: { top: 56, right: 56, bottom: 64, left: 56 },
     header: {
       enabled: true,
-      text: "Vellum  ·  Studio",
+      text: "veillum  ·  Studio",
       fontFamily: "Instrument Sans",
       fontSize: 11,
       color: "#7a7268",
