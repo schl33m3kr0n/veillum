@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/lib/editor-store";
-import { interpolatedLayer, nearPoint, triangleGridLines } from "@/lib/geometry";
+import { interpolatedLayer, nearPoint, radialGrid, triangleGridLines } from "@/lib/geometry";
 import { rgbToHex } from "@/lib/colors";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
@@ -431,6 +431,7 @@ export default function HtmlStage({
   );
 
   const gridLines: number[][] = [];
+  const gridCircles: { cx: number; cy: number; r: number }[] = [];
   if (page.grid.visible && page.grid.type === "square") {
     for (let x = 0; x <= page.width; x += page.grid.size) {
       gridLines.push([x, 0, x, page.height]);
@@ -442,6 +443,10 @@ export default function HtmlStage({
     gridLines.push(
       ...triangleGridLines(page.width, page.height, page.grid.size),
     );
+  } else if (page.grid.visible && page.grid.type === "radial") {
+    const radial = radialGrid(page.width, page.height, page.grid.size);
+    gridLines.push(...radial.lines);
+    gridCircles.push(...radial.circles);
   }
 
   const draftStroke =
@@ -546,11 +551,21 @@ export default function HtmlStage({
           <svg className="pointer-events-none absolute inset-0 h-full w-full">
             {gridLines.map((pts, i) => (
               <line
-                key={i}
+                key={`l-${i}`}
                 x1={pts[0]}
                 y1={pts[1]}
                 x2={pts[2]}
                 y2={pts[3]}
+                stroke="rgba(28,25,22,0.12)"
+              />
+            ))}
+            {gridCircles.map((c, i) => (
+              <circle
+                key={`c-${i}`}
+                cx={c.cx}
+                cy={c.cy}
+                r={c.r}
+                fill="none"
                 stroke="rgba(28,25,22,0.12)"
               />
             ))}

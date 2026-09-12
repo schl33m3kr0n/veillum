@@ -125,7 +125,7 @@ export type Anchor =
   | "bottom-left"
   | "bottom-center"
   | "bottom-right";
-export type GridType = "none" | "square" | "triangle";
+export type GridType = "none" | "square" | "triangle" | "radial";
 export type DashStyle = "solid" | "dash" | "dot" | "dashdot";
 
 export interface ImageAdjustments {

@@ -98,7 +98,7 @@ export function PropertiesPanel() {
               updatePage({
                 grid: {
                   ...page.grid,
-                  type: v === "none" ? "square" : (v as "square" | "triangle"),
+                  type: v === "none" ? "square" : (v as "square" | "triangle" | "radial"),
                   visible: v !== "none",
                 },
               })
@@ -111,6 +111,7 @@ export function PropertiesPanel() {
               <SelectItem value="none">Hidden</SelectItem>
               <SelectItem value="square">Square</SelectItem>
               <SelectItem value="triangle">Triangle</SelectItem>
+              <SelectItem value="radial">Radial</SelectItem>
             </SelectContent>
           </Select>
         </Field>

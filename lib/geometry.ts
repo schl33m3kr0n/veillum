@@ -314,3 +314,30 @@ export function triangleGridLines(
   void dy;
   return lines;
 }
+
+export function radialGrid(
+  width: number,
+  height: number,
+  size: number,
+): { lines: number[][]; circles: { cx: number; cy: number; r: number }[] } {
+  const cx = width / 2;
+  const cy = height / 2;
+  const maxR = Math.hypot(cx, cy);
+  const step = Math.max(8, size);
+  const circles: { cx: number; cy: number; r: number }[] = [];
+  for (let r = step; r <= maxR + step; r += step) {
+    circles.push({ cx, cy, r });
+  }
+  const spokes = 12;
+  const lines: number[][] = [];
+  for (let i = 0; i < spokes; i++) {
+    const a = (i / spokes) * Math.PI * 2;
+    lines.push([
+      cx,
+      cy,
+      cx + Math.cos(a) * maxR,
+      cy + Math.sin(a) * maxR,
+    ]);
+  }
+  return { lines, circles };
+}
