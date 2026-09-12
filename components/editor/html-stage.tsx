@@ -194,24 +194,42 @@ export default function HtmlStage({
       const dx = e.deltaX * unit;
       const dy = e.deltaY * unit;
       const pinch = e.ctrlKey || e.metaKey;
-      const panInstead =
-        e.shiftKey || spacePan.current || (!pinch && Math.abs(dx) > Math.abs(dy));
-      if (panInstead) {
-        store.setPan(
-          store.panX - (e.shiftKey && dx === 0 ? dy : dx),
-          store.panY - (e.shiftKey ? 0 : dy),
+      if (pinch) {
+        const factor = Math.exp(-dy * 0.012);
+        store.zoomToward(
+          store.zoom * factor,
+          e.clientX - rect.left,
+          e.clientY - rect.top,
         );
         return;
       }
-      const factor = Math.exp(-dy * (pinch ? 0.012 : 0.0022));
-      store.zoomToward(
-        store.zoom * factor,
-        e.clientX - rect.left,
-        e.clientY - rect.top,
-      );
+      store.setPan(store.panX - dx, store.panY - dy);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
+
+    let gestureStartZoom = 1;
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      gestureStartZoom = useEditorStore.getState().zoom;
+    };
+    const onGestureChange = (e: Event) => {
+      e.preventDefault();
+      const ge = e as Event & { scale: number; clientX: number; clientY: number };
+      const store = useEditorStore.getState();
+      const rect = el.getBoundingClientRect();
+      store.zoomToward(
+        gestureStartZoom * (ge.scale || 1),
+        ge.clientX - rect.left,
+        ge.clientY - rect.top,
+      );
+    };
+    el.addEventListener("gesturestart", onGestureStart);
+    el.addEventListener("gesturechange", onGestureChange);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("gesturestart", onGestureStart);
+      el.removeEventListener("gesturechange", onGestureChange);
+    };
   }, [width, height]);
 
   const finishBezier = useCallback((closed = false) => {

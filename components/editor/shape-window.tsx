@@ -17,7 +17,6 @@ import {
 import { useEditorStore } from "@/lib/editor-store";
 import type { ShapeKind } from "@/lib/types";
 import { SvgMarkContent } from "./html-layer";
-import { ShapeAdjustments } from "./shape-adjustments";
 
 export function ShapeWindow() {
   const tool = useEditorStore((s) => s.tool);
@@ -26,11 +25,9 @@ export function ShapeWindow() {
   const fillEnabled = useEditorStore((s) => s.shapeFillEnabled);
   const strokeEnabled = useEditorStore((s) => s.shapeStrokeEnabled);
   const setTool = useEditorStore((s) => s.setTool);
-  const clearSelection = useEditorStore((s) => s.clearSelection);
   const selectedIds = useEditorStore((s) => s.selectedIds);
   const layers = useEditorStore((s) => s.layers);
   const selected = layers.find((l) => l.id === selectedIds[0]);
-  const editing = selected?.type === "shape" ? selected : null;
   const saved = useSyncExternalStore(
     subscribeSavedElements,
     getSavedElements,
@@ -90,7 +87,7 @@ export function ShapeWindow() {
         onPointerMove={onTitleMove}
         onPointerUp={onTitleUp}
       >
-        <span>{editing ? "Adjust element" : "Elements"}</span>
+        <span>Elements</span>
         <Button
           size="icon-xs"
           variant="ghost"
@@ -167,16 +164,8 @@ export function ShapeWindow() {
                   >
                     <ElementPreview
                       item={item}
-                      fill={
-                        (editing?.fillEnabled ?? fillEnabled)
-                          ? (editing?.fill ?? color)
-                          : "none"
-                      }
-                      stroke={
-                        (editing?.strokeEnabled ?? strokeEnabled)
-                          ? (editing?.stroke ?? shapeStroke)
-                          : "none"
-                      }
+                      fill={fillEnabled ? color : "none"}
+                      stroke={strokeEnabled ? shapeStroke : "none"}
                     />
                   </button>
                 ))}
@@ -190,13 +179,6 @@ export function ShapeWindow() {
             No elements match “{query}”.
           </p>
         ) : null}
-
-        <p className="text-[11px] leading-snug text-muted-foreground">
-          {editing
-            ? "Sliders rewrite the selected element. Click a library item to place another copy."
-            : "Click to place on the page. Basics can also be dragged out after you pick them."}
-        </p>
-        <ShapeAdjustments layer={editing} compact />
       </div>
     </div>
   );
