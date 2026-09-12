@@ -51,7 +51,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | ] | Show / hide Inspect sidebar |
 | [ | Show / hide Animation panel |
 
-Double-click a text box to type. Drag images onto the page to place them.
+Double-click a text box to type. Drag images onto the page to place them. In Select, drag on empty canvas to draw a selection box; hold Shift to add to the current selection.
 
 **Symbol die.** Open [http://127.0.0.1:4781/die](http://127.0.0.1:4781/die) (or Die in the studio header). Faces: point (1), pair (2), triangle (3), square (4), star (5), hexagon (6). Click the cube to roll.
 

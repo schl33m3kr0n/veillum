@@ -14,6 +14,7 @@ import { ShapeAdjustGizmos } from "./shape-gizmos";
 import { TransformGizmos } from "./transform-gizmos";
 import { snapMovingLayers } from "@/lib/snap";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
+import { layerAabb } from "@/lib/transform";
 
 export default function HtmlStage({
   width,
@@ -58,6 +59,18 @@ export default function HtmlStage({
   const [bezierDraft, setBezierDraft] = useState<BezierPoint[]>([]);
   const [bezierDragging, setBezierDragging] = useState(false);
   const [maskPts, setMaskPts] = useState<number[] | null>(null);
+  const [marquee, setMarquee] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } | null>(null);
+  const marqueeOrigin = useRef<{
+    additive: boolean;
+    originIds: string[];
+  } | null>(null);
+  const marqueeRef = useRef(marquee);
+  marqueeRef.current = marquee;
   const bezierHandleDrag = useRef(false);
   const bezierDraftRef = useRef<BezierPoint[]>([]);
   bezierDraftRef.current = bezierDraft;
@@ -87,6 +100,50 @@ export default function HtmlStage({
     },
     [zoom],
   );
+
+  const beginMarquee = (e: React.PointerEvent, p: { x: number; y: number }) => {
+    drawing.current = true;
+    marqueeOrigin.current = {
+      additive: e.shiftKey,
+      originIds: useEditorStore.getState().selectedIds,
+    };
+    const start = { x: p.x, y: p.y, w: 0, h: 0 };
+    marqueeRef.current = start;
+    setMarquee(start);
+    boardRef.current?.setPointerCapture(e.pointerId);
+  };
+
+  const idsInMarquee = (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ): string[] => {
+    const left = Math.min(x, x + w);
+    const top = Math.min(y, y + h);
+    const right = Math.max(x, x + w);
+    const bottom = Math.max(y, y + h);
+    return useEditorStore
+      .getState()
+      .layers.filter((layer) => {
+        if (!layer.visible || layer.locked) return false;
+        const box = layerAabb(layer);
+        return box.left < right && box.right > left && box.top < bottom && box.bottom > top;
+      })
+      .map((layer) => layer.id);
+  };
+
+  const applyMarquee = (draft: { x: number; y: number; w: number; h: number }) => {
+    const origin = marqueeOrigin.current;
+    const hit = idsInMarquee(draft.x, draft.y, draft.w, draft.h);
+    if (origin?.additive) {
+      useEditorStore
+        .getState()
+        .select(Array.from(new Set([...origin.originIds, ...hit])));
+    } else {
+      useEditorStore.getState().select(hit);
+    }
+  };
 
   useEffect(() => {
     const el = boardRef.current;
@@ -159,6 +216,10 @@ export default function HtmlStage({
       };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       return;
+    }
+    if (store.tool === "select" && e.button === 0 && e.target === e.currentTarget) {
+      const p = pagePoint(e.clientX, e.clientY);
+      if (p) beginMarquee(e, p);
     }
   };
 
@@ -243,6 +304,12 @@ export default function HtmlStage({
       return;
     }
 
+    if (e.target === e.currentTarget && current === "select") {
+      beginMarquee(e, p);
+      e.stopPropagation();
+      return;
+    }
+
     if (e.target === e.currentTarget) {
       if (!e.shiftKey) store.clearSelection();
     }
@@ -296,6 +363,13 @@ export default function HtmlStage({
     if (shapeDraft) {
       setShapeDraft((d) => (d ? { ...d, w: p.x - d.x, h: p.y - d.y } : d));
     }
+    if (marqueeRef.current) {
+      const origin = marqueeRef.current;
+      const next = { ...origin, w: p.x - origin.x, h: p.y - origin.y };
+      marqueeRef.current = next;
+      setMarquee(next);
+      if (Math.abs(next.w) > 3 || Math.abs(next.h) > 3) applyMarquee(next);
+    }
     if (maskPts) setMaskPts((pts) => (pts ? [...pts, p.x, p.y] : pts));
   };
 
@@ -345,8 +419,17 @@ export default function HtmlStage({
         }
       }
     }
+    const box = marqueeRef.current;
+    if (box) {
+      if (Math.abs(box.w) <= 3 && Math.abs(box.h) <= 3) {
+        if (!marqueeOrigin.current?.additive) store.clearSelection();
+      } else {
+        applyMarquee(box);
+      }
+    }
     drawing.current = false;
     drag.current = null;
+    marqueeOrigin.current = null;
     store.setSnapGuides([]);
     bezierHandleDrag.current = false;
     setBezierDragging(false);
@@ -363,6 +446,8 @@ export default function HtmlStage({
     });
     setDraftPts(null);
     setShapeDraft(null);
+    setMarquee(null);
+    marqueeRef.current = null;
     setMaskPts(null);
   };
 
@@ -649,6 +734,19 @@ export default function HtmlStage({
         >
           {gizmoLayers.length > 0 && <TransformGizmos layers={gizmoLayers} />}
           {editShape && <ShapeAdjustGizmos layer={editShape} />}
+          {marquee && (Math.abs(marquee.w) > 2 || Math.abs(marquee.h) > 2) && (
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                left: Math.min(marquee.x, marquee.x + marquee.w),
+                top: Math.min(marquee.y, marquee.y + marquee.h),
+                width: Math.abs(marquee.w),
+                height: Math.abs(marquee.h),
+                border: "1px solid #c45c26",
+                background: "rgba(196,92,38,0.12)",
+              }}
+            />
+          )}
           {guides.length > 0 && (
             <svg className="absolute inset-0 h-full w-full overflow-visible">
               {guides.map((guide, i) => {
