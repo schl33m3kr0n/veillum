@@ -44,6 +44,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 | ⌘/Ctrl + scroll or pinch | Zoom toward the cursor |
 | ⌘/Ctrl + / − | Zoom toward the pointer |
 | ⌘/Ctrl N | New page / templates |
+| ⌘/Ctrl Z | Undo |
 | ⌘/Ctrl Shift Z or ⌘/Ctrl Y | Redo |
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |
 | ⌘/Ctrl B I U | Bold / Italic / Underline (or Unite if two+ shapes are selected) |
