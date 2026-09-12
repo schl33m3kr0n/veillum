@@ -85,7 +85,7 @@ export function Studio() {
               <Rulers width={size.width} height={size.height} />
               <TextOverlay />
               <TextFormatBar />
-              {tool === "shape" || selected?.type === "shape" ? <ShapeWindow /> : null}
+              {tool === "shape" ? <ShapeWindow /> : null}
               <ColorWindow />
             </div>
             <Timeline />

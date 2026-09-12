@@ -189,21 +189,30 @@ export default function HtmlStage({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const store = useEditorStore.getState();
-      if (e.ctrlKey || e.metaKey) {
-        const rect = el.getBoundingClientRect();
-        const factor = Math.exp(-e.deltaY * 0.01);
-        store.zoomToward(
-          store.zoom * factor,
-          e.clientX - rect.left,
-          e.clientY - rect.top,
+      const rect = el.getBoundingClientRect();
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1;
+      const dx = e.deltaX * unit;
+      const dy = e.deltaY * unit;
+      const pinch = e.ctrlKey || e.metaKey;
+      const panInstead =
+        e.shiftKey || spacePan.current || (!pinch && Math.abs(dx) > Math.abs(dy));
+      if (panInstead) {
+        store.setPan(
+          store.panX - (e.shiftKey && dx === 0 ? dy : dx),
+          store.panY - (e.shiftKey ? 0 : dy),
         );
-      } else {
-        store.setPan(store.panX - e.deltaX, store.panY - e.deltaY);
+        return;
       }
+      const factor = Math.exp(-dy * (pinch ? 0.012 : 0.0022));
+      store.zoomToward(
+        store.zoom * factor,
+        e.clientX - rect.left,
+        e.clientY - rect.top,
+      );
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, []);
+  }, [width, height]);
 
   const finishBezier = useCallback((closed = false) => {
     const draft = bezierDraftRef.current;

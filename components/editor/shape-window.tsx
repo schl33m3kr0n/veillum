@@ -96,10 +96,7 @@ export function ShapeWindow() {
           variant="ghost"
           className="size-6 text-white/70 hover:bg-white/10 hover:text-white"
           aria-label="Close elements"
-          onClick={() => {
-            if (tool === "shape") setTool("select");
-            else clearSelection();
-          }}
+          onClick={() => setTool("select")}
         >
           <X />
         </Button>
