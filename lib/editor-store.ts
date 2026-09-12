@@ -5,7 +5,7 @@ import { temporal } from "zundo";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
 import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
-import { layerAabb } from "./transform";
+import { flipLayer, layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
 import { combineLayers, isCombinable, type CombineMode } from "./combine";
 import type { SnapGuide } from "./snap";
@@ -155,6 +155,7 @@ interface EditorState {
   matchSelected: (dim: "width" | "height", target?: AlignTarget) => void;
   combineSelected: (mode: CombineMode) => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
+  flipSelected: (axis: "horizontal" | "vertical") => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
   applyAnchor: (anchor: Anchor) => void;
@@ -658,6 +659,16 @@ export const useEditorStore = create<EditorState>()(
           const map = new Map(next.map((l) => [l.id, l]));
           return {
             layers: s.layers.map((l) => map.get(l.id) ?? l),
+          };
+        }),
+
+      flipSelected: (axis) =>
+        set((s) => {
+          const ids = new Set(s.selectedIds);
+          return {
+            layers: s.layers.map((l) =>
+              ids.has(l.id) && !l.locked ? flipLayer(l, axis) : l,
+            ),
           };
         }),
 

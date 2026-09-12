@@ -71,6 +71,25 @@ export function layerAabb(layer: BoxLayer): {
   };
 }
 
+/** Mirror in place so the AABB center stays put. */
+export function flipLayer<T extends BoxLayer>(
+  layer: T,
+  axis: "horizontal" | "vertical",
+): T {
+  const before = layerAabb(layer);
+  const next = {
+    ...layer,
+    scaleX: axis === "horizontal" ? -layer.scaleX : layer.scaleX,
+    scaleY: axis === "vertical" ? -layer.scaleY : layer.scaleY,
+  };
+  const after = layerAabb(next);
+  return {
+    ...next,
+    x: layer.x + (before.cx - after.cx),
+    y: layer.y + (before.cy - after.cy),
+  };
+}
+
 export function groupAabb(layers: BoxLayer[]): {
   left: number;
   right: number;

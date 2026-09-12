@@ -9,6 +9,8 @@ import {
   Download,
   Maximize2,
   Minimize2,
+  FlipHorizontal2,
+  FlipVertical2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,8 @@ export function TopBar() {
   const redo = useTemporalStore((s) => s.redo);
   const canUndo = useTemporalStore((s) => s.pastStates.length > 0);
   const canRedo = useTemporalStore((s) => s.futureStates.length > 0);
+  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const canFlip = selectedIds.length > 0;
   const [full, setFull] = useState(false);
 
   useEffect(() => {
@@ -110,6 +114,35 @@ export function TopBar() {
       <Button size="icon-sm" variant="ghost" onClick={() => useEditorStore.getState().paste()}>
         <ClipboardPaste />
       </Button>
+      <Separator orientation="vertical" className="mx-1 h-6" />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            disabled={!canFlip}
+            aria-label="Flip horizontal"
+            onClick={() => useEditorStore.getState().flipSelected("horizontal")}
+          >
+            <FlipHorizontal2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Flip horizontal</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            disabled={!canFlip}
+            aria-label="Flip vertical"
+            onClick={() => useEditorStore.getState().flipSelected("vertical")}
+          >
+            <FlipVertical2 />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Flip vertical</TooltipContent>
+      </Tooltip>
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
       <CombineTools compact />
