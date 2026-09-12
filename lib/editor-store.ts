@@ -7,6 +7,7 @@ import type { TemporalState } from "zundo";
 import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
 import { layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
+import { combineLayers, isCombinable, type CombineMode } from "./combine";
 import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
@@ -143,6 +144,7 @@ interface EditorState {
 
   alignSelected: (mode: AlignMode, target?: AlignTarget) => void;
   matchSelected: (dim: "width" | "height", target?: AlignTarget) => void;
+  combineSelected: (mode: CombineMode) => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
@@ -579,6 +581,21 @@ export const useEditorStore = create<EditorState>()(
             }),
           };
         }),
+
+      combineSelected: (mode) => {
+        const s = get();
+        const picked = s.layers.filter(
+          (l) => s.selectedIds.includes(l.id) && !l.locked,
+        );
+        const combined = combineLayers(picked, mode);
+        if (!combined) return;
+        const ids = new Set(picked.filter(isCombinable).map((l) => l.id));
+        const last = s.layers.reduce((acc, l, i) => (ids.has(l.id) ? i : acc), 0);
+        const next = s.layers.filter((l) => !ids.has(l.id));
+        const at = Math.min(last - (s.layers.length - next.length) + 1, next.length);
+        next.splice(Math.max(0, at), 0, combined);
+        set({ layers: next, selectedIds: [combined.id], tool: "select" });
+      },
 
       distributeSelected: (axis) =>
         set((s) => {

@@ -214,6 +214,7 @@ function SvgMarkContent({
             key={i}
             d={node.d}
             fill={fill}
+            fillRule="evenodd"
             stroke={stroke}
             strokeWidth={sw}
             strokeLinecap={node.strokeLinecap}

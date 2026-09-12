@@ -42,6 +42,7 @@ import {
 import { NumberField } from "./fields";
 import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
+import { CombineTools } from "./combine-tools";
 import Link from "next/link";
 
 export function TopBar() {
@@ -205,6 +206,7 @@ export function TopBar() {
       ))}
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
+      <CombineTools compact />
       <div className="ml-auto flex items-center gap-1">
         <ExportMenu />
       </div>

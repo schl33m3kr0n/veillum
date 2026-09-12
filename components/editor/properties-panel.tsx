@@ -26,6 +26,7 @@ import {
 import { Field, NumberField, Section, SliderField } from "./fields";
 import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
+import { CombineTools } from "./combine-tools";
 import { ShapeAdjustments } from "./shape-adjustments";
 
 export function PropertiesPanel() {
@@ -129,8 +130,9 @@ export function PropertiesPanel() {
       </Section>
 
       {selectedIds.length > 0 && (
-        <div className="px-3 py-2">
+        <div className="space-y-2 px-3 py-2">
           <AlignTools />
+          <CombineTools />
         </div>
       )}
 

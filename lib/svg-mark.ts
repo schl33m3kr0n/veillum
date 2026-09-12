@@ -76,7 +76,7 @@ export function svgNodesToMarkup(
       const join = node.strokeLinejoin
         ? ` stroke-linejoin="${node.strokeLinejoin}"`
         : "";
-      return `<path d="${node.d}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"${cap}${join}${extra}/>`;
+      return `<path d="${node.d}" fill="${fill}" fill-rule="evenodd" stroke="${stroke}" stroke-width="${sw}"${cap}${join}${extra}/>`;
     })
     .join("");
   return `<svg width="${layer.width}" height="${layer.height}" viewBox="${svgMarkViewBox(layer)}" overflow="visible">${fillDefsMarkup(layer)}${inner}</svg>`;

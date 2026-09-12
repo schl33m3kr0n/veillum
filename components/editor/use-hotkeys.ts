@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
+import { isCombinable } from "@/lib/combine";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 
 export function useEditorHotkeys() {
@@ -62,6 +63,13 @@ export function useEditorHotkeys() {
         });
       } else if (meta && e.key.toLowerCase() === "u") {
         e.preventDefault();
+        const combinable = store.layers.filter(
+          (l) => store.selectedIds.includes(l.id) && isCombinable(l),
+        );
+        if (combinable.length >= 2) {
+          store.combineSelected("unite");
+          return;
+        }
         store.layers.forEach((l) => {
           if (store.selectedIds.includes(l.id) && l.type === "text") {
             store.updateLayer(l.id, { underline: !l.underline });
