@@ -45,6 +45,7 @@ import {
 } from "@/lib/export";
 import { NumberField } from "./fields";
 import { FontSelect } from "./font-select";
+import { AlignTools } from "./align-tools";
 import Link from "next/link";
 
 export function TopBar() {
@@ -205,6 +206,8 @@ export function TopBar() {
           <Icon />
         </Toggle>
       ))}
+      <Separator orientation="vertical" className="mx-1 h-6" />
+      <AlignTools compact />
       <div className="ml-auto flex items-center gap-1">
         <PlayPause />
         <SidebarToggle />

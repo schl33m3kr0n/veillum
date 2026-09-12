@@ -21,6 +21,20 @@ import {
   Syne,
   Unbounded,
   Young_Serif,
+  Audiowide,
+  Bungee_Spice,
+  Creepster,
+  Foldit,
+  Honk,
+  Kablammo,
+  Megrim,
+  Monoton,
+  Orbitron,
+  Pixelify_Sans,
+  Press_Start_2P,
+  Rubik_Glitch,
+  Shrikhand,
+  Silkscreen,
 } from "next/font/google";
 
 export const instrument = Instrument_Sans({
@@ -151,6 +165,99 @@ const youngSerif = Young_Serif({
   variable: "--font-young-serif",
 });
 
+const rubikGlitch = Rubik_Glitch({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-rubik-glitch",
+});
+
+const monoton = Monoton({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-monoton",
+});
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-orbitron",
+});
+
+const silkscreen = Silkscreen({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  preload: false,
+  variable: "--font-silkscreen",
+});
+
+const pressStart = Press_Start_2P({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-press-start",
+});
+
+const bungeeSpice = Bungee_Spice({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-bungee-spice",
+});
+
+const kablammo = Kablammo({
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-kablammo",
+});
+
+const honk = Honk({
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-honk",
+});
+
+const foldit = Foldit({
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-foldit",
+});
+
+const megrim = Megrim({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-megrim",
+});
+
+const shrikhand = Shrikhand({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-shrikhand",
+});
+
+const pixelify = Pixelify_Sans({
+  subsets: ["latin"],
+  preload: false,
+  variable: "--font-pixelify",
+});
+
+const audiowide = Audiowide({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-audiowide",
+});
+
+const creepster = Creepster({
+  subsets: ["latin"],
+  weight: "400",
+  preload: false,
+  variable: "--font-creepster",
+});
+
 export const fontVariables = [
   instrument.variable,
   fraunces.variable,
@@ -174,4 +281,18 @@ export const fontVariables = [
   figtree.variable,
   greatVibes.variable,
   youngSerif.variable,
+  rubikGlitch.variable,
+  monoton.variable,
+  orbitron.variable,
+  silkscreen.variable,
+  pressStart.variable,
+  bungeeSpice.variable,
+  kablammo.variable,
+  honk.variable,
+  foldit.variable,
+  megrim.variable,
+  shrikhand.variable,
+  pixelify.variable,
+  audiowide.variable,
+  creepster.variable,
 ].join(" ");

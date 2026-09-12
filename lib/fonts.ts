@@ -24,6 +24,20 @@ const STACKS: Record<FontFamily, string> = {
   "Cinzel Decorative":
     'var(--font-cinzel-decorative), "Cinzel Decorative", serif',
   "Great Vibes": 'var(--font-great-vibes), "Great Vibes", cursive',
+  "Rubik Glitch": 'var(--font-rubik-glitch), "Rubik Glitch", sans-serif',
+  Monoton: 'var(--font-monoton), "Monoton", sans-serif',
+  Orbitron: 'var(--font-orbitron), "Orbitron", sans-serif',
+  Silkscreen: 'var(--font-silkscreen), "Silkscreen", sans-serif',
+  "Press Start 2P": 'var(--font-press-start), "Press Start 2P", sans-serif',
+  "Bungee Spice": 'var(--font-bungee-spice), "Bungee Spice", sans-serif',
+  Kablammo: 'var(--font-kablammo), "Kablammo", sans-serif',
+  Honk: 'var(--font-honk), "Honk", sans-serif',
+  Foldit: 'var(--font-foldit), "Foldit", sans-serif',
+  Megrim: 'var(--font-megrim), "Megrim", sans-serif',
+  Shrikhand: 'var(--font-shrikhand), "Shrikhand", cursive',
+  "Pixelify Sans": 'var(--font-pixelify), "Pixelify Sans", sans-serif',
+  Audiowide: 'var(--font-audiowide), "Audiowide", sans-serif',
+  Creepster: 'var(--font-creepster), "Creepster", cursive',
   "JetBrains Mono": 'var(--font-jetbrains), "JetBrains Mono", monospace',
 };
 

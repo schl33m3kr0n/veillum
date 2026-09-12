@@ -1,4 +1,12 @@
 import type { ShapeKind, ShapeLayer } from "./types";
+import {
+  localToPage,
+  pageToLocal,
+  resizeFromHandle,
+  rotateAroundCenter,
+} from "./transform";
+
+export { localToPage, pageToLocal, resizeFromHandle, rotateAroundCenter };
 
 export const SHAPE_KINDS: { id: ShapeKind; label: string }[] = [
   { id: "rect", label: "Rectangle" },
@@ -69,89 +77,6 @@ export function arrowGeometry(
     y2: y,
     points: `${w - 1},${y} ${w - size},${y - size / 2} ${w - size},${y + size / 2}`,
   };
-}
-
-export function localToPage(
-  layer: Pick<ShapeLayer, "x" | "y" | "rotation" | "scaleX" | "scaleY">,
-  lx: number,
-  ly: number,
-): { x: number; y: number } {
-  const rad = (layer.rotation * Math.PI) / 180;
-  const x = lx * layer.scaleX;
-  const y = ly * layer.scaleY;
-  return {
-    x: layer.x + x * Math.cos(rad) - y * Math.sin(rad),
-    y: layer.y + x * Math.sin(rad) + y * Math.cos(rad),
-  };
-}
-
-export function pageToLocal(
-  layer: Pick<ShapeLayer, "x" | "y" | "rotation" | "scaleX" | "scaleY">,
-  px: number,
-  py: number,
-): { x: number; y: number } {
-  const dx = px - layer.x;
-  const dy = py - layer.y;
-  const rad = -(layer.rotation * Math.PI) / 180;
-  const x = dx * Math.cos(rad) - dy * Math.sin(rad);
-  const y = dx * Math.sin(rad) + dy * Math.cos(rad);
-  return { x: x / (layer.scaleX || 1), y: y / (layer.scaleY || 1) };
-}
-
-export function rotateAroundCenter(
-  layer: Pick<ShapeLayer, "x" | "y" | "width" | "height" | "rotation" | "scaleX" | "scaleY">,
-  pageX: number,
-  pageY: number,
-): { x: number; y: number; rotation: number } {
-  const cx = (layer.width * layer.scaleX) / 2;
-  const cy = (layer.height * layer.scaleY) / 2;
-  const old = (layer.rotation * Math.PI) / 180;
-  const center = {
-    x: layer.x + cx * Math.cos(old) - cy * Math.sin(old),
-    y: layer.y + cx * Math.sin(old) + cy * Math.cos(old),
-  };
-  const deg = (Math.atan2(pageY - center.y, pageX - center.x) * 180) / Math.PI + 90;
-  const neu = (deg * Math.PI) / 180;
-  return {
-    rotation: deg,
-    x: center.x - (cx * Math.cos(neu) - cy * Math.sin(neu)),
-    y: center.y - (cx * Math.sin(neu) + cy * Math.cos(neu)),
-  };
-}
-
-export function resizeFromHandle(
-  handle: "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w",
-  localX: number,
-  localY: number,
-  origin: Pick<ShapeLayer, "x" | "y" | "width" | "height" | "rotation" | "scaleX" | "scaleY">,
-  lockAspect: boolean,
-): { x: number; y: number; width: number; height: number } {
-  let width = origin.width;
-  let height = origin.height;
-  let ox = 0;
-  let oy = 0;
-  if (handle.includes("e")) width = Math.max(8, localX);
-  if (handle.includes("s")) height = Math.max(8, localY);
-  if (handle.includes("w")) {
-    width = Math.max(8, origin.width - localX);
-    ox = origin.width - width;
-  }
-  if (handle.includes("n")) {
-    height = Math.max(8, origin.height - localY);
-    oy = origin.height - height;
-  }
-  if (lockAspect && origin.width > 0 && origin.height > 0) {
-    const ratio = origin.width / origin.height;
-    const corner = handle.length === 2;
-    if (corner) {
-      if (width / height > ratio) height = width / ratio;
-      else width = height * ratio;
-      if (handle.includes("w")) ox = origin.width - width;
-      if (handle.includes("n")) oy = origin.height - height;
-    }
-  }
-  const page = localToPage(origin, ox, oy);
-  return { x: page.x, y: page.y, width, height };
 }
 
 export function shapeSvgPoints(layer: Pick<ShapeLayer, "shape" | "width" | "height" | "strokeWidth" | "sides" | "starPoints" | "innerRatio" | "arrowHead">) {

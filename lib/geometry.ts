@@ -1,4 +1,5 @@
 import type { Anchor, BezierPoint, DashStyle, Layer } from "./types";
+import { groupAabb, layerAabb } from "./transform";
 
 export const ANCHOR_OFFSET: Record<Anchor, { x: number; y: number }> = {
   "top-left": { x: 0, y: 0 },
@@ -199,35 +200,95 @@ export type AlignMode =
   | "middle"
   | "bottom";
 
-export function alignLayers(layers: Layer[], mode: AlignMode): Layer[] {
+export type AlignTarget = "selection" | "page" | "margins";
+
+export function alignFrame(
+  page: { width: number; height: number; margins: { top: number; right: number; bottom: number; left: number } },
+  layers: Layer[],
+  target: AlignTarget,
+): { left: number; right: number; top: number; bottom: number } {
+  if (target === "page") {
+    return { left: 0, right: page.width, top: 0, bottom: page.height };
+  }
+  if (target === "margins") {
+    return {
+      left: page.margins.left,
+      right: page.width - page.margins.right,
+      top: page.margins.top,
+      bottom: page.height - page.margins.bottom,
+    };
+  }
+  const box = groupAabb(layers);
+  return { left: box.left, right: box.right, top: box.top, bottom: box.bottom };
+}
+
+export function alignLayers(
+  layers: Layer[],
+  mode: AlignMode,
+  frame: { left: number; right: number; top: number; bottom: number },
+): Layer[] {
   if (layers.length === 0) return layers;
-  const xs = layers.map((l) => l.x);
-  const ys = layers.map((l) => l.y);
-  const rights = layers.map((l) => l.x + l.width * l.scaleX);
-  const bottoms = layers.map((l) => l.y + l.height * l.scaleY);
-  const minX = Math.min(...xs);
-  const maxR = Math.max(...rights);
-  const minY = Math.min(...ys);
-  const maxB = Math.max(...bottoms);
-  const cx = (minX + maxR) / 2;
-  const cy = (minY + maxB) / 2;
+  const cx = (frame.left + frame.right) / 2;
+  const cy = (frame.top + frame.bottom) / 2;
   return layers.map((l) => {
-    const w = l.width * l.scaleX;
-    const h = l.height * l.scaleY;
+    const box = layerAabb(l);
     switch (mode) {
       case "left":
-        return { ...l, x: minX };
+        return { ...l, x: l.x + (frame.left - box.left) };
       case "right":
-        return { ...l, x: maxR - w };
+        return { ...l, x: l.x + (frame.right - box.right) };
       case "center":
-        return { ...l, x: cx - w / 2 };
+        return { ...l, x: l.x + (cx - box.cx) };
       case "top":
-        return { ...l, y: minY };
+        return { ...l, y: l.y + (frame.top - box.top) };
       case "bottom":
-        return { ...l, y: maxB - h };
+        return { ...l, y: l.y + (frame.bottom - box.bottom) };
       case "middle":
-        return { ...l, y: cy - h / 2 };
+        return { ...l, y: l.y + (cy - box.cy) };
     }
+  });
+}
+
+export function distributeLayers(layers: Layer[], axis: "horizontal" | "vertical"): Layer[] {
+  if (layers.length < 3) return layers;
+  const items = layers.map((l) => ({ layer: l, box: layerAabb(l) }));
+  if (axis === "horizontal") {
+    items.sort((a, b) => a.box.left - b.box.left);
+    const first = items[0];
+    const last = items[items.length - 1];
+    const span = last.box.right - first.box.left;
+    const total = items.reduce((sum, it) => sum + (it.box.right - it.box.left), 0);
+    const gap = (span - total) / (items.length - 1);
+    let cursor = first.box.left;
+    return items.map((it, i) => {
+      if (i === 0) {
+        cursor = it.box.right + gap;
+        return it.layer;
+      }
+      if (i === items.length - 1) return it.layer;
+      const width = it.box.right - it.box.left;
+      const next = { ...it.layer, x: it.layer.x + (cursor - it.box.left) };
+      cursor += width + gap;
+      return next;
+    });
+  }
+  items.sort((a, b) => a.box.top - b.box.top);
+  const first = items[0];
+  const last = items[items.length - 1];
+  const span = last.box.bottom - first.box.top;
+  const total = items.reduce((sum, it) => sum + (it.box.bottom - it.box.top), 0);
+  const gap = (span - total) / (items.length - 1);
+  let cursor = first.box.top;
+  return items.map((it, i) => {
+    if (i === 0) {
+      cursor = it.box.bottom + gap;
+      return it.layer;
+    }
+    if (i === items.length - 1) return it.layer;
+    const height = it.box.bottom - it.box.top;
+    const next = { ...it.layer, y: it.layer.y + (cursor - it.box.top) };
+    cursor += height + gap;
+    return next;
   });
 }
 

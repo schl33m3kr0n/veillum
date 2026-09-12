@@ -4,7 +4,7 @@ import { create } from "zustand";
 import { temporal } from "zundo";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
-import { alignLayers, type AlignMode, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
+import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
 import {
   createBezierLayer,
   createDefaultPage,
@@ -109,7 +109,8 @@ interface EditorState {
   copy: () => void;
   paste: () => void;
 
-  alignSelected: (mode: AlignMode) => void;
+  alignSelected: (mode: AlignMode, target?: AlignTarget) => void;
+  distributeSelected: (axis: "horizontal" | "vertical") => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
   applyAnchor: (anchor: Anchor) => void;
@@ -407,12 +408,26 @@ export const useEditorStore = create<EditorState>()(
         }));
       },
 
-      alignSelected: (mode) =>
+      alignSelected: (mode, target = "selection") =>
         set((s) => {
           const ids = new Set(s.selectedIds);
           const targets = s.layers.filter((l) => ids.has(l.id) && !l.locked);
-          const aligned = alignLayers(targets, mode);
+          const resolved =
+            targets.length < 2 && target === "selection" ? "page" : target;
+          const frame = alignFrame(s.page, targets, resolved);
+          const aligned = alignLayers(targets, mode, frame);
           const map = new Map(aligned.map((l) => [l.id, l]));
+          return {
+            layers: s.layers.map((l) => map.get(l.id) ?? l),
+          };
+        }),
+
+      distributeSelected: (axis) =>
+        set((s) => {
+          const ids = new Set(s.selectedIds);
+          const targets = s.layers.filter((l) => ids.has(l.id) && !l.locked);
+          const next = distributeLayers(targets, axis);
+          const map = new Map(next.map((l) => [l.id, l]));
           return {
             layers: s.layers.map((l) => map.get(l.id) ?? l),
           };

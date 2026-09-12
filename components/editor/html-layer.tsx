@@ -43,7 +43,7 @@ export function HtmlLayer({
     visibility: layer.visible ? "visible" : "hidden",
     pointerEvents: interactive && !layer.locked ? "auto" : "none",
     cursor: interactive && !layer.locked ? "move" : "default",
-    outline: selected && layer.type !== "shape" ? "1.5px solid #c45c26" : undefined,
+    outline: selected && layer.locked ? "1.5px solid #c45c26" : undefined,
     outlineOffset: 2,
     boxSizing: "border-box",
     overflow: layer.type === "path" || layer.type === "bezier" ? "visible" : "hidden",

@@ -22,9 +22,9 @@ import {
   type Orientation,
   type TextLayer,
 } from "@/lib/types";
-import { AlignCenter, AlignHorizontalJustifyCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter } from "lucide-react";
 import { Field, NumberField, Section, SliderField } from "./fields";
 import { FontSelect } from "./font-select";
+import { AlignTools } from "./align-tools";
 import { ShapeAdjustments } from "./shape-adjustments";
 
 export function PropertiesPanel() {
@@ -126,9 +126,9 @@ export function PropertiesPanel() {
         <HeaderFooterFields />
       </Section>
 
-      {selectedIds.length > 1 && (
-        <Section title="Align objects">
-          <AlignButtons />
+      {selectedIds.length > 0 && (
+        <Section title="Align">
+          <AlignTools />
         </Section>
       )}
 
@@ -188,32 +188,6 @@ function HeaderFooterFields() {
         }
         className="h-7 text-xs"
       />
-    </div>
-  );
-}
-
-function AlignButtons() {
-  const align = useEditorStore((s) => s.alignSelected);
-  return (
-    <div className="flex flex-wrap gap-1">
-      <Button size="icon-xs" variant="outline" onClick={() => align("left")}>
-        <AlignLeft />
-      </Button>
-      <Button size="icon-xs" variant="outline" onClick={() => align("center")}>
-        <AlignHorizontalJustifyCenter />
-      </Button>
-      <Button size="icon-xs" variant="outline" onClick={() => align("right")}>
-        <AlignRight />
-      </Button>
-      <Button size="icon-xs" variant="outline" onClick={() => align("top")}>
-        <AlignVerticalJustifyCenter className="rotate-180" />
-      </Button>
-      <Button size="icon-xs" variant="outline" onClick={() => align("middle")}>
-        <AlignCenter />
-      </Button>
-      <Button size="icon-xs" variant="outline" onClick={() => align("bottom")}>
-        <AlignVerticalJustifyCenter />
-      </Button>
     </div>
   );
 }

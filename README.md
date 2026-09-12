@@ -13,11 +13,11 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 ## What you can do
 
-**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (editorial serifs, grotesques, display, script, and mono — each name previews in its own face), bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
+**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (editorial, grotesque, display, script, experimental, and mono — each name previews in its own face), bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
 
-**Arrange.** Ruler, indent, page margins, and box alignment (left, right, center, justify). Align several objects to each other from Inspect when more than one layer is selected. Square or triangle grid, plus perspective on a layer.
+**Arrange.** Ruler, indent, page margins, and box alignment. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, and other objects. Align to the page, the margin box, or the selection, and distribute three or more objects. Square or triangle grid, plus perspective on a layer.
 
-**Draw.** Pencil, pen, and highlighter, plus a Shapes window. Select a shape to get Pages-style handles: white squares to resize, a rotation handle, and yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
+**Draw.** Pencil, pen, and highlighter, plus a Shapes window. Selected shapes keep yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — Vellum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 

@@ -10,7 +10,9 @@ import { cssFontFamily } from "@/lib/fonts";
 import type { BezierPoint, Tool } from "@/lib/types";
 import { HtmlLayer } from "./html-layer";
 import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier-overlay";
-import { ShapeGizmos } from "./shape-gizmos";
+import { ShapeAdjustGizmos } from "./shape-gizmos";
+import { TransformGizmos } from "./transform-gizmos";
+import { snapMovingLayers, type SnapGuide } from "@/lib/snap";
 
 const PAGE_X = 80;
 const PAGE_Y = 60;
@@ -44,9 +46,9 @@ export default function HtmlStage({
     id: string;
     ox: number;
     oy: number;
-    lx: number;
-    ly: number;
+    origins: { id: string; x: number; y: number }[];
   } | null>(null);
+  const [guides, setGuides] = useState<SnapGuide[]>([]);
 
   const [draftPts, setDraftPts] = useState<number[] | null>(null);
   const [shapeDraft, setShapeDraft] = useState<{
@@ -155,8 +157,7 @@ export default function HtmlStage({
         id: "__pan",
         ox: e.clientX,
         oy: e.clientY,
-        lx: store.panX,
-        ly: store.panY,
+        origins: [{ id: "__pan", x: store.panX, y: store.panY }],
       };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       return;
@@ -255,9 +256,10 @@ export default function HtmlStage({
     const store = useEditorStore.getState();
 
     if (drag.current?.id === "__pan") {
+      const origin = drag.current.origins[0];
       store.setPan(
-        drag.current.lx + (e.clientX - drag.current.ox),
-        drag.current.ly + (e.clientY - drag.current.oy),
+        origin.x + (e.clientX - drag.current.ox),
+        origin.y + (e.clientY - drag.current.oy),
       );
       return;
     }
@@ -265,10 +267,17 @@ export default function HtmlStage({
     if (drag.current && drag.current.id !== "__pan") {
       const dx = p ? p.x - drag.current.ox : 0;
       const dy = p ? p.y - drag.current.oy : 0;
-      store.updateLayer(drag.current.id, {
-        x: drag.current.lx + dx,
-        y: drag.current.ly + dy,
-      });
+      const { positions, guides: nextGuides } = snapMovingLayers(
+        drag.current.origins,
+        dx,
+        dy,
+        store.layers,
+        store.page,
+      );
+      for (const [id, pos] of positions) {
+        store.updateLayer(id, pos);
+      }
+      setGuides(nextGuides);
       return;
     }
 
@@ -340,6 +349,7 @@ export default function HtmlStage({
     }
     drawing.current = false;
     drag.current = null;
+    setGuides([]);
     bezierHandleDrag.current = false;
     setBezierDragging(false);
     setBezierDraft((d) => {
@@ -382,7 +392,16 @@ export default function HtmlStage({
       return;
     }
     if (layer.locked || !p) return;
-    drag.current = { id, ox: p.x, oy: p.y, lx: layer.x, ly: layer.y };
+    const nextIds = useEditorStore.getState().selectedIds;
+    const moving = store.layers.filter(
+      (l) => nextIds.includes(l.id) && !l.locked,
+    );
+    drag.current = {
+      id,
+      ox: p.x,
+      oy: p.y,
+      origins: moving.map((l) => ({ id: l.id, x: l.x, y: l.y })),
+    };
     useEditorStore.temporal.getState().pause();
   };
 
@@ -444,6 +463,15 @@ export default function HtmlStage({
     selectedLayer?.type === "shape" && !selectedLayer.locked
       ? selectedLayer
       : null;
+  const gizmoLayers =
+    !playing && tool === "select"
+      ? layers.filter(
+          (l) =>
+            selectedIds.includes(l.id) &&
+            !l.locked &&
+            editingTextId !== l.id,
+        )
+      : [];
 
   return (
     <div
@@ -583,7 +611,6 @@ export default function HtmlStage({
             />
           )}
           {editBezier && <BezierEditOverlay layer={editBezier} />}
-          {!playing && editShape && <ShapeGizmos layer={editShape} />}
           {maskPts && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full">
               <polyline
@@ -596,6 +623,46 @@ export default function HtmlStage({
               />
             </svg>
           )}
+        </div>
+        <div
+          className="pointer-events-none absolute overflow-visible"
+          style={{
+            left: PAGE_X,
+            top: PAGE_Y,
+            width: page.width,
+            height: page.height,
+            zIndex: 20,
+          }}
+        >
+          {guides.length > 0 && (
+            <svg className="absolute inset-0 h-full w-full overflow-visible">
+              {guides.map((guide, i) =>
+                guide.axis === "x" ? (
+                  <line
+                    key={`x-${i}`}
+                    x1={guide.pos}
+                    y1={-40}
+                    x2={guide.pos}
+                    y2={page.height + 40}
+                    stroke="#f5b4c0"
+                    strokeWidth={1}
+                  />
+                ) : (
+                  <line
+                    key={`y-${i}`}
+                    x1={-40}
+                    y1={guide.pos}
+                    x2={page.width + 40}
+                    y2={guide.pos}
+                    stroke="#f5b4c0"
+                    strokeWidth={1}
+                  />
+                ),
+              )}
+            </svg>
+          )}
+          {gizmoLayers.length > 0 && <TransformGizmos layers={gizmoLayers} />}
+          {editShape && <ShapeAdjustGizmos layer={editShape} />}
         </div>
       </div>
       <span className="sr-only">{shapeKind}</span>

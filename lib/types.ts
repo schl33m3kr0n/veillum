@@ -20,6 +20,20 @@ export const FONT_OPTIONS = [
   { label: "Cinzel", family: "Cinzel", group: "Display" },
   { label: "Cinzel Decorative", family: "Cinzel Decorative", group: "Display" },
   { label: "Great Vibes", family: "Great Vibes", group: "Script" },
+  { label: "Rubik Glitch", family: "Rubik Glitch", group: "Experimental" },
+  { label: "Monoton", family: "Monoton", group: "Experimental" },
+  { label: "Orbitron", family: "Orbitron", group: "Experimental" },
+  { label: "Silkscreen", family: "Silkscreen", group: "Experimental" },
+  { label: "Press Start 2P", family: "Press Start 2P", group: "Experimental" },
+  { label: "Bungee Spice", family: "Bungee Spice", group: "Experimental" },
+  { label: "Kablammo", family: "Kablammo", group: "Experimental" },
+  { label: "Honk", family: "Honk", group: "Experimental" },
+  { label: "Foldit", family: "Foldit", group: "Experimental" },
+  { label: "Megrim", family: "Megrim", group: "Experimental" },
+  { label: "Shrikhand", family: "Shrikhand", group: "Experimental" },
+  { label: "Pixelify Sans", family: "Pixelify Sans", group: "Experimental" },
+  { label: "Audiowide", family: "Audiowide", group: "Experimental" },
+  { label: "Creepster", family: "Creepster", group: "Experimental" },
   { label: "JetBrains Mono", family: "JetBrains Mono", group: "Mono" },
 ] as const;
 
@@ -28,6 +42,7 @@ export const FONT_GROUPS = [
   "Sans",
   "Display",
   "Script",
+  "Experimental",
   "Mono",
 ] as const;
 
