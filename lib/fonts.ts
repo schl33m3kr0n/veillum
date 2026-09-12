@@ -13,6 +13,8 @@ const STACKS: Record<BundledFont, string> = {
   "DM Serif Display": 'var(--font-dm-serif), "DM Serif Display", serif',
   Calisto:
     '"Calisto MT", Calisto, "Calisto MT Std", var(--font-calisto), serif',
+  Bodoni:
+    '"Bodoni 72", "Bodoni MT", "Bodoni MT Poster Compressed", Bodoni, Didot, var(--font-bodoni), serif',
   "Instrument Sans": 'var(--font-instrument), "Instrument Sans", sans-serif',
   "Avenir Book":
     '"Avenir-Book", "Avenir Book", Avenir, "Avenir Next", var(--font-avenir), sans-serif',

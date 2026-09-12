@@ -9,6 +9,7 @@ export const FONT_OPTIONS = [
   { label: "Playfair Display", family: "Playfair Display", group: "Editorial" },
   { label: "DM Serif Display", family: "DM Serif Display", group: "Editorial" },
   { label: "Calisto", family: "Calisto", group: "Editorial" },
+  { label: "Bodoni", family: "Bodoni", group: "Editorial" },
   { label: "Instrument Sans", family: "Instrument Sans", group: "Sans" },
   { label: "Avenir Book", family: "Avenir Book", group: "Sans" },
   { label: "Avenir Medium", family: "Avenir Medium", group: "Sans" },

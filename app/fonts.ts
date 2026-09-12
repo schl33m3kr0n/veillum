@@ -44,6 +44,7 @@ import {
   Montserrat,
   Oswald,
   Barlow_Condensed,
+  Bodoni_Moda,
   Questrial,
 } from "next/font/google";
 import localFont from "next/font/local";
@@ -98,6 +99,12 @@ const calisto = Crimson_Pro({
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-calisto",
+});
+
+const bodoni = Bodoni_Moda({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-bodoni",
 });
 
 const centuryGothic = Questrial({
@@ -345,6 +352,7 @@ export const fontVariables = [
   avenir.variable,
   futura.variable,
   calisto.variable,
+  bodoni.variable,
   centuryGothic.variable,
   montserrat.variable,
   cooper.variable,
