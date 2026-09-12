@@ -17,7 +17,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Arrange.** Ruler, indent, page margins, and box alignment. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, other objects, and matching widths or heights. Align to the page, the margin box, or the selection, match width or height, and distribute three or more objects. Square, triangle, or radial grid, plus perspective on a layer.
 
-**Draw.** Pencil, pen, and highlighter, plus a Shapes window. Selected shapes keep yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
+**Draw.** Pencil, pen, and highlighter, plus an Elements library (basics, frames, marks, badges, nature stamps, and items you save). Click to place, or drag a basic onto the page. Selected shapes keep yellow diamonds for corner radius, star inner radius, and arrowhead. Fill and stroke each have a no-color option.
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 
@@ -36,7 +36,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | V | Select |
 | T | Text |
 | P / N / H | Pencil / Pen / Highlighter |
-| S | Shape |
+| S | Elements |
 | B | Bezier |
 | I | Eyedropper |
 | M | Mask |

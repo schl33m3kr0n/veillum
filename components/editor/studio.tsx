@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { seedDocument, useEditorStore } from "@/lib/editor-store";
 import { restoreCustomFonts } from "@/lib/custom-fonts";
+import { restoreSavedElements } from "@/lib/elements";
 import { HistoryGuard } from "./history-guard";
 import { TopBar } from "./top-bar";
 import { ToolRail } from "./tool-rail";
@@ -36,6 +37,7 @@ export function Studio() {
 
   useEffect(() => {
     void restoreCustomFonts();
+    restoreSavedElements();
     seedDocument();
   }, []);
 
@@ -57,7 +59,7 @@ export function Studio() {
         <TopBar />
         {tool === "shape" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
-            Choose a shape, drag on the page, then use the Adjust sliders on the selected shape.
+            Click an element to place it, or drag on the page to draw the current basic. Save a selection to store it in the library.
           </div>
         )}
         {tool === "bezier" && (

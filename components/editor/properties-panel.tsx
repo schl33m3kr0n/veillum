@@ -145,7 +145,7 @@ export function PropertiesPanel() {
         </>
       ) : (
         <p className="px-3 py-6 text-sm text-muted-foreground">
-          Select a layer to edit type, color, image, or shape.
+          Select a layer to edit type, color, image, or element.
         </p>
       )}
     </div>
@@ -547,7 +547,7 @@ function ImageFields({ layer }: { layer: ImageLayer }) {
 
 function ShapeFields({ layer }: { layer: Extract<Layer, { type: "shape" }> }) {
   return (
-    <Section title="Shape">
+    <Section title="Element">
       <ShapeAdjustments layer={layer} />
     </Section>
   );

@@ -1,18 +1,25 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { X } from "lucide-react";
+import { useRef, useState, useSyncExternalStore } from "react";
+import { BookmarkPlus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  ELEMENT_CATALOG,
+  ELEMENT_GROUPS,
+  deleteSavedElement,
+  getSavedElements,
+  saveLayerAsElement,
+  subscribeSavedElements,
+  type CatalogElement,
+  type SavedElement,
+} from "@/lib/elements";
 import { useEditorStore } from "@/lib/editor-store";
-import type { ShapeKind, ShapeLayer } from "@/lib/types";
-import { SHAPE_KINDS } from "@/lib/shapes";
-import { cn } from "@/lib/utils";
+import type { ShapeKind } from "@/lib/types";
 import { ShapeAdjustments } from "./shape-adjustments";
 
 export function ShapeWindow() {
   const tool = useEditorStore((s) => s.tool);
-  const shapeKind = useEditorStore((s) => s.shapeKind);
-  const setShapeKind = useEditorStore((s) => s.setShapeKind);
   const color = useEditorStore((s) => s.color);
   const shapeStroke = useEditorStore((s) => s.shapeStroke);
   const fillEnabled = useEditorStore((s) => s.shapeFillEnabled);
@@ -23,7 +30,13 @@ export function ShapeWindow() {
   const layers = useEditorStore((s) => s.layers);
   const selected = layers.find((l) => l.id === selectedIds[0]);
   const editing = selected?.type === "shape" ? selected : null;
+  const saved = useSyncExternalStore(
+    subscribeSavedElements,
+    getSavedElements,
+    getSavedElements,
+  );
 
+  const [query, setQuery] = useState("");
   const [pos, setPos] = useState({ x: 16, y: 16 });
   const drag = useRef<{
     ox: number;
@@ -50,16 +63,23 @@ export function ShapeWindow() {
     drag.current = null;
   };
 
-  const pickKind = (id: ShapeKind) => {
-    setShapeKind(id);
-    if (editing) {
-      useEditorStore.getState().updateLayer(editing.id, { shape: id });
-    }
+  const q = query.trim().toLowerCase();
+  const matches = (label: string) => !q || label.toLowerCase().includes(q);
+  const catalog = ELEMENT_CATALOG.filter((item) => matches(item.label));
+  const savedVisible = saved.filter((item) => matches(item.name));
+
+  const place = (item: CatalogElement) => {
+    useEditorStore.getState().placeCatalogItem(item.id);
+  };
+
+  const saveSelection = () => {
+    if (!selected) return;
+    saveLayerAsElement(selected);
   };
 
   return (
     <div
-      className="absolute z-30 w-[248px] overflow-hidden rounded-xl border border-border/80 bg-card shadow-2xl"
+      className="absolute z-30 w-[280px] overflow-hidden rounded-xl border border-border/80 bg-card shadow-2xl"
       style={{ left: pos.x, top: pos.y }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -69,12 +89,12 @@ export function ShapeWindow() {
         onPointerMove={onTitleMove}
         onPointerUp={onTitleUp}
       >
-        <span>{editing ? "Adjust shape" : "Shapes"}</span>
+        <span>{editing ? "Adjust element" : "Elements"}</span>
         <Button
           size="icon-xs"
           variant="ghost"
           className="size-6 text-white/70 hover:bg-white/10 hover:text-white"
-          aria-label="Close shapes"
+          aria-label="Close elements"
           onClick={() => {
             if (tool === "shape") setTool("select");
             else clearSelection();
@@ -83,37 +103,100 @@ export function ShapeWindow() {
           <X />
         </Button>
       </div>
-      <div className="max-h-[min(70vh,520px)] space-y-3 overflow-y-auto p-3">
-        <div className="grid grid-cols-4 gap-1.5">
-          {SHAPE_KINDS.map((shape) => (
-            <button
-              key={shape.id}
-              type="button"
-              title={shape.label}
-              onClick={() => pickKind(shape.id)}
-              className={cn(
-                "flex aspect-square items-center justify-center rounded-lg border bg-[#f7f1e6] transition-colors",
-                (editing?.shape ?? shapeKind) === shape.id
-                  ? "border-primary ring-2 ring-primary/30"
-                  : "border-border/70 hover:border-primary/50",
-              )}
-            >
-              <ShapePreview
-                kind={shape.id}
-                fill={(editing?.fillEnabled ?? fillEnabled) ? (editing?.fill ?? color) : "none"}
-                stroke={
-                  (editing?.strokeEnabled ?? strokeEnabled)
-                    ? (editing?.stroke ?? shapeStroke)
-                    : "none"
-                }
-              />
-            </button>
-          ))}
+      <div className="max-h-[min(74vh,580px)] space-y-3 overflow-y-auto p-3">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search the library"
+            className="h-8 pl-7 text-xs"
+            aria-label="Search elements"
+          />
         </div>
+        <div className="flex gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 flex-1 text-[11px]"
+            disabled={!selected}
+            onClick={saveSelection}
+          >
+            <BookmarkPlus className="size-3.5" />
+            Save selection
+          </Button>
+        </div>
+
+        {ELEMENT_GROUPS.map((group) => {
+          if (group === "Saved") {
+            if (q && savedVisible.length === 0) return null;
+            return (
+              <section key={group} className="space-y-1.5">
+                <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Saved
+                </h3>
+                {savedVisible.length === 0 ? (
+                  <p className="text-[11px] leading-snug text-muted-foreground">
+                    Nothing stored yet. Select a layer and save it here to reuse
+                    on other pages.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {savedVisible.map((item) => (
+                      <SavedTile key={item.id} item={item} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          }
+
+          const items = catalog.filter((item) => item.group === group);
+          if (items.length === 0) return null;
+          return (
+            <section key={group} className="space-y-1.5">
+              <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {group}
+              </h3>
+              <div className="grid grid-cols-4 gap-1.5">
+                {items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    title={item.label}
+                    onClick={() => place(item)}
+                    className="flex aspect-square flex-col items-center justify-center rounded-lg border border-border/70 bg-[#f7f1e6] px-0.5 transition-colors hover:border-primary/50"
+                  >
+                    <ElementPreview
+                      item={item}
+                      fill={
+                        (editing?.fillEnabled ?? fillEnabled)
+                          ? (editing?.fill ?? color)
+                          : "none"
+                      }
+                      stroke={
+                        (editing?.strokeEnabled ?? strokeEnabled)
+                          ? (editing?.stroke ?? shapeStroke)
+                          : "none"
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+
+        {catalog.length === 0 && savedVisible.length === 0 ? (
+          <p className="text-[11px] text-muted-foreground">
+            No elements match “{query}”.
+          </p>
+        ) : null}
+
         <p className="text-[11px] leading-snug text-muted-foreground">
           {editing
-            ? "Sliders rewrite the selected shape. Change kind, fill, geometry, and size here."
-            : `${SHAPE_KINDS.find((s) => s.id === shapeKind)?.label}. Drag on the page to draw it.`}
+            ? "Sliders rewrite the selected element. Click a library item to place another copy."
+            : "Click to place on the page. Basics can also be dragged out after you pick them."}
         </p>
         <ShapeAdjustments layer={editing} compact />
       </div>
@@ -121,18 +204,78 @@ export function ShapeWindow() {
   );
 }
 
+function SavedTile({ item }: { item: SavedElement }) {
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        title={item.name}
+        onClick={() => useEditorStore.getState().placeSavedElement(item.id)}
+        className="flex aspect-square w-full items-center justify-center rounded-lg border border-border/70 bg-[#f7f1e6] hover:border-primary/50"
+      >
+        <span className="line-clamp-2 px-1 text-center text-[9px] leading-tight text-[#1a1612]">
+          {item.name}
+        </span>
+      </button>
+      <button
+        type="button"
+        aria-label={`Delete ${item.name}`}
+        className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[#2a2622] text-white/80 hover:text-white"
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteSavedElement(item.id);
+        }}
+      >
+        <Trash2 className="size-2.5" />
+      </button>
+    </div>
+  );
+}
+
+function ElementPreview({
+  item,
+  fill,
+  stroke,
+}: {
+  item: CatalogElement;
+  fill: string;
+  stroke: string;
+}) {
+  if (item.kind === "stamp") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={item.src} alt="" className="size-8 object-contain" />
+    );
+  }
+  return (
+    <ShapePreview
+      kind={item.shape}
+      fill={item.defaults?.fillEnabled === false ? "none" : fill}
+      stroke={item.defaults?.strokeEnabled === false ? "none" : stroke}
+      sides={item.defaults?.sides}
+    />
+  );
+}
+
 function ShapePreview({
   kind,
   fill,
   stroke,
+  sides,
 }: {
   kind: ShapeKind;
   fill: string;
   stroke: string;
+  sides?: number;
 }) {
   const w = 40;
   const h = 40;
   const sw = 1.75;
+  const n = sides ?? 6;
+  const poly = Array.from({ length: n }, (_, i) => {
+    const a = (Math.PI * 2 * i) / n - Math.PI / 2;
+    return `${20 + 13 * Math.cos(a)},${20 + 13 * Math.sin(a)}`;
+  }).join(" ");
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden>
       {kind === "rect" && (
@@ -145,12 +288,7 @@ function ShapePreview({
         <polygon points="20,6 34,34 6,34" fill={fill} stroke={stroke} strokeWidth={sw} />
       )}
       {kind === "hexagon" && (
-        <polygon
-          points="20,6 32,13 32,27 20,34 8,27 8,13"
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={sw}
-        />
+        <polygon points={poly} fill={fill} stroke={stroke} strokeWidth={sw} />
       )}
       {kind === "star" && (
         <polygon
@@ -172,5 +310,3 @@ function ShapePreview({
     </svg>
   );
 }
-
-export type { ShapeLayer };

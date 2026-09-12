@@ -25,6 +25,11 @@ import type {
   TextAlign,
   Tool,
 } from "./types";
+import {
+  cloneLayerOntoPage,
+  ELEMENT_CATALOG,
+  getSavedElements,
+} from "./elements";
 
 type Clipboard = Layer[] | null;
 
@@ -108,8 +113,17 @@ interface EditorState {
   ) => void;
   addImageFromSrc: (
     src: string,
-    opts?: { isRaw?: boolean; name?: string; width?: number; height?: number },
+    opts?: {
+      isRaw?: boolean;
+      name?: string;
+      width?: number;
+      height?: number;
+      x?: number;
+      y?: number;
+    },
   ) => string;
+  placeCatalogItem: (id: string) => void;
+  placeSavedElement: (id: string) => void;
 
   cut: () => void;
   copy: () => void;
@@ -375,11 +389,16 @@ export const useEditorStore = create<EditorState>()(
       },
 
       addImageFromSrc: (src, opts) => {
+        const page = get().page;
+        const width = opts?.width ?? 360;
+        const height = opts?.height ?? 240;
         const layer = createImageLayer(src, {
           isRaw: opts?.isRaw ?? false,
           name: opts?.name ?? "Image",
-          width: opts?.width ?? 360,
-          height: opts?.height ?? 240,
+          width,
+          height,
+          x: opts?.x ?? Math.round((page.width - width) / 2),
+          y: opts?.y ?? Math.round((page.height - height) / 2),
           adjustments: {
             ...createImageLayer(src).adjustments,
             raw: opts?.isRaw ?? false,
@@ -387,6 +406,62 @@ export const useEditorStore = create<EditorState>()(
         });
         get().addLayer(layer);
         return layer.id;
+      },
+
+      placeCatalogItem: (id) => {
+        const item = ELEMENT_CATALOG.find((entry) => entry.id === id);
+        if (!item) return;
+        const s = get();
+        const x = Math.round((s.page.width - item.width) / 2);
+        const y = Math.round((s.page.height - item.height) / 2);
+        if (item.kind === "stamp") {
+          get().addImageFromSrc(item.src, {
+            name: item.label,
+            width: item.width,
+            height: item.height,
+            x,
+            y,
+          });
+          return;
+        }
+        const defaults = item.defaults ?? {};
+        const layer = createShapeLayer(item.shape, {
+          name: item.label,
+          x,
+          y,
+          width: item.width,
+          height: item.height,
+          fill: s.color,
+          stroke: s.shapeStroke,
+          fillEnabled: s.shapeFillEnabled,
+          strokeEnabled: s.shapeStrokeEnabled,
+          strokeWidth: s.shapeStrokeWidth,
+          cornerRadius: s.shapeKind === "rect" ? s.shapeCornerRadius : 0,
+          sides: s.shapeSides,
+          starPoints: s.shapeStarPoints,
+          innerRatio: s.shapeInnerRatio,
+          arrowHead: s.shapeArrowHead,
+          ...defaults,
+        });
+        get().addLayer(layer);
+        set({
+          shapeKind: item.shape,
+          shapeCornerRadius: layer.cornerRadius,
+          shapeSides: layer.sides,
+          shapeStarPoints: layer.starPoints,
+          shapeInnerRatio: layer.innerRatio,
+          shapeArrowHead: layer.arrowHead,
+          shapeFillEnabled: layer.fillEnabled,
+          shapeStrokeEnabled: layer.strokeEnabled,
+          shapeStrokeWidth: layer.strokeWidth,
+        });
+      },
+
+      placeSavedElement: (id) => {
+        const item = getSavedElements().find((entry) => entry.id === id);
+        if (!item) return;
+        const page = get().page;
+        get().addLayer(cloneLayerOntoPage(item.layer, page.width, page.height));
       },
 
       cut: () => {
