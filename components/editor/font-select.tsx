@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ChevronDown, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -85,11 +85,10 @@ export function FontSelect({
             size="sm"
             disabled={disabled}
             aria-label="Font"
-            className="h-7 min-w-0 flex-1 justify-between px-2.5 font-normal"
+            className="h-7 min-w-0 flex-1 justify-start px-2.5 font-normal"
             style={{ fontFamily: cssFontFamily(value) }}
           >
             <span className="truncate">{value || "Font"}</span>
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent

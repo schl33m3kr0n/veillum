@@ -9,7 +9,6 @@ import {
   AlignRight,
   AlignVerticalJustifyCenter,
   AlignVerticalSpaceAround,
-  ChevronDown,
   UnfoldHorizontal,
   UnfoldVertical,
 } from "lucide-react";
@@ -51,10 +50,9 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
             variant="ghost"
             aria-label="Align"
             title="Align"
-            className="gap-0.5 px-2"
+            className="px-2"
           >
             <AlignHorizontalJustifyCenter />
-            <ChevronDown className="size-3" />
           </Button>
         ) : (
           <Button size="sm" variant="outline" className="w-full justify-between">
@@ -62,7 +60,6 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
               <AlignHorizontalJustifyCenter />
               Align
             </span>
-            <ChevronDown />
           </Button>
         )}
       </DropdownMenuTrigger>

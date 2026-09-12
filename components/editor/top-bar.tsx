@@ -17,12 +17,8 @@ import {
   ClipboardPaste,
   Scissors,
   Download,
-  PanelBottomClose,
-  PanelBottomOpen,
   PanelRightClose,
   PanelRightOpen,
-  Play,
-  Square as SquareIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -131,6 +127,7 @@ export function TopBar() {
         value={text?.fontSize ?? 16}
         onChange={(v) => patchText({ fontSize: v })}
         className="w-16"
+        steppers={false}
       />
       <Toggle
         size="sm"
@@ -211,41 +208,10 @@ export function TopBar() {
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
       <div className="ml-auto flex items-center gap-1">
-        <PlayPause />
-        <TimelineToggle />
         <SidebarToggle />
         <ExportMenu />
       </div>
     </header>
-  );
-}
-
-function PlayPause() {
-  const playing = useEditorStore((s) => s.playing);
-  return (
-    <Button
-      size="sm"
-      variant="ghost"
-      onClick={() => useEditorStore.getState().setPlaying(!playing)}
-    >
-      {playing ? <SquareIcon /> : <Play />}
-      {playing ? "Stop" : "Play"}
-    </Button>
-  );
-}
-
-function TimelineToggle() {
-  const open = useEditorStore((s) => s.timelineOpen);
-  return (
-    <Button
-      size="icon-sm"
-      variant="ghost"
-      aria-label={open ? "Hide animation" : "Show animation"}
-      title={open ? "Hide animation [" : "Show animation ["}
-      onClick={() => useEditorStore.getState().setTimelineOpen(!open)}
-    >
-      {open ? <PanelBottomClose /> : <PanelBottomOpen />}
-    </Button>
   );
 }
 

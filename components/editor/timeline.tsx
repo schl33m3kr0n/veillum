@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useEditorStore } from "@/lib/editor-store";
-import { Diamond, PanelBottomClose, PanelBottomOpen, Plus, Trash2 } from "lucide-react";
+import { Diamond, PanelBottomClose, PanelBottomOpen, Play, Plus, Square as SquareIcon, Trash2 } from "lucide-react";
 
 export function Timeline() {
   const playhead = useEditorStore((s) => s.playhead);
@@ -55,6 +55,14 @@ export function Timeline() {
         <span className="text-xs tabular-nums text-muted-foreground">
           {playhead.toFixed(2)}s / {duration.toFixed(1)}s
         </span>
+        <Button
+          size="xs"
+          variant="ghost"
+          onClick={() => useEditorStore.getState().setPlaying(!playing)}
+        >
+          {playing ? <SquareIcon /> : <Play />}
+          {playing ? "Stop" : "Play"}
+        </Button>
         {open ? (
           <div className="ml-auto flex items-center gap-1">
             <Button
