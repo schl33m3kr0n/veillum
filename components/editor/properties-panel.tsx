@@ -127,9 +127,9 @@ export function PropertiesPanel() {
       </Section>
 
       {selectedIds.length > 0 && (
-        <Section title="Align">
+        <div className="px-3 py-2">
           <AlignTools />
-        </Section>
+        </div>
       )}
 
       {layer ? (

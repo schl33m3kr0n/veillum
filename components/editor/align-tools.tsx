@@ -9,11 +9,22 @@ import {
   AlignRight,
   AlignVerticalJustifyCenter,
   AlignVerticalSpaceAround,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEditorStore } from "@/lib/editor-store";
 import type { AlignMode, AlignTarget } from "@/lib/geometry";
-import { cn } from "@/lib/utils";
 
 export function AlignTools({ compact = false }: { compact?: boolean }) {
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -28,68 +39,131 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
     useEditorStore.getState().distributeSelected(axis);
 
   return (
-    <div className={cn("space-y-2", compact && "flex items-center gap-1 space-y-0")}>
-      <div className="flex flex-wrap gap-1">
-        <AlignBtn title="Align left" onClick={() => align("left")}>
-          <AlignLeft />
-        </AlignBtn>
-        <AlignBtn title="Center horizontally" onClick={() => align("center")}>
-          <AlignHorizontalJustifyCenter />
-        </AlignBtn>
-        <AlignBtn title="Align right" onClick={() => align("right")}>
-          <AlignRight />
-        </AlignBtn>
-        <AlignBtn title="Align top" onClick={() => align("top")}>
-          <AlignVerticalJustifyCenter className="rotate-180" />
-        </AlignBtn>
-        <AlignBtn title="Center vertically" onClick={() => align("middle")}>
-          <AlignCenter />
-        </AlignBtn>
-        <AlignBtn title="Align bottom" onClick={() => align("bottom")}>
-          <AlignVerticalJustifyCenter />
-        </AlignBtn>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {compact ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label="Align"
+            title="Align"
+            className="gap-0.5 px-2"
+          >
+            <AlignHorizontalJustifyCenter />
+            <ChevronDown className="size-3" />
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" className="w-full justify-between">
+            <span className="flex items-center gap-1.5">
+              <AlignHorizontalJustifyCenter />
+              Align
+            </span>
+            <ChevronDown />
+          </Button>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-52">
+        <DropdownMenuGroup>
+          <AlignItem
+            label="Align left"
+            onSelect={() => align("left")}
+          >
+            <AlignLeft />
+          </AlignItem>
+          <AlignItem
+            label="Center horizontally"
+            onSelect={() => align("center")}
+          >
+            <AlignHorizontalJustifyCenter />
+          </AlignItem>
+          <AlignItem
+            label="Align right"
+            onSelect={() => align("right")}
+          >
+            <AlignRight />
+          </AlignItem>
+          <AlignItem
+            label="Align top"
+            onSelect={() => align("top")}
+          >
+            <AlignVerticalJustifyCenter className="rotate-180" />
+          </AlignItem>
+          <AlignItem
+            label="Center vertically"
+            onSelect={() => align("middle")}
+          >
+            <AlignCenter />
+          </AlignItem>
+          <AlignItem
+            label="Align bottom"
+            onSelect={() => align("bottom")}
+          >
+            <AlignVerticalJustifyCenter />
+          </AlignItem>
+        </DropdownMenuGroup>
         {selectedIds.length >= 3 && (
           <>
-            <AlignBtn title="Distribute horizontally" onClick={() => distribute("horizontal")}>
-              <AlignHorizontalSpaceAround />
-            </AlignBtn>
-            <AlignBtn title="Distribute vertically" onClick={() => distribute("vertical")}>
-              <AlignVerticalSpaceAround />
-            </AlignBtn>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <AlignItem
+                label="Distribute horizontally"
+                onSelect={() => distribute("horizontal")}
+              >
+                <AlignHorizontalSpaceAround />
+              </AlignItem>
+              <AlignItem
+                label="Distribute vertically"
+                onSelect={() => distribute("vertical")}
+              >
+                <AlignVerticalSpaceAround />
+              </AlignItem>
+            </DropdownMenuGroup>
           </>
         )}
-      </div>
-      {!compact && (
-        <div className="flex flex-wrap gap-1">
-          {(["page", "margins", "selection"] as const).map((value) => (
-            <Button
-              key={value}
-              size="xs"
-              variant={resolved === value ? "default" : "outline"}
-              disabled={value === "selection" && selectedIds.length < 2}
-              onClick={() => setTarget(value)}
-            >
-              {value === "page" ? "Page" : value === "margins" ? "Margins" : "Selection"}
-            </Button>
-          ))}
-        </div>
-      )}
-    </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Align to</DropdownMenuLabel>
+        <DropdownMenuRadioGroup
+          value={resolved}
+          onValueChange={(value) => setTarget(value as AlignTarget)}
+        >
+          <DropdownMenuRadioItem
+            value="page"
+            onSelect={(event) => event.preventDefault()}
+          >
+            Page
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="margins"
+            onSelect={(event) => event.preventDefault()}
+          >
+            Margins
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="selection"
+            disabled={selectedIds.length < 2}
+            onSelect={(event) => event.preventDefault()}
+          >
+            Selection
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-function AlignBtn({
-  title,
-  onClick,
+function AlignItem({
+  label,
+  onSelect,
   children,
 }: {
-  title: string;
-  onClick: () => void;
+  label: string;
+  onSelect: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <Button size="icon-xs" variant="outline" title={title} aria-label={title} onClick={onClick}>
+    <DropdownMenuItem onSelect={onSelect}>
       {children}
-    </Button>
+      {label}
+    </DropdownMenuItem>
   );
 }
