@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useEditorStore, pauseHistory, resumeHistory } from "@/lib/editor-store";
-import { cssFontFamily } from "@/lib/fonts";
+import { cssFontFamily, cssFontWeight } from "@/lib/fonts";
 import type { TextLayer } from "@/lib/types";
 
 export function TextOverlay() {
@@ -54,7 +54,7 @@ export function TextOverlay() {
         height: Math.max(40, layer.height * zoom),
         fontFamily: cssFontFamily(layer.fontFamily),
         fontSize: layer.fontSize * zoom,
-        fontWeight: layer.bold ? 700 : 400,
+        fontWeight: cssFontWeight(layer.fontFamily, layer.bold),
         fontStyle: layer.italic ? "italic" : "normal",
         color: layer.color,
         lineHeight: layer.lineHeight,

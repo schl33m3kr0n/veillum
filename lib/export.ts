@@ -1,3 +1,4 @@
+import { cssFontWeight } from "./fonts";
 import { bezierPath } from "./geometry";
 import { shapeSvgPoints } from "./shapes";
 import type { BezierLayer, Layer, Page, PathLayer, ShapeLayer, TextLayer } from "./types";
@@ -35,7 +36,7 @@ function layerToSvg(layer: Layer): string {
   if (layer.type === "text") {
     const l = layer as TextLayer;
     const text = escapeXml(displayText(l));
-    const weight = l.bold ? "700" : "400";
+    const weight = cssFontWeight(l.fontFamily, l.bold);
     const style = l.italic ? "italic" : "normal";
     const deco = [l.underline ? "underline" : "", l.strikethrough ? "line-through" : ""]
       .filter(Boolean)

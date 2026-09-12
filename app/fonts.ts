@@ -36,6 +36,7 @@ import {
   Shrikhand,
   Silkscreen,
   Solway,
+  Nunito_Sans,
 } from "next/font/google";
 import localFont from "next/font/local";
 
@@ -71,6 +72,12 @@ const cormorant = Cormorant_Garamond({
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
+});
+
+const avenir = Nunito_Sans({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-avenir",
 });
 
 const libre = Libre_Baskerville({
@@ -279,6 +286,7 @@ export const fontVariables = [
   jetbrains.variable,
   cormorant.variable,
   outfit.variable,
+  avenir.variable,
   libre.variable,
   bebas.variable,
   playfair.variable,
