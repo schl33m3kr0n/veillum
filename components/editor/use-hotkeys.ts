@@ -100,6 +100,9 @@ export function useEditorHotkeys() {
       } else if (e.key === "]") {
         e.preventDefault();
         store.setSidebarOpen(!store.sidebarOpen);
+      } else if (e.key === "[") {
+        e.preventDefault();
+        store.setTimelineOpen(!store.timelineOpen);
       } else if (meta && e.key === "0") {
         e.preventDefault();
         store.setZoom(1);

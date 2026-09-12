@@ -49,6 +49,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | ⌘/Ctrl B I U | Bold / Italic / Underline |
 | Delete | Remove layer |
 | ] | Show / hide Inspect sidebar |
+| [ | Show / hide Animation panel |
 
 Double-click a text box to type. Drag images onto the page to place them.
 

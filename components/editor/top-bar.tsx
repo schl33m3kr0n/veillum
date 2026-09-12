@@ -17,6 +17,8 @@ import {
   ClipboardPaste,
   Scissors,
   Download,
+  PanelBottomClose,
+  PanelBottomOpen,
   PanelRightClose,
   PanelRightOpen,
   Play,
@@ -210,6 +212,7 @@ export function TopBar() {
       <AlignTools compact />
       <div className="ml-auto flex items-center gap-1">
         <PlayPause />
+        <TimelineToggle />
         <SidebarToggle />
         <ExportMenu />
       </div>
@@ -227,6 +230,21 @@ function PlayPause() {
     >
       {playing ? <SquareIcon /> : <Play />}
       {playing ? "Stop" : "Play"}
+    </Button>
+  );
+}
+
+function TimelineToggle() {
+  const open = useEditorStore((s) => s.timelineOpen);
+  return (
+    <Button
+      size="icon-sm"
+      variant="ghost"
+      aria-label={open ? "Hide animation" : "Show animation"}
+      title={open ? "Hide animation [" : "Show animation ["}
+      onClick={() => useEditorStore.getState().setTimelineOpen(!open)}
+    >
+      {open ? <PanelBottomClose /> : <PanelBottomOpen />}
     </Button>
   );
 }

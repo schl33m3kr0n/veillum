@@ -54,6 +54,7 @@ interface EditorState {
   pointer: { x: number; y: number };
   recentColors: string[];
   sidebarOpen: boolean;
+  timelineOpen: boolean;
 
   setTool: (tool: Tool) => void;
   setShapeKind: (kind: ShapeKind) => void;
@@ -76,6 +77,7 @@ interface EditorState {
   setDuration: (t: number) => void;
   setPlaying: (p: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
+  setTimelineOpen: (open: boolean) => void;
   select: (ids: string[], additive?: boolean) => void;
   clearSelection: () => void;
   setEditingText: (id: string | null) => void;
@@ -158,6 +160,7 @@ export const useEditorStore = create<EditorState>()(
       pointer: { x: 0, y: 0 },
       recentColors: ["#1c1916", "#c45c26", "#d4a054", "#f7f1e6", "#8aa39b"],
       sidebarOpen: true,
+      timelineOpen: true,
 
       setTool: (tool) => set({ tool, editingTextId: null }),
       setShapeKind: (shapeKind) => set({ shapeKind }),
@@ -191,6 +194,7 @@ export const useEditorStore = create<EditorState>()(
       setDuration: (duration) => set({ duration }),
       setPlaying: (playing) => set({ playing }),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setTimelineOpen: (timelineOpen) => set({ timelineOpen }),
       select: (ids, additive) =>
         set((s) => ({
           selectedIds: additive
