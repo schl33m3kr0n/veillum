@@ -140,7 +140,9 @@ function TextContent({ layer }: { layer: TextLayer }) {
 
 function ImageContent({ layer }: { layer: ImageLayer }) {
   const image = useProcessedImage(layer);
-  if (!image) {
+  const busy = useEditorStore((s) => s.bgBusyId === layer.id);
+  const note = useEditorStore((s) => (s.bgBusyId === layer.id ? s.bgBusyNote : ""));
+  if (!image && !busy) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-[#ddd6c8] text-[11px] text-[#7a7268]">
         Developing…
@@ -148,13 +150,24 @@ function ImageContent({ layer }: { layer: ImageLayer }) {
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={image.src}
-      alt={layer.name}
-      draggable={false}
-      className="h-full w-full object-cover"
-    />
+    <div className="relative h-full w-full">
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image.src}
+          alt={layer.name}
+          draggable={false}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="h-full w-full bg-[#ddd6c8]" />
+      )}
+      {busy && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#1c1916]/45 px-3 text-center text-[11px] text-[#f7f1e6]">
+          {note || "Cutting out…"}
+        </div>
+      )}
+    </div>
   );
 }
 

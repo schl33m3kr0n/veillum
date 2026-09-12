@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -29,6 +30,7 @@ import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
 import { ShapeAdjustments } from "./shape-adjustments";
+import { removeImageBackground } from "@/lib/remove-background";
 
 export function PropertiesPanel() {
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -496,14 +498,57 @@ function TextFields({ layer }: { layer: TextLayer }) {
 
 function ImageFields({ layer }: { layer: ImageLayer }) {
   const update = useEditorStore((s) => s.updateLayer);
+  const setBgBusy = useEditorStore((s) => s.setBgBusy);
+  const bgBusyId = useEditorStore((s) => s.bgBusyId);
+  const bgBusyNote = useEditorStore((s) => s.bgBusyNote);
+  const [bgError, setBgError] = useState<string | null>(null);
+  const busy = bgBusyId === layer.id;
   const adj = layer.adjustments;
   const raw = adj.raw || layer.isRaw;
   const range = raw ? 2 : 1;
   const setAdj = (partial: Partial<typeof adj>) =>
     update(layer.id, { adjustments: { ...adj, ...partial } });
+  const cutOut = async () => {
+    setBgError(null);
+    setBgBusy(layer.id, "Cutting out…");
+    try {
+      const src = await removeImageBackground(layer.originalSrc, (note) =>
+        setBgBusy(layer.id, note),
+      );
+      update(layer.id, { src });
+    } catch (err) {
+      setBgError(
+        err instanceof Error ? err.message : "Could not remove the background.",
+      );
+    } finally {
+      setBgBusy(null);
+    }
+  };
 
   return (
     <Section title={raw ? "RAW develop" : "Image"}>
+      <div className="mb-2 flex flex-col gap-1.5">
+        <Button size="sm" disabled={busy} onClick={() => void cutOut()}>
+          {busy ? bgBusyNote || "Cutting out…" : "Remove background"}
+        </Button>
+        {layer.src !== layer.originalSrc && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => update(layer.id, { src: layer.originalSrc })}
+          >
+            Restore original
+          </Button>
+        )}
+        {bgError && (
+          <p className="text-[11px] leading-relaxed text-destructive">{bgError}</p>
+        )}
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          Cuts the subject free of its backdrop. First run may download a model.
+          Undo or restore brings the original back.
+        </p>
+      </div>
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs">RAW workspace</span>
         <Switch

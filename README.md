@@ -19,7 +19,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 
 **Draw.** Pencil, pen, and highlighter, plus an Elements library (circle, square, rectangle, ellipse, and other basics, frames, marks, badges, nature icons, and items you save). Path-based marks place as live SVG — fill, stroke, and SVG export stay vector. Click to place, or drag a basic onto the page. A pie chart in Basics has an adjustable wedge (slider or yellow handle). Selected shapes keep yellow diamonds for corner radius, star inner radius, arrowhead, and pie wedge. Fill and stroke each have a no-color option.
 
-**Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
+**Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, Remove background (cuts the subject free; restore or undo to reverse), and Instant Alpha (click a color to punch it out).
 
 **Color.** I opens Color: a dark panel with the wheel, hex, highlighter, recent swatches, and grouped palettes. Hover the page for a pixel magnifier; click to sample. Shape fills include solid, linear, radial, diamond, angular, and reflect — shown as previews — with two to five gradient colors whose lengths you can adjust (even by default).
 

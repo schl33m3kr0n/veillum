@@ -76,6 +76,8 @@ interface EditorState {
   timelineOpen: boolean;
   snapGuides: SnapGuide[];
   startOpen: boolean;
+  bgBusyId: string | null;
+  bgBusyNote: string;
 
   setTool: (tool: Tool) => void;
   setStartOpen: (open: boolean) => void;
@@ -163,6 +165,7 @@ interface EditorState {
   removeKeyframeAtPlayhead: () => void;
   rasterizeSelected: (dataUrl: string, width: number, height: number) => void;
   flattenPage: (dataUrl: string) => void;
+  setBgBusy: (id: string | null, note?: string) => void;
 }
 
 function selected(state: EditorState): Layer[] {
@@ -215,8 +218,12 @@ export const useEditorStore = create<EditorState>()(
       timelineOpen: true,
       snapGuides: [],
       startOpen: true,
+      bgBusyId: null,
+      bgBusyNote: "",
 
       setTool: (tool) => set({ tool, editingTextId: null }),
+      setBgBusy: (bgBusyId, note) =>
+        set({ bgBusyId, bgBusyNote: note ?? (bgBusyId ? "Cutting out…" : "") }),
       setStartOpen: (startOpen) => set({ startOpen }),
       startBlank: (preset) => {
         const page = pageFromSize(preset);
