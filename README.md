@@ -13,7 +13,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 ## What you can do
 
-**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (including the Avenir family, Campfire, and Flames), plus import of a .ttf/.otf/.woff you own. Bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
+**Type.** Cut, copy, paste, undo, and redo. Size, color, highlighter, orientation, headers and footers, line spacing, letter spacing, text-box anchoring, a bundled type library (including Avenir, Futura, Campfire, and Flames), plus import of a .ttf/.otf/.woff you own. Bold/italic/underline/strikethrough, super/subscript, kerning, ligatures, bullets, numbered lists, and capitalization.
 
 **Arrange.** Ruler, indent, page margins, and box alignment. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, and other objects. Align to the page, the margin box, or the selection, and distribute three or more objects. Square or triangle grid, plus perspective on a layer.
 

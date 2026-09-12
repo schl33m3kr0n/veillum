@@ -20,6 +20,12 @@ const STACKS: Record<BundledFont, string> = {
     '"Avenir-Heavy", "Avenir Heavy", Avenir, "Avenir Next", var(--font-avenir), sans-serif',
   "Avenir Next":
     '"Avenir Next", "AvenirNext-Regular", Avenir, var(--font-avenir), sans-serif',
+  "Futura Light":
+    '"Futura-Light", "Futura Light", Futura, var(--font-futura), sans-serif',
+  "Futura Medium":
+    '"Futura-Medium", "Futura Medium", Futura, var(--font-futura), sans-serif',
+  "Futura Bold":
+    '"Futura-Bold", "Futura Bold", Futura, var(--font-futura), sans-serif',
   Outfit: 'var(--font-outfit), "Outfit", sans-serif',
   Figtree: 'var(--font-figtree), "Figtree", sans-serif',
   "Space Grotesk": 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
@@ -57,14 +63,17 @@ export function cssFontFamily(family: string): string {
   return STACKS[family as BundledFont] ?? `"${family}", serif`;
 }
 
-const AVENIR_WEIGHT: Record<string, { regular: number; bold: number }> = {
+const FAMILY_WEIGHT: Record<string, { regular: number; bold: number }> = {
   "Avenir Book": { regular: 400, bold: 800 },
   "Avenir Medium": { regular: 500, bold: 800 },
   "Avenir Heavy": { regular: 800, bold: 900 },
   "Avenir Next": { regular: 400, bold: 700 },
+  "Futura Light": { regular: 300, bold: 500 },
+  "Futura Medium": { regular: 500, bold: 700 },
+  "Futura Bold": { regular: 700, bold: 800 },
 };
 
 export function cssFontWeight(family: string, bold: boolean): number {
-  const pair = AVENIR_WEIGHT[family] ?? { regular: 400, bold: 700 };
+  const pair = FAMILY_WEIGHT[family] ?? { regular: 400, bold: 700 };
   return bold ? pair.bold : pair.regular;
 }

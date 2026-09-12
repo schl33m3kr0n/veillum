@@ -37,6 +37,7 @@ import {
   Silkscreen,
   Solway,
   Nunito_Sans,
+  Jost,
 } from "next/font/google";
 import localFont from "next/font/local";
 
@@ -78,6 +79,12 @@ const avenir = Nunito_Sans({
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-avenir",
+});
+
+const futura = Jost({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-futura",
 });
 
 const libre = Libre_Baskerville({
@@ -287,6 +294,7 @@ export const fontVariables = [
   cormorant.variable,
   outfit.variable,
   avenir.variable,
+  futura.variable,
   libre.variable,
   bebas.variable,
   playfair.variable,
