@@ -11,6 +11,8 @@ const STACKS: Record<BundledFont, string> = {
   "Instrument Serif": 'var(--font-instrument-serif), "Instrument Serif", serif',
   "Playfair Display": 'var(--font-playfair), "Playfair Display", serif',
   "DM Serif Display": 'var(--font-dm-serif), "DM Serif Display", serif',
+  Calisto:
+    '"Calisto MT", Calisto, "Calisto MT Std", var(--font-calisto), serif',
   "Instrument Sans": 'var(--font-instrument), "Instrument Sans", sans-serif',
   "Avenir Book":
     '"Avenir-Book", "Avenir Book", Avenir, "Avenir Next", var(--font-avenir), sans-serif',
@@ -32,6 +34,9 @@ const STACKS: Record<BundledFont, string> = {
   "Bricolage Grotesque":
     'var(--font-bricolage), "Bricolage Grotesque", sans-serif',
   Syne: 'var(--font-syne), "Syne", sans-serif',
+  "Century Gothic":
+    '"Century Gothic", CenturyGothic, AppleGothic, var(--font-century-gothic), sans-serif',
+  Montserrat: 'var(--font-montserrat), "Montserrat", sans-serif',
   "Bebas Neue": 'var(--font-bebas), "Bebas Neue", sans-serif',
   "Archivo Black": 'var(--font-archivo-black), "Archivo Black", sans-serif',
   Unbounded: 'var(--font-unbounded), "Unbounded", sans-serif',
@@ -39,6 +44,11 @@ const STACKS: Record<BundledFont, string> = {
   "Cinzel Decorative":
     'var(--font-cinzel-decorative), "Cinzel Decorative", serif',
   Campfire: 'var(--font-campfire), "Campfire", "Solway", serif',
+  "Cooper Black":
+    '"Cooper Black", "Cooper Black Std", CooperBlack, var(--font-cooper), sans-serif',
+  Oswald: 'var(--font-oswald), "Oswald", sans-serif',
+  Impact:
+    'Impact, Haettenschweiler, "Arial Narrow Bold", var(--font-impact), sans-serif',
   "Great Vibes": 'var(--font-great-vibes), "Great Vibes", cursive',
   "Rubik Glitch": 'var(--font-rubik-glitch), "Rubik Glitch", sans-serif',
   Monoton: 'var(--font-monoton), "Monoton", sans-serif',
@@ -71,6 +81,8 @@ const FAMILY_WEIGHT: Record<string, { regular: number; bold: number }> = {
   "Futura Light": { regular: 300, bold: 500 },
   "Futura Medium": { regular: 500, bold: 700 },
   "Futura Bold": { regular: 700, bold: 800 },
+  "Cooper Black": { regular: 400, bold: 400 },
+  Impact: { regular: 400, bold: 400 },
 };
 
 export function cssFontWeight(family: string, bold: boolean): number {

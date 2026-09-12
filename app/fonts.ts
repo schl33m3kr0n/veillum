@@ -38,6 +38,12 @@ import {
   Solway,
   Nunito_Sans,
   Jost,
+  Anton,
+  Crimson_Pro,
+  Lilita_One,
+  Montserrat,
+  Oswald,
+  Questrial,
 } from "next/font/google";
 import localFont from "next/font/local";
 
@@ -85,6 +91,41 @@ const futura = Jost({
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-futura",
+});
+
+const calisto = Crimson_Pro({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-calisto",
+});
+
+const centuryGothic = Questrial({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-century-gothic",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-montserrat",
+});
+
+const cooper = Lilita_One({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-cooper",
+});
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+});
+
+const impact = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-impact",
 });
 
 const libre = Libre_Baskerville({
@@ -295,6 +336,12 @@ export const fontVariables = [
   outfit.variable,
   avenir.variable,
   futura.variable,
+  calisto.variable,
+  centuryGothic.variable,
+  montserrat.variable,
+  cooper.variable,
+  oswald.variable,
+  impact.variable,
   libre.variable,
   bebas.variable,
   playfair.variable,
