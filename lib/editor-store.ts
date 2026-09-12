@@ -15,7 +15,6 @@ import {
   createImageLayer,
   createPathLayer,
   createShapeLayer,
-  createStarterLayers,
   createTextLayer,
 } from "./document";
 import type {
@@ -33,6 +32,9 @@ import {
   ELEMENT_CATALOG,
   getSavedElements,
 } from "./elements";
+import { pageFromSize, type PageSizePreset } from "./page-sizes";
+import { framePage } from "./stage";
+import { templateById } from "./templates";
 
 type Clipboard = Layer[] | null;
 
@@ -71,8 +73,12 @@ interface EditorState {
   sidebarOpen: boolean;
   timelineOpen: boolean;
   snapGuides: SnapGuide[];
+  startOpen: boolean;
 
   setTool: (tool: Tool) => void;
+  setStartOpen: (open: boolean) => void;
+  startBlank: (preset: PageSizePreset) => void;
+  loadTemplate: (id: string) => void;
   setShapeKind: (kind: ShapeKind) => void;
   setShapeStroke: (color: string) => void;
   setShapeFillEnabled: (enabled: boolean) => void;
@@ -200,8 +206,44 @@ export const useEditorStore = create<EditorState>()(
       sidebarOpen: true,
       timelineOpen: true,
       snapGuides: [],
+      startOpen: true,
 
       setTool: (tool) => set({ tool, editingTextId: null }),
+      setStartOpen: (startOpen) => set({ startOpen }),
+      startBlank: (preset) => {
+        const page = pageFromSize(preset);
+        set({
+          page,
+          layers: [],
+          selectedIds: [],
+          editingTextId: null,
+          startOpen: false,
+          tool: "select",
+          playhead: 0,
+          playing: false,
+          snapGuides: [],
+          ...framePage(page),
+        });
+        useEditorStore.temporal.getState().clear();
+      },
+      loadTemplate: (id) => {
+        const item = templateById(id);
+        if (!item) return;
+        const page = item.page();
+        set({
+          page,
+          layers: item.layers(),
+          selectedIds: [],
+          editingTextId: null,
+          startOpen: false,
+          tool: "select",
+          playhead: 0,
+          playing: false,
+          snapGuides: [],
+          ...framePage(page),
+        });
+        useEditorStore.temporal.getState().clear();
+      },
       setShapeKind: (shapeKind) => set({ shapeKind }),
       setShapeStroke: (shapeStroke) => set({ shapeStroke }),
       setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
@@ -784,20 +826,6 @@ export function resumeHistory() {
   }
   gestureSnapshot = null;
   useEditorStore.temporal.getState().resume();
-}
-
-export function seedDocument() {
-  try {
-    const s = useEditorStore.getState();
-    if (s.layers.length > 0) return;
-    useEditorStore.setState({
-      page: createDefaultPage(),
-      layers: createStarterLayers(),
-    });
-    useEditorStore.temporal.getState().clear();
-  } catch (err) {
-    console.error("Could not seed the starter page", err);
-  }
 }
 
 export function primarySelected(): Layer | undefined {

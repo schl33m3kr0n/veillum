@@ -20,6 +20,20 @@ export function useEditorHotkeys() {
       const meta = e.metaKey || e.ctrlKey;
       const store = useEditorStore.getState();
 
+      if (meta && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
+        store.setStartOpen(true);
+        return;
+      }
+      if (e.key === "Escape" && store.startOpen) {
+        if (store.layers.length > 0) {
+          e.preventDefault();
+          store.setStartOpen(false);
+        }
+        return;
+      }
+      if (store.startOpen) return;
+
       if (meta && e.key.toLowerCase() === "z") {
         e.preventDefault();
         resumeHistory();

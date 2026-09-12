@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
-import { seedDocument, useEditorStore } from "@/lib/editor-store";
+import { useEditorStore } from "@/lib/editor-store";
 import { restoreCustomFonts } from "@/lib/custom-fonts";
 import { restoreSavedElements } from "@/lib/elements";
 import { HistoryGuard } from "./history-guard";
@@ -18,6 +18,7 @@ import { Timeline } from "./timeline";
 import { Rulers } from "./rulers";
 import { TextOverlay } from "./text-overlay";
 import { TextFormatBar } from "./text-format-bar";
+import { StartScreen } from "./start-screen";
 import { useEditorHotkeys } from "./use-hotkeys";
 import { ShapeWindow } from "./shape-window";
 import HtmlStage from "./html-stage";
@@ -39,7 +40,6 @@ export function Studio() {
   useEffect(() => {
     void restoreCustomFonts();
     restoreSavedElements();
-    seedDocument();
   }, []);
 
   useEffect(() => {
@@ -56,7 +56,8 @@ export function Studio() {
   return (
     <TooltipProvider delayDuration={200}>
       <HistoryGuard />
-      <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+      <div className="relative flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+        <StartScreen />
         <TopBar />
         {tool === "shape" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">

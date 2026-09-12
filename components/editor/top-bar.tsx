@@ -46,6 +46,13 @@ export function TopBar() {
         <Button size="sm" variant="ghost" asChild>
           <Link href="/die">Die</Link>
         </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => useEditorStore.getState().setStartOpen(true)}
+        >
+          New
+        </Button>
       </div>
       <Tooltip>
         <TooltipTrigger asChild>

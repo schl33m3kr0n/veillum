@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
+The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start screen asks for a blank size (print, screen, social) or a template. **New** in the header (⌘/Ctrl N) opens it again.
 
 ## What you can do
 
@@ -43,7 +43,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 | Space | Pan |
 | ⌘/Ctrl + scroll or pinch | Zoom toward the cursor |
 | ⌘/Ctrl + / − | Zoom toward the pointer |
-| ⌘/Ctrl Z | Undo |
+| ⌘/Ctrl N | New page / templates |
 | ⌘/Ctrl Shift Z or ⌘/Ctrl Y | Redo |
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |
 | ⌘/Ctrl B I U | Bold / Italic / Underline (or Unite if two+ shapes are selected) |
