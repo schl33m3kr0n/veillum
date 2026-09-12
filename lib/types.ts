@@ -86,7 +86,30 @@ export type ShapeKind =
   | "line"
   | "hexagon"
   | "star"
-  | "arrow";
+  | "arrow"
+  | "svg";
+
+export type SvgPaint = "fill" | "stroke" | "none" | "accent";
+
+export type SvgNode =
+  | {
+      tag: "path";
+      d: string;
+      fill?: SvgPaint;
+      stroke?: SvgPaint;
+      strokeWidth?: number;
+      strokeLinecap?: "butt" | "round" | "square";
+      strokeLinejoin?: "miter" | "round" | "bevel";
+    }
+  | {
+      tag: "circle";
+      cx: number;
+      cy: number;
+      r: number;
+      fill?: SvgPaint;
+      stroke?: SvgPaint;
+      strokeWidth?: number;
+    };
 
 export type BlendMode =
   | "source-over"
@@ -246,6 +269,8 @@ export interface ShapeLayer extends LayerBase {
   starPoints: number;
   innerRatio: number;
   arrowHead: number;
+  svgViewBox?: string;
+  svgNodes?: SvgNode[];
 }
 
 export interface PathLayer extends LayerBase {

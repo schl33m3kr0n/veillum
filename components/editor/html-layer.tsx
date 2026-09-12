@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { bezierPath, dashArray } from "@/lib/geometry";
 import { shapeSvgPoints } from "@/lib/shapes";
+import { resolveSvgPaint, svgMarkViewBox, svgNodeStrokeWidth } from "@/lib/svg-mark";
 import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
 import { cssFontFamily, cssFontWeight } from "@/lib/fonts";
@@ -13,6 +14,8 @@ function cssBlend(mode: Layer["blendMode"]): CSSProperties["mixBlendMode"] {
   if (mode === "source-over") return "normal";
   return mode as CSSProperties["mixBlendMode"];
 }
+
+export { SvgMarkContent };
 
 export function HtmlLayer({
   layer,
@@ -46,7 +49,7 @@ export function HtmlLayer({
     outline: selected && layer.locked ? "1.5px solid #c45c26" : undefined,
     outlineOffset: 2,
     boxSizing: "border-box",
-    overflow: layer.type === "path" || layer.type === "bezier" ? "visible" : "hidden",
+    overflow: layer.type === "path" || layer.type === "bezier" || (layer.type === "shape" && layer.shape === "svg") ? "visible" : "hidden",
     WebkitMaskImage:
       layer.maskEnabled && layer.maskSrc ? `url(${layer.maskSrc})` : undefined,
     maskImage:
@@ -151,6 +154,72 @@ function ImageContent({ layer }: { layer: ImageLayer }) {
   );
 }
 
+function SvgMarkContent({
+  layer,
+  className,
+}: {
+  layer: Pick<
+    ShapeLayer,
+    | "svgNodes"
+    | "svgViewBox"
+    | "fill"
+    | "stroke"
+    | "fillEnabled"
+    | "strokeEnabled"
+    | "strokeWidth"
+    | "dash"
+  >;
+  className?: string;
+}) {
+  const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
+  return (
+    <svg
+      className={className}
+      width="100%"
+      height="100%"
+      viewBox={svgMarkViewBox(layer)}
+      preserveAspectRatio="xMidYMid meet"
+      overflow="visible"
+    >
+      {(layer.svgNodes ?? []).map((node, i) => {
+        const fallback =
+          node.tag === "path" && node.stroke && node.stroke !== "none"
+            ? "none"
+            : "fill";
+        const fill = resolveSvgPaint(node.fill, layer, fallback);
+        const stroke = resolveSvgPaint(node.stroke, layer, "none");
+        const sw = svgNodeStrokeWidth(node, layer);
+        if (node.tag === "circle") {
+          return (
+            <circle
+              key={i}
+              cx={node.cx}
+              cy={node.cy}
+              r={node.r}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={sw}
+              strokeDasharray={dash || undefined}
+            />
+          );
+        }
+        return (
+          <path
+            key={i}
+            d={node.d}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+            strokeLinecap={node.strokeLinecap}
+            strokeLinejoin={node.strokeLinejoin}
+            strokeDasharray={dash || undefined}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 function ShapeContent({ layer }: { layer: ShapeLayer }) {
   const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
   const fill = layer.fillEnabled ? layer.fill : "transparent";
@@ -159,6 +228,9 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
   const strokeOn = layer.strokeEnabled !== false && layer.strokeWidth > 0;
   const stroke = strokeOn ? layer.stroke : "none";
   const geo = shapeSvgPoints(layer);
+  if (layer.shape === "svg") {
+    return <SvgMarkContent layer={layer} />;
+  }
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
       {layer.shape === "rect" && (

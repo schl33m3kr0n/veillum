@@ -65,7 +65,7 @@ export function ShapeAdjustments({
 
   return (
     <div className="space-y-2">
-      {!compact && (
+      {!compact && kind !== "svg" && (
         <Field label="Kind">
           <Select
             value={kind}
@@ -75,7 +75,7 @@ export function ShapeAdjustments({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SHAPE_KINDS.map((k) => (
+              {SHAPE_KINDS.filter((k) => k.id !== "svg").map((k) => (
                 <SelectItem key={k.id} value={k.id}>
                   {k.label}
                 </SelectItem>

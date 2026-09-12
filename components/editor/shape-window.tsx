@@ -16,6 +16,7 @@ import {
 } from "@/lib/elements";
 import { useEditorStore } from "@/lib/editor-store";
 import type { ShapeKind } from "@/lib/types";
+import { SvgMarkContent } from "./html-layer";
 import { ShapeAdjustments } from "./shape-adjustments";
 
 export function ShapeWindow() {
@@ -241,10 +242,21 @@ function ElementPreview({
   fill: string;
   stroke: string;
 }) {
-  if (item.kind === "stamp") {
+  if (item.shape === "svg") {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={item.src} alt="" className="size-8 object-contain" />
+      <SvgMarkContent
+        className="size-8"
+        layer={{
+          svgNodes: item.defaults?.svgNodes ?? [],
+          svgViewBox: item.defaults?.svgViewBox ?? "0 0 64 64",
+          fill,
+          stroke,
+          fillEnabled: item.defaults?.fillEnabled !== false,
+          strokeEnabled: item.defaults?.strokeEnabled === true,
+          strokeWidth: item.defaults?.strokeWidth ?? 2,
+          dash: "solid",
+        }}
+      />
     );
   }
   return (

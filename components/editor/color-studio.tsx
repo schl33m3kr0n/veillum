@@ -24,7 +24,11 @@ export function ColorStudio() {
     if (selected.type === "text") {
       useEditorStore.getState().updateLayer(selected.id, { color: next });
     } else if (selected.type === "shape") {
-      useEditorStore.getState().updateLayer(selected.id, { fill: next });
+      if (selected.fillEnabled === false && selected.strokeEnabled) {
+        useEditorStore.getState().updateLayer(selected.id, { stroke: next });
+      } else {
+        useEditorStore.getState().updateLayer(selected.id, { fill: next });
+      }
     } else if (selected.type === "path" || selected.type === "bezier") {
       useEditorStore.getState().updateLayer(selected.id, { stroke: next });
     }

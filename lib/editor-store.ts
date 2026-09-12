@@ -414,16 +414,6 @@ export const useEditorStore = create<EditorState>()(
         const s = get();
         const x = Math.round((s.page.width - item.width) / 2);
         const y = Math.round((s.page.height - item.height) / 2);
-        if (item.kind === "stamp") {
-          get().addImageFromSrc(item.src, {
-            name: item.label,
-            width: item.width,
-            height: item.height,
-            x,
-            y,
-          });
-          return;
-        }
         const defaults = item.defaults ?? {};
         const layer = createShapeLayer(item.shape, {
           name: item.label,
@@ -444,6 +434,7 @@ export const useEditorStore = create<EditorState>()(
           ...defaults,
         });
         get().addLayer(layer);
+        if (item.shape === "svg") return;
         set({
           shapeKind: item.shape,
           shapeCornerRadius: layer.cornerRadius,
