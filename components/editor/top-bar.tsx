@@ -17,8 +17,6 @@ import {
   ClipboardPaste,
   Scissors,
   Download,
-  PanelRightClose,
-  PanelRightOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -208,25 +206,9 @@ export function TopBar() {
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
       <div className="ml-auto flex items-center gap-1">
-        <SidebarToggle />
         <ExportMenu />
       </div>
     </header>
-  );
-}
-
-function SidebarToggle() {
-  const open = useEditorStore((s) => s.sidebarOpen);
-  return (
-    <Button
-      size="icon-sm"
-      variant="ghost"
-      aria-label={open ? "Hide sidebar" : "Show sidebar"}
-      title={open ? "Hide sidebar ]" : "Show sidebar ]"}
-      onClick={() => useEditorStore.getState().setSidebarOpen(!open)}
-    >
-      {open ? <PanelRightClose /> : <PanelRightOpen />}
-    </Button>
   );
 }
 
