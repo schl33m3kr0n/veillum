@@ -20,6 +20,7 @@ import {
 import type {
   Anchor,
   BezierPoint,
+  FillStyle,
   Layer,
   Page,
   ShapeKind,
@@ -42,6 +43,9 @@ interface EditorState {
   shapeKind: ShapeKind;
   shapeStroke: string;
   shapeFillEnabled: boolean;
+  shapeFillStyle: FillStyle;
+  shapeFillTo: string;
+  shapeFillAngle: number;
   shapeStrokeEnabled: boolean;
   shapeStrokeWidth: number;
   shapeCornerRadius: number;
@@ -71,6 +75,9 @@ interface EditorState {
   setShapeKind: (kind: ShapeKind) => void;
   setShapeStroke: (color: string) => void;
   setShapeFillEnabled: (enabled: boolean) => void;
+  setShapeFillStyle: (style: FillStyle) => void;
+  setShapeFillTo: (color: string) => void;
+  setShapeFillAngle: (angle: number) => void;
   setShapeStrokeEnabled: (enabled: boolean) => void;
   setShapeStrokeWidth: (width: number) => void;
   setShapeCornerRadius: (radius: number) => void;
@@ -164,6 +171,9 @@ export const useEditorStore = create<EditorState>()(
       shapeKind: "rect",
       shapeStroke: "#1c1916",
       shapeFillEnabled: true,
+      shapeFillStyle: "solid" as FillStyle,
+      shapeFillTo: "#f4d8a8",
+      shapeFillAngle: 0,
       shapeStrokeEnabled: true,
       shapeStrokeWidth: 2,
       shapeCornerRadius: 8,
@@ -193,6 +203,9 @@ export const useEditorStore = create<EditorState>()(
       setShapeKind: (shapeKind) => set({ shapeKind }),
       setShapeStroke: (shapeStroke) => set({ shapeStroke }),
       setShapeFillEnabled: (shapeFillEnabled) => set({ shapeFillEnabled }),
+      setShapeFillStyle: (shapeFillStyle) => set({ shapeFillStyle }),
+      setShapeFillTo: (shapeFillTo) => set({ shapeFillTo }),
+      setShapeFillAngle: (shapeFillAngle) => set({ shapeFillAngle }),
       setShapeStrokeEnabled: (shapeStrokeEnabled) => set({ shapeStrokeEnabled }),
       setShapeStrokeWidth: (shapeStrokeWidth) => set({ shapeStrokeWidth }),
       setShapeCornerRadius: (shapeCornerRadius) => set({ shapeCornerRadius }),
@@ -330,6 +343,9 @@ export const useEditorStore = create<EditorState>()(
           fill: s.color,
           stroke: s.shapeStroke,
           fillEnabled: s.shapeFillEnabled,
+          fillStyle: s.shapeFillStyle,
+          fillTo: s.shapeFillTo,
+          fillAngle: s.shapeFillAngle,
           strokeEnabled: s.shapeStrokeEnabled,
           strokeWidth: s.shapeStrokeWidth,
           cornerRadius: s.shapeKind === "rect" ? s.shapeCornerRadius : 0,
@@ -435,6 +451,9 @@ export const useEditorStore = create<EditorState>()(
           fill: s.color,
           stroke: s.shapeStroke,
           fillEnabled: s.shapeFillEnabled,
+          fillStyle: s.shapeFillStyle,
+          fillTo: s.shapeFillTo,
+          fillAngle: s.shapeFillAngle,
           strokeEnabled: s.shapeStrokeEnabled,
           strokeWidth: s.shapeStrokeWidth,
           cornerRadius: s.shapeKind === "rect" ? s.shapeCornerRadius : 0,
@@ -458,6 +477,9 @@ export const useEditorStore = create<EditorState>()(
           shapeWedge: layer.wedge,
           shapeTrackFill: layer.trackFill,
           shapeFillEnabled: layer.fillEnabled,
+          shapeFillStyle: layer.fillStyle,
+          shapeFillTo: layer.fillTo,
+          shapeFillAngle: layer.fillAngle,
           shapeStrokeEnabled: layer.strokeEnabled,
           shapeStrokeWidth: layer.strokeWidth,
         });

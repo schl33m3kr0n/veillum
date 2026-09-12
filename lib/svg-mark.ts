@@ -1,17 +1,32 @@
-import type { ShapeLayer, SvgNode, SvgPaint } from "./types";
+import { fillDefsMarkup, fillPaint, type Fillable } from "./fill";
 import { dashArray } from "./geometry";
+import type { ShapeLayer, SvgNode, SvgPaint } from "./types";
 
 const ACCENT = "#d4a054";
 
 export function resolveSvgPaint(
   token: SvgPaint | undefined,
-  layer: Pick<ShapeLayer, "fill" | "stroke" | "fillEnabled" | "strokeEnabled">,
+  layer: Pick<ShapeLayer, "fill" | "stroke" | "fillEnabled" | "strokeEnabled"> &
+    Partial<Fillable>,
   fallback: SvgPaint = "fill",
 ): string {
   const paint = token ?? fallback;
   if (paint === "none") return "none";
   if (paint === "accent") return ACCENT;
-  if (paint === "fill") return layer.fillEnabled ? layer.fill : "none";
+  if (paint === "fill") {
+    if (!layer.fillEnabled) return "none";
+    if (layer.id && (layer.fillStyle === "linear" || layer.fillStyle === "radial")) {
+      return fillPaint({
+        id: layer.id,
+        fill: layer.fill,
+        fillEnabled: true,
+        fillStyle: layer.fillStyle,
+        fillTo: layer.fillTo,
+        fillAngle: layer.fillAngle,
+      });
+    }
+    return layer.fill;
+  }
   if (paint === "stroke") return layer.strokeEnabled ? layer.stroke : "none";
   return "none";
 }
@@ -37,6 +52,10 @@ export function svgNodesToMarkup(
     | "dash"
     | "width"
     | "height"
+    | "id"
+    | "fillStyle"
+    | "fillTo"
+    | "fillAngle"
   >,
 ): string {
   const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
@@ -60,5 +79,5 @@ export function svgNodesToMarkup(
       return `<path d="${node.d}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"${cap}${join}${extra}/>`;
     })
     .join("");
-  return `<svg width="${layer.width}" height="${layer.height}" viewBox="${svgMarkViewBox(layer)}" overflow="visible">${inner}</svg>`;
+  return `<svg width="${layer.width}" height="${layer.height}" viewBox="${svgMarkViewBox(layer)}" overflow="visible">${fillDefsMarkup(layer)}${inner}</svg>`;
 }

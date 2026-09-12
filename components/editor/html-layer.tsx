@@ -2,12 +2,14 @@
 
 import type { CSSProperties } from "react";
 import { bezierPath, dashArray } from "@/lib/geometry";
+import { fillPaint } from "@/lib/fill";
 import { pieGeometry, shapeSvgPoints } from "@/lib/shapes";
 import { resolveSvgPaint, svgMarkViewBox, svgNodeStrokeWidth } from "@/lib/svg-mark";
 import { displayText, textDecoration } from "@/lib/text";
 import { useEditorStore } from "@/lib/editor-store";
 import { cssFontFamily, cssFontWeight } from "@/lib/fonts";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
+import { FillDefs } from "./fill-defs";
 import { useProcessedImage } from "./use-processed-image";
 
 function cssBlend(mode: Layer["blendMode"]): CSSProperties["mixBlendMode"] {
@@ -168,7 +170,10 @@ function SvgMarkContent({
     | "strokeEnabled"
     | "strokeWidth"
     | "dash"
-  >;
+    | "fillStyle"
+    | "fillTo"
+    | "fillAngle"
+  > & { id?: string };
   className?: string;
 }) {
   const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
@@ -181,6 +186,7 @@ function SvgMarkContent({
       preserveAspectRatio="xMidYMid meet"
       overflow="visible"
     >
+      {layer.id ? <FillDefs layer={layer as ShapeLayer} /> : null}
       {(layer.svgNodes ?? []).map((node, i) => {
         const fallback =
           node.tag === "path" && node.stroke && node.stroke !== "none"
@@ -222,7 +228,7 @@ function SvgMarkContent({
 
 function ShapeContent({ layer }: { layer: ShapeLayer }) {
   const dash = dashArray(layer.dash, layer.strokeWidth).join(" ");
-  const fill = layer.fillEnabled ? layer.fill : "transparent";
+  const fill = fillPaint(layer);
   const w = Math.max(1, layer.width);
   const h = Math.max(1, layer.height);
   const strokeOn = layer.strokeEnabled !== false && layer.strokeWidth > 0;
@@ -233,6 +239,7 @@ function ShapeContent({ layer }: { layer: ShapeLayer }) {
   }
   return (
     <svg width="100%" height="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <FillDefs layer={layer} />
       {layer.shape === "rect" && (
         <rect
           x={layer.strokeWidth / 2}
@@ -384,6 +391,7 @@ function BezierContent({ layer }: { layer: BezierLayer }) {
   const hit = Math.max(16, layer.strokeWidth + 12);
   return (
     <svg width={w} height={h} overflow="visible">
+      <FillDefs layer={layer} />
       <path
         d={d}
         fill="none"
@@ -394,7 +402,7 @@ function BezierContent({ layer }: { layer: BezierLayer }) {
       />
       <path
         d={d}
-        fill={layer.fillEnabled ? layer.fill : "none"}
+        fill={fillPaint(layer)}
         stroke={layer.stroke}
         strokeWidth={layer.strokeWidth}
         strokeLinecap="round"

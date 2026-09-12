@@ -105,6 +105,9 @@ export function createShapeLayer(
     dash: "solid",
     cornerRadius: shape === "rect" ? 8 : 0,
     fillEnabled: true,
+    fillStyle: "solid",
+    fillTo: "#f4d8a8",
+    fillAngle: 0,
     strokeEnabled: true,
     sides: 6,
     starPoints: 5,
@@ -156,6 +159,9 @@ export function createBezierLayer(
     strokeWidth: 2,
     fill: "#d4a054",
     fillEnabled: false,
+    fillStyle: "solid",
+    fillTo: "#f4d8a8",
+    fillAngle: 0,
     ...overrides,
   };
 }

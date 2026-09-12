@@ -151,6 +151,7 @@ export type Anchor =
   | "bottom-right";
 export type GridType = "none" | "square" | "triangle" | "radial";
 export type DashStyle = "solid" | "dash" | "dot" | "dashdot";
+export type FillStyle = "solid" | "linear" | "radial";
 
 export interface ImageAdjustments {
   exposure: number;
@@ -265,6 +266,9 @@ export interface ShapeLayer extends LayerBase {
   dash: DashStyle;
   cornerRadius: number;
   fillEnabled: boolean;
+  fillStyle: FillStyle;
+  fillTo: string;
+  fillAngle: number;
   strokeEnabled: boolean;
   sides: number;
   starPoints: number;
@@ -293,6 +297,9 @@ export interface BezierLayer extends LayerBase {
   strokeWidth: number;
   fill: string;
   fillEnabled: boolean;
+  fillStyle: FillStyle;
+  fillTo: string;
+  fillAngle: number;
 }
 
 export type Layer =

@@ -16,6 +16,7 @@ import {
   type Anchor,
   type Capitalization,
   type DashStyle,
+  type FillStyle,
   type ImageLayer,
   type Layer,
   type ListType,
@@ -575,7 +576,7 @@ function StrokeFields({
         step={0.5}
         onChange={(strokeWidth) => update(layer.id, { strokeWidth })}
       />
-      {layer.type === "bezier" && (
+          {layer.type === "bezier" && (
         <>
           <div className="flex items-center justify-between">
             <span className="text-xs">Fill curve</span>
@@ -584,6 +585,25 @@ function StrokeFields({
               onCheckedChange={(fillEnabled) => update(layer.id, { fillEnabled })}
             />
           </div>
+          {layer.fillEnabled && (
+            <Field label="Fill style">
+              <Select
+                value={layer.fillStyle}
+                onValueChange={(fillStyle) =>
+                  update(layer.id, { fillStyle: fillStyle as FillStyle })
+                }
+              >
+                <SelectTrigger size="sm" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Solid</SelectItem>
+                  <SelectItem value="linear">Lateral</SelectItem>
+                  <SelectItem value="radial">Radial</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-xs">Closed</span>
             <Switch

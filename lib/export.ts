@@ -1,6 +1,7 @@
 import { cssFontWeight } from "./fonts";
 import { bezierPath } from "./geometry";
 import { shapeSvgPoints, pieGeometry } from "./shapes";
+import { fillDefsMarkup, fillPaint } from "./fill";
 import { svgNodesToMarkup } from "./svg-mark";
 import type { BezierLayer, Layer, Page, PathLayer, ShapeLayer, TextLayer } from "./types";
 import { displayText } from "./text";
@@ -46,7 +47,10 @@ function layerToSvg(layer: Layer): string {
   }
   if (layer.type === "shape") {
     const s = layer as ShapeLayer;
-    const fill = s.fillEnabled ? s.fill : "none";
+    const fill = fillPaint(s);
+    const defs = fillDefsMarkup(s);
+    const wrap = (body: string) =>
+      `<g ${t} ${op}>${defs}${body}</g>`;
     const strokeOn = s.strokeEnabled !== false && s.strokeWidth > 0;
     const strokePaint = strokeOn ? s.stroke : "none";
     const sw = strokeOn ? s.strokeWidth : 0;
@@ -64,24 +68,36 @@ function layerToSvg(layer: Layer): string {
           ? `<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="${fill}"/>`
           : `<path d="${pie.d}" fill="${fill}"/>`
         : "";
-      return `<g ${t} ${op}><ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="${rest}"/>${wedge}<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="none" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/></g>`;
+      return wrap(
+        `<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="${rest}"/>${wedge}<ellipse cx="${pie.cx}" cy="${pie.cy}" rx="${pie.rx}" ry="${pie.ry}" fill="none" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`,
+      );
     }
     if (s.shape === "ellipse") {
-      return `<ellipse ${t} ${op} cx="${s.width / 2}" cy="${s.height / 2}" rx="${s.width / 2}" ry="${s.height / 2}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
+      return wrap(
+        `<ellipse cx="${s.width / 2}" cy="${s.height / 2}" rx="${s.width / 2}" ry="${s.height / 2}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`,
+      );
     }
     if (s.shape === "line") {
-      return `<line ${t} ${op} x1="0" y1="${s.height / 2}" x2="${s.width}" y2="${s.height / 2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
+      return wrap(
+        `<line x1="0" y1="${s.height / 2}" x2="${s.width}" y2="${s.height / 2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`,
+      );
     }
     if (s.shape === "rect") {
-      return `<rect ${t} ${op} width="${s.width}" height="${s.height}" rx="${s.cornerRadius}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`;
+      return wrap(
+        `<rect width="${s.width}" height="${s.height}" rx="${s.cornerRadius}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/>`,
+      );
     }
     if (geo.arrow) {
       const a = geo.arrow;
       const head = strokeOn ? s.stroke : fill;
-      return `<g ${t} ${op}><line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/><polygon points="${a.points}" fill="${head}"/></g>`;
+      return wrap(
+        `<line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="${strokePaint}" stroke-width="${sw}" ${extra}/><polygon points="${a.points}" fill="${head}"/>`,
+      );
     }
     if (geo.polygon) {
-      return `<polygon ${t} ${op} points="${geo.polygon}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" stroke-linejoin="round" ${extra}/>`;
+      return wrap(
+        `<polygon points="${geo.polygon}" fill="${fill}" stroke="${strokePaint}" stroke-width="${sw}" stroke-linejoin="round" ${extra}/>`,
+      );
     }
   }
   if (layer.type === "path") {
@@ -95,8 +111,8 @@ function layerToSvg(layer: Layer): string {
   if (layer.type === "bezier") {
     const b = layer as BezierLayer;
     const d = bezierPath(b.points, b.closed);
-    const fill = b.fillEnabled ? b.fill : "none";
-    return `<path ${t} ${op} d="${d}" fill="${fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" fill-rule="evenodd"/>`;
+    const fill = fillPaint(b);
+    return `<g ${t} ${op}>${fillDefsMarkup(b)}<path d="${d}" fill="${fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" fill-rule="evenodd"/></g>`;
   }
   if (layer.type === "image") {
     return `<image ${t} ${op} href="${layer.src}" width="${layer.width}" height="${layer.height}" />`;

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEditorStore } from "@/lib/editor-store";
-import type { DashStyle, ShapeKind, ShapeLayer } from "@/lib/types";
+import type { DashStyle, FillStyle, ShapeKind, ShapeLayer } from "@/lib/types";
 import { SHAPE_KINDS } from "@/lib/shapes";
 import { cn } from "@/lib/utils";
 import { Field, SliderField } from "./fields";
@@ -22,6 +22,9 @@ export function ShapeAdjustments({
 }) {
   const shapeKind = useEditorStore((s) => s.shapeKind);
   const shapeFillEnabled = useEditorStore((s) => s.shapeFillEnabled);
+  const shapeFillStyle = useEditorStore((s) => s.shapeFillStyle);
+  const shapeFillTo = useEditorStore((s) => s.shapeFillTo);
+  const shapeFillAngle = useEditorStore((s) => s.shapeFillAngle);
   const shapeStrokeEnabled = useEditorStore((s) => s.shapeStrokeEnabled);
   const color = useEditorStore((s) => s.color);
   const shapeStroke = useEditorStore((s) => s.shapeStroke);
@@ -36,6 +39,9 @@ export function ShapeAdjustments({
 
   const kind = layer?.shape ?? shapeKind;
   const fillEnabled = layer?.fillEnabled ?? shapeFillEnabled;
+  const fillStyle = layer?.fillStyle ?? shapeFillStyle;
+  const fillTo = layer?.fillTo ?? shapeFillTo;
+  const fillAngle = layer?.fillAngle ?? shapeFillAngle;
   const strokeEnabled = layer?.strokeEnabled ?? shapeStrokeEnabled;
   const fill = layer?.fill ?? color;
   const stroke = layer?.stroke ?? shapeStroke;
@@ -58,6 +64,9 @@ export function ShapeAdjustments({
     if (partial.fill) s.setColor(partial.fill);
     if (partial.stroke) s.setShapeStroke(partial.stroke);
     if (partial.fillEnabled != null) s.setShapeFillEnabled(partial.fillEnabled);
+    if (partial.fillStyle) s.setShapeFillStyle(partial.fillStyle);
+    if (partial.fillTo) s.setShapeFillTo(partial.fillTo);
+    if (partial.fillAngle != null) s.setShapeFillAngle(partial.fillAngle);
     if (partial.strokeEnabled != null) s.setShapeStrokeEnabled(partial.strokeEnabled);
     if (partial.strokeWidth != null) s.setShapeStrokeWidth(partial.strokeWidth);
     if (partial.cornerRadius != null) s.setShapeCornerRadius(partial.cornerRadius);
@@ -106,6 +115,54 @@ export function ShapeAdjustments({
           onColor={(value) => patch({ stroke: value, strokeEnabled: true })}
         />
       </div>
+      {fillEnabled && (
+        <>
+          <Field label="Fill style">
+            <Select
+              value={fillStyle}
+              onValueChange={(value) =>
+                patch({ fillStyle: value as FillStyle, fillEnabled: true })
+              }
+            >
+              <SelectTrigger size="sm" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="solid">Solid</SelectItem>
+                <SelectItem value="linear">Lateral</SelectItem>
+                <SelectItem value="radial">Radial</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {fillStyle !== "solid" && (
+            <div className={fillStyle === "linear" ? "grid grid-cols-2 gap-2" : ""}>
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  To
+                </span>
+                <input
+                  type="color"
+                  value={fillTo}
+                  title="Gradient end"
+                  onChange={(e) => patch({ fillTo: e.target.value, fillEnabled: true })}
+                  className="h-8 w-full cursor-pointer rounded-md border border-border bg-background p-0.5"
+                />
+              </div>
+              {fillStyle === "linear" && (
+                <SliderField
+                  label="Angle"
+                  value={fillAngle}
+                  min={0}
+                  max={180}
+                  step={1}
+                  onChange={(value) => patch({ fillAngle: value })}
+                  format={(v) => `${Math.round(v)}°`}
+                />
+              )}
+            </div>
+          )}
+        </>
+      )}
       {strokeEnabled && (
         <SliderField
           label="Stroke width"

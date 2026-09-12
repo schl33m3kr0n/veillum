@@ -21,7 +21,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781).
 
 **Photographs.** Drop a JPEG/PNG/WebP, or a camera RAW (DNG, CR2, NEF, ARW, and similar) — veillum reads the embedded preview and opens a wider RAW workspace. Exposure, brightness, contrast, shadows, highlights, saturation, temperature, tint, sepia, sharpness, blur, warmth, and Instant Alpha (click a color to punch it out).
 
-**Color.** Wheel, hex field, highlighter swatch, recent colors, and named palettes.
+**Color.** Wheel, hex field, highlighter swatch, recent colors, and named palettes. Shape fills can be solid, lateral (linear), or radial, with a second stop and an angle for lateral gradients.
 
 **Layers.** Order, lock, hide, blending modes, opacity, transparency, masks (paint a keep-region), borders.
 
