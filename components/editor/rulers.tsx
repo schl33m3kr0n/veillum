@@ -1,8 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/lib/editor-store";
-
-const SIZE = 24;
+import { PAGE_PAD_X, PAGE_PAD_Y, RULER_SIZE } from "@/lib/stage";
 
 export function Rulers({
   width,
@@ -19,13 +18,13 @@ export function Rulers({
 
   if (!page.ruler) return null;
 
-  const originX = panX + 80 * zoom;
-  const originY = panY + 60 * zoom;
+  const originX = panX + PAGE_PAD_X * zoom;
+  const originY = panY + PAGE_PAD_Y * zoom;
 
   const hTicks = [];
   for (let x = 0; x <= page.width; x += 50) {
     const left = originX + x * zoom;
-    if (left < SIZE || left > width) continue;
+    if (left < RULER_SIZE || left > width) continue;
     hTicks.push(
       <span
         key={x}
@@ -39,7 +38,7 @@ export function Rulers({
   const vTicks = [];
   for (let y = 0; y <= page.height; y += 50) {
     const top = originY + y * zoom;
-    if (top < SIZE || top > height) continue;
+    if (top < RULER_SIZE || top > height) continue;
     vTicks.push(
       <span
         key={y}
@@ -56,21 +55,30 @@ export function Rulers({
 
   return (
     <>
-      <div className="pointer-events-none absolute top-0 right-0 left-6 h-6 overflow-hidden bg-[#1f1c19] text-white">
+      <div
+        className="pointer-events-none absolute top-0 right-0 left-0 overflow-hidden bg-[#1f1c19] text-white"
+        style={{ height: RULER_SIZE }}
+      >
         {hTicks}
         <div
           className="absolute top-0 h-full w-px bg-primary"
           style={{ left: px }}
         />
       </div>
-      <div className="pointer-events-none absolute top-6 bottom-0 left-0 w-6 overflow-hidden bg-[#1f1c19] text-white">
+      <div
+        className="pointer-events-none absolute top-0 bottom-0 left-0 overflow-hidden bg-[#1f1c19] text-white"
+        style={{ width: RULER_SIZE }}
+      >
         {vTicks}
         <div
           className="absolute left-0 h-px w-full bg-primary"
-          style={{ top: py - SIZE }}
+          style={{ top: py }}
         />
       </div>
-      <div className="absolute top-0 left-0 z-10 size-6 bg-[#1f1c19]" />
+      <div
+        className="absolute top-0 left-0 z-10 bg-[#1f1c19]"
+        style={{ width: RULER_SIZE, height: RULER_SIZE }}
+      />
     </>
   );
 }

@@ -13,9 +13,7 @@ import { BezierDraftOverlay, BezierEditOverlay, CLOSE_THRESHOLD } from "./bezier
 import { ShapeAdjustGizmos } from "./shape-gizmos";
 import { TransformGizmos } from "./transform-gizmos";
 import { snapMovingLayers } from "@/lib/snap";
-
-const PAGE_X = 80;
-const PAGE_Y = 60;
+import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 
 export default function HtmlStage({
   width,
@@ -488,8 +486,8 @@ export default function HtmlStage({
         style={{
           transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
           transformOrigin: "0 0",
-          width: page.width + PAGE_X * 2,
-          height: page.height + PAGE_Y * 2,
+          width: page.width + PAGE_PAD_X * 2,
+          height: page.height + PAGE_PAD_Y * 2,
         }}
       >
         <div
@@ -498,8 +496,8 @@ export default function HtmlStage({
           onPointerDown={onPagePointerDown}
           style={{
             position: "absolute",
-            left: PAGE_X,
-            top: PAGE_Y,
+            left: PAGE_PAD_X,
+            top: PAGE_PAD_Y,
             width: page.width,
             height: page.height,
             background: page.background,
@@ -627,8 +625,8 @@ export default function HtmlStage({
         <div
           className="pointer-events-none absolute overflow-visible"
           style={{
-            left: PAGE_X,
-            top: PAGE_Y,
+            left: PAGE_PAD_X,
+            top: PAGE_PAD_Y,
             width: page.width,
             height: page.height,
             zIndex: 20,

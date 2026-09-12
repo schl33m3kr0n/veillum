@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-store";
+import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 
 export function useEditorHotkeys() {
   const undo = useTemporalStore((s) => s.undo);
@@ -111,15 +112,15 @@ export function useEditorHotkeys() {
         e.preventDefault();
         store.zoomToward(
           store.zoom * 1.15,
-          store.panX + (80 + store.pointer.x) * store.zoom,
-          store.panY + (60 + store.pointer.y) * store.zoom,
+          store.panX + (PAGE_PAD_X + store.pointer.x) * store.zoom,
+          store.panY + (PAGE_PAD_Y + store.pointer.y) * store.zoom,
         );
       } else if (meta && e.key === "-") {
         e.preventDefault();
         store.zoomToward(
           store.zoom / 1.15,
-          store.panX + (80 + store.pointer.x) * store.zoom,
-          store.panY + (60 + store.pointer.y) * store.zoom,
+          store.panX + (PAGE_PAD_X + store.pointer.x) * store.zoom,
+          store.panY + (PAGE_PAD_Y + store.pointer.y) * store.zoom,
         );
       }
     };
