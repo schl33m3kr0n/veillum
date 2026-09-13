@@ -27,12 +27,11 @@ export function ColorLoupe({
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !snapshot) return;
-    const dpr = window.devicePixelRatio || 1;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    canvas.width = Math.round(MAG * dpr);
-    canvas.height = Math.round(MAG * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (canvas.width !== MAG) canvas.width = MAG;
+    if (canvas.height !== MAG) canvas.height = MAG;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, MAG, MAG);
     for (let y = 0; y < SIZE; y++) {
@@ -58,16 +57,20 @@ export function ColorLoupe({
         top: boardY,
         width: MAG,
         height: MAG,
-        transform: "translate(-50%, -50%)",
+        marginLeft: -MAG / 2,
+        marginTop: -MAG / 2,
       }}
     >
       <canvas
         ref={canvasRef}
-        className="block rounded-full shadow-[0_0_0_2px_#161310,0_10px_24px_rgba(0,0,0,0.45)]"
+        width={MAG}
+        height={MAG}
+        className="block overflow-hidden rounded-full"
         style={{
           width: MAG,
           height: MAG,
           imageRendering: "pixelated",
+          boxShadow: "0 0 0 2px #161310, 0 10px 24px rgba(0,0,0,0.45)",
         }}
       />
       {hex ? (
