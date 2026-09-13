@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link2, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +24,7 @@ import {
   type Orientation,
   type TextLayer,
 } from "@/lib/types";
-import { Field, NumberField, Section, SliderField } from "./fields";
+import { Field, NumberField, Section, SliderField, historyFieldProps } from "./fields";
 import { FillStylePicker } from "./fill-style-picker";
 import { GradientStopsEditor } from "./gradient-stops";
 import { FontSelect } from "./font-select";
@@ -185,6 +186,7 @@ function HeaderFooterFields() {
           updatePage({ header: { ...page.header, text: e.target.value } })
         }
         className="h-7 text-xs"
+        {...historyFieldProps<HTMLInputElement>()}
       />
       <div className="flex items-center justify-between">
         <span className="text-xs">Footer</span>
@@ -201,6 +203,7 @@ function HeaderFooterFields() {
           updatePage({ footer: { ...page.footer, text: e.target.value } })
         }
         className="h-7 text-xs"
+        {...historyFieldProps<HTMLInputElement>()}
       />
     </div>
   );
@@ -208,6 +211,8 @@ function HeaderFooterFields() {
 
 function CommonFields({ layer }: { layer: Layer }) {
   const update = useEditorStore((s) => s.updateLayer);
+  const locked = !!layer.lockProportions;
+  const ratio = layer.width / Math.max(1, layer.height);
   return (
     <Section title="Transform">
       <div className="grid grid-cols-2 gap-2">
@@ -218,11 +223,48 @@ function CommonFields({ layer }: { layer: Layer }) {
           <NumberField value={Math.round(layer.y)} onChange={(y) => update(layer.id, { y })} />
         </Field>
         <Field label="W">
-          <NumberField value={Math.round(layer.width)} onChange={(width) => update(layer.id, { width })} />
+          <NumberField
+            value={Math.round(layer.width)}
+            onChange={(width) =>
+              update(
+                layer.id,
+                locked
+                  ? { width, height: Math.max(8, width / ratio) }
+                  : { width },
+              )
+            }
+          />
         </Field>
         <Field label="H">
-          <NumberField value={Math.round(layer.height)} onChange={(height) => update(layer.id, { height })} />
+          <NumberField
+            value={Math.round(layer.height)}
+            onChange={(height) =>
+              update(
+                layer.id,
+                locked
+                  ? { height, width: Math.max(8, height * ratio) }
+                  : { height },
+              )
+            }
+          />
         </Field>
+      </div>
+      <div className="mt-2 flex items-center justify-between">
+        <label htmlFor="lock-proportions" className="text-xs">
+          Lock proportions
+        </label>
+        <div className="flex items-center gap-1.5">
+          {locked ? (
+            <Link2 className="size-3.5 text-muted-foreground" aria-hidden />
+          ) : (
+            <Link2Off className="size-3.5 text-muted-foreground" aria-hidden />
+          )}
+          <Switch
+            id="lock-proportions"
+            checked={locked}
+            onCheckedChange={(lockProportions) => update(layer.id, { lockProportions })}
+          />
+        </div>
       </div>
       <SliderField
         label="Rotation"
@@ -317,6 +359,7 @@ function TextFields({ layer }: { layer: TextLayer }) {
           value={layer.text}
           onChange={(e) => update(layer.id, { text: e.target.value })}
           className="min-h-24 w-full rounded-md border border-input bg-transparent p-2 text-sm"
+          {...historyFieldProps<HTMLTextAreaElement>({ commitOnEnter: false })}
         />
         <Field label="Font">
           <FontSelect

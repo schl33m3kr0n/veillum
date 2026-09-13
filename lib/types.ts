@@ -213,6 +213,7 @@ export interface LayerBase {
   y: number;
   width: number;
   height: number;
+  lockProportions?: boolean;
   rotation: number;
   scaleX: number;
   scaleY: number;

@@ -1,11 +1,38 @@
 "use client";
 
+import type { KeyboardEvent, FocusEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { beginHistoryGesture, endHistoryGesture } from "@/lib/editor-store";
+
+/** Pause undo on focus and record one history step when the field blurs. */
+export function historyFieldProps<T extends HTMLElement>(opts?: {
+  commitOnEnter?: boolean;
+}) {
+  const commitOnEnter = opts?.commitOnEnter !== false;
+  return {
+    onFocus: () => beginHistoryGesture(),
+    onBlur: () => endHistoryGesture(),
+    onKeyDown: (e: KeyboardEvent<T>) => {
+      if (commitOnEnter && e.key === "Enter" && !e.nativeEvent.isComposing) {
+        (e.currentTarget as HTMLElement).blur();
+      }
+    },
+  };
+}
+
+function mergeFocus(
+  ours: () => void,
+  theirs?: (e: FocusEvent<HTMLInputElement>) => void,
+) {
+  return (e: FocusEvent<HTMLInputElement>) => {
+    ours();
+    theirs?.(e);
+  };
+}
 
 export function Field({
   label,
@@ -89,6 +116,13 @@ export function NumberField({
         step={step}
         value={current}
         onChange={(e) => onChange(Number(e.target.value))}
+        onFocus={mergeFocus(() => beginHistoryGesture())}
+        onBlur={mergeFocus(() => endHistoryGesture())}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.currentTarget.blur();
+          }
+        }}
         className={cn(
           "h-7 text-xs tabular-nums text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           steppers ? "pr-5" : "px-2.5",

@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Pipette, Search } from "lucide-react";
 import { hexToHsv, hsvToHex } from "@/lib/colors";
 import { PALETTE_GROUPS, PALETTES } from "@/lib/palettes";
-import { applyStudioColor } from "@/lib/apply-color";
+import { applyStudioColor, applyStudioNone } from "@/lib/apply-color";
 import { useEditorStore } from "@/lib/editor-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ColorCircle, NoneSwatch } from "./paint-swatch";
+import { historyFieldProps } from "./fields";
 
 export function ColorPanel() {
   const color = useEditorStore((s) => s.color);
@@ -17,7 +18,16 @@ export function ColorPanel() {
   const setHighlight = useEditorStore((s) => s.setHighlight);
   const recent = useEditorStore((s) => s.recentColors);
   const tool = useEditorStore((s) => s.tool);
+  const selectedIds = useEditorStore((s) => s.selectedIds);
+  const layers = useEditorStore((s) => s.layers);
+  const shapeFillEnabled = useEditorStore((s) => s.shapeFillEnabled);
   const [query, setQuery] = useState("");
+
+  const selected = layers.find((l) => selectedIds.includes(l.id));
+  const fillIsNone =
+    selected?.type === "shape"
+      ? selected.fillEnabled === false
+      : !shapeFillEnabled;
 
   const apply = (next: string) => applyStudioColor(next);
   const q = query.trim().toLowerCase();
@@ -54,6 +64,7 @@ export function ColorPanel() {
             value={color}
             onChange={(e) => apply(e.target.value)}
             className="h-7 bg-secondary font-mono text-xs"
+            {...historyFieldProps<HTMLInputElement>()}
           />
         </label>
         <label className="space-y-1">
@@ -79,7 +90,15 @@ export function ColorPanel() {
         <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           Recent
         </p>
-        <Swatches colors={recent} onPick={apply} active={color} />
+        <div className="flex flex-wrap items-center gap-1.5">
+          <NoneSwatch
+            size="sm"
+            title="No fill"
+            selected={fillIsNone}
+            onClick={() => applyStudioNone()}
+          />
+          <Swatches colors={recent} onPick={apply} active={color} />
+        </div>
       </div>
       <div className="relative">
         <Search className="pointer-events-none absolute left-2 top-1.5 size-3.5 text-muted-foreground" />
@@ -125,16 +144,12 @@ function Swatches({
   return (
     <div className="flex flex-wrap gap-1.5">
       {colors.map((c) => (
-        <button
+        <ColorCircle
           key={c}
-          type="button"
-          title={c}
+          color={c}
+          size="sm"
+          selected={active.toLowerCase() === c.toLowerCase()}
           onClick={() => onPick(c)}
-          className={cn(
-            "size-6 rounded-md border border-black/40 shadow-sm",
-            active.toLowerCase() === c.toLowerCase() && "ring-2 ring-primary",
-          )}
-          style={{ background: c }}
         />
       ))}
     </div>

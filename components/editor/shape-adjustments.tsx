@@ -10,10 +10,16 @@ import {
 import { useEditorStore } from "@/lib/editor-store";
 import type { DashStyle, ShapeKind, ShapeLayer } from "@/lib/types";
 import { SHAPE_KINDS } from "@/lib/shapes";
-import { cn } from "@/lib/utils";
-import { Field, SliderField } from "./fields";
+import { Field, SliderField, historyFieldProps } from "./fields";
 import { FillStylePicker } from "./fill-style-picker";
 import { GradientStopsEditor } from "./gradient-stops";
+import { ColorCircleLook, NoneSwatch, NoneSwatchLook } from "./paint-swatch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 
 export function ShapeAdjustments({
   layer,
@@ -273,37 +279,6 @@ export function ShapeAdjustments({
           format={(v) => `${Math.round(v)}`}
         />
       )}
-      {layer && (
-        <>
-          <SliderField
-            label="Width"
-            value={layer.width}
-            min={8}
-            max={960}
-            step={1}
-            onChange={(width) => patch({ width })}
-            format={(v) => `${Math.round(v)}`}
-          />
-          <SliderField
-            label="Height"
-            value={layer.height}
-            min={8}
-            max={960}
-            step={1}
-            onChange={(height) => patch({ height })}
-            format={(v) => `${Math.round(v)}`}
-          />
-          <SliderField
-            label="Rotation"
-            value={layer.rotation}
-            min={-180}
-            max={180}
-            step={1}
-            onChange={(rotation) => patch({ rotation })}
-            format={(v) => `${Math.round(v)}°`}
-          />
-        </>
-      )}
     </div>
   );
 }
@@ -321,48 +296,56 @@ function PaintField({
   onEnabled: (enabled: boolean) => void;
   onColor: (color: string) => void;
 }) {
+  const noneLabel = label === "Stroke" ? "No stroke" : "No fill";
   return (
     <div className="space-y-1">
       <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
-      <div className="flex gap-1">
-        <button
-          type="button"
-          title={`No ${label.toLowerCase()}`}
-          aria-pressed={!enabled}
-          onClick={() => onEnabled(false)}
-          className={cn(
-            "relative size-8 shrink-0 overflow-hidden rounded-md border",
-            !enabled
-              ? "border-primary ring-2 ring-primary/35"
-              : "border-border hover:border-primary/50",
-          )}
-        >
-          <span
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "linear-gradient(45deg,#c8c2b6 25%,transparent 25%,transparent 75%,#c8c2b6 75%),linear-gradient(45deg,#c8c2b6 25%,#f7f1e6 25%,#f7f1e6 75%,#c8c2b6 75%)",
-              backgroundSize: "8px 8px",
-              backgroundPosition: "0 0, 4px 4px",
-            }}
-          />
-          <span className="absolute inset-[-20%] rotate-45 border-t-2 border-[#c45c26]" />
-        </button>
-        <input
-          type="color"
-          value={color}
-          title={label}
-          onChange={(e) => onColor(e.target.value)}
-          className={cn(
-            "h-8 min-w-0 flex-1 cursor-pointer rounded-md border bg-background p-0.5",
-            enabled
-              ? "border-primary ring-2 ring-primary/30"
-              : "border-border opacity-70",
-          )}
-        />
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            title={enabled ? color : noneLabel}
+            aria-label={label}
+            className="rounded-full"
+          >
+            {enabled ? (
+              <ColorCircleLook color={color} selected />
+            ) : (
+              <NoneSwatchLook selected />
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-56 gap-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+          <div className="flex items-center gap-2">
+            <NoneSwatch
+              selected={!enabled}
+              title={noneLabel}
+              onClick={() => onEnabled(false)}
+            />
+            <label className="relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-full border border-black/40">
+              <span className="absolute inset-0" style={{ background: color }} />
+              <input
+                type="color"
+                value={color}
+                aria-label={`${label} color`}
+                onChange={(e) => onColor(e.target.value)}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </label>
+            <Input
+              value={color}
+              onChange={(e) => onColor(e.target.value)}
+              className="h-7 flex-1 font-mono text-xs"
+              {...historyFieldProps<HTMLInputElement>()}
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

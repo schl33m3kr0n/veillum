@@ -64,6 +64,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
       if (!page) return;
       const { kind, origin, startAngle } = drag.current;
       const shift = e.shiftKey || drag.current.shift;
+      const lockAspect = shift || !!origin.lockProportions;
       const s = useEditorStore.getState();
       if (kind === "rotate") {
         const center = {
@@ -80,7 +81,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
         return;
       }
       const local = pageToLocal(origin, page.x, page.y);
-      const next = resizeFromHandle(kind, local.x, local.y, origin, shift);
+      const next = resizeFromHandle(kind, local.x, local.y, origin, lockAspect);
       const others = s.layers.filter((l) => l.id !== origin.id && l.visible);
       const snapped = snapAabbResize(
         { left: next.x, top: next.y, width: next.width, height: next.height },
@@ -156,6 +157,7 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
       if (!page) return;
       const { kind, origins, box, startAngle, shift } = drag.current;
       const lock = e.shiftKey || shift;
+      const lockAspect = lock || origins.some((l) => l.lockProportions);
       const s = useEditorStore.getState();
       if (kind === "rotate") {
         const cx = box.left + box.width / 2;
@@ -167,7 +169,7 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
         }
         return;
       }
-      const nextBox = resizeGroupFromHandle(kind, page.x, page.y, box, lock);
+      const nextBox = resizeGroupFromHandle(kind, page.x, page.y, box, lockAspect);
       const others = s.layers.filter(
         (l) => !origins.some((o) => o.id === l.id) && l.visible,
       );

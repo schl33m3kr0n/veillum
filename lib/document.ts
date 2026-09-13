@@ -24,6 +24,7 @@ function base(
     locked: false,
     x: 80,
     y: 80,
+    lockProportions: false,
     rotation: 0,
     scaleX: 1,
     scaleY: 1,

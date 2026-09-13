@@ -10,15 +10,17 @@ export function applyStudioColor(next: string) {
     store.updateLayer(selected.id, { color: next });
   } else if (selected.type === "shape") {
     if (selected.fillEnabled === false && selected.strokeEnabled) {
-      store.updateLayer(selected.id, { stroke: next });
+      store.updateLayer(selected.id, { stroke: next, strokeEnabled: true });
     } else {
       const stops = selected.fillStops?.map((s, i) =>
         i === 0 ? { ...s, color: next } : s,
       );
       store.updateLayer(selected.id, {
         fill: next,
+        fillEnabled: true,
         fillStops: stops,
       });
+      store.setShapeFillEnabled(true);
     }
   } else if (selected.type === "path" || selected.type === "bezier") {
     if (selected.type === "bezier" && selected.fillEnabled) {
@@ -29,5 +31,28 @@ export function applyStudioColor(next: string) {
     } else {
       store.updateLayer(selected.id, { stroke: next });
     }
+  }
+}
+
+/** Clear fill, or stroke if fill is already off. */
+export function applyStudioNone() {
+  const store = useEditorStore.getState();
+  const selected = store.layers.find((l) => store.selectedIds.includes(l.id));
+  if (!selected) {
+    store.setShapeFillEnabled(false);
+    return;
+  }
+  if (selected.type === "shape") {
+    if (selected.fillEnabled !== false) {
+      store.updateLayer(selected.id, { fillEnabled: false });
+      store.setShapeFillEnabled(false);
+    } else if (selected.strokeEnabled !== false) {
+      store.updateLayer(selected.id, { strokeEnabled: false });
+      store.setShapeStrokeEnabled(false);
+    }
+    return;
+  }
+  if (selected.type === "bezier" && selected.fillEnabled) {
+    store.updateLayer(selected.id, { fillEnabled: false });
   }
 }

@@ -188,13 +188,18 @@ export function resizeFromHandle(
   }
   if (lockAspect && origin.width > 0 && origin.height > 0) {
     const ratio = origin.width / origin.height;
-    const corner = handle.length === 2;
-    if (corner) {
+    if (handle.length === 2) {
       if (width / height > ratio) height = width / ratio;
       else width = height * ratio;
-      if (handle.includes("w")) ox = origin.width - width;
-      if (handle.includes("n")) oy = origin.height - height;
+    } else if (handle === "e" || handle === "w") {
+      height = Math.max(8, width / ratio);
+      oy = (origin.height - height) / 2;
+    } else if (handle === "n" || handle === "s") {
+      width = Math.max(8, height * ratio);
+      ox = (origin.width - width) / 2;
     }
+    if (handle.includes("w")) ox = origin.width - width;
+    if (handle.includes("n")) oy = origin.height - height;
   }
   const page = localToPage(origin, ox, oy);
   return { x: page.x, y: page.y, width, height };
@@ -225,9 +230,15 @@ export function resizeGroupFromHandle(
     if (handle.length === 2) {
       if (width / height > ratio) height = width / ratio;
       else width = height * ratio;
-      if (handle.includes("w")) left = right - width;
-      if (handle.includes("n")) top = bottom - height;
+    } else if (handle === "e" || handle === "w") {
+      height = Math.max(8, width / ratio);
+      top = origin.top + (origin.height - height) / 2;
+    } else if (handle === "n" || handle === "s") {
+      width = Math.max(8, height * ratio);
+      left = origin.left + (origin.width - width) / 2;
     }
+    if (handle.includes("w")) left = right - width;
+    if (handle.includes("n")) top = bottom - height;
   }
   return { left, top, width, height };
 }

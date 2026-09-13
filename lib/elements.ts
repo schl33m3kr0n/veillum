@@ -68,8 +68,6 @@ function mark(
 
 export const ELEMENT_CATALOG: CatalogElement[] = [
   { id: "rect", label: "Rectangle", group: "Basics", kind: "shape", shape: "rect", width: 180, height: 120 },
-  { id: "square", label: "Square", group: "Basics", kind: "shape", shape: "rect", width: 140, height: 140, defaults: { cornerRadius: 0 } },
-  { id: "ellipse", label: "Ellipse", group: "Basics", kind: "shape", shape: "ellipse", width: 160, height: 120 },
   { id: "circle", label: "Circle", group: "Basics", kind: "shape", shape: "ellipse", width: 140, height: 140 },
   { id: "triangle", label: "Triangle", group: "Basics", kind: "shape", shape: "triangle", width: 140, height: 128 },
   { id: "diamond", label: "Diamond", group: "Basics", kind: "shape", shape: "hexagon", width: 120, height: 140, defaults: { sides: 4 } },
@@ -83,21 +81,16 @@ export const ELEMENT_CATALOG: CatalogElement[] = [
 
   { id: "frame-rect", label: "Frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 0 } },
   { id: "frame-round", label: "Round frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 24 } },
-  { id: "frame-circle", label: "Oval frame", group: "Frames", kind: "shape", shape: "ellipse", width: 160, height: 160, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8 } },
   { id: "pill", label: "Pill", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 56, defaults: { cornerRadius: 80 } },
+  { id: "plaque", label: "Plaque", group: "Frames", kind: "shape", shape: "rect", width: 220, height: 100, defaults: { cornerRadius: 4, strokeWidth: 3 } },
 
-  { id: "burst", label: "Burst", group: "Marks", kind: "shape", shape: "star", width: 160, height: 160, defaults: { starPoints: 12, innerRatio: 0.55 } },
-  { id: "spark-star", label: "Spark", group: "Marks", kind: "shape", shape: "star", width: 120, height: 120, defaults: { starPoints: 4, innerRatio: 0.28 } },
   { id: "chevron", label: "Chevron", group: "Marks", kind: "shape", shape: "triangle", width: 120, height: 80 },
   { id: "rule", label: "Rule", group: "Marks", kind: "shape", shape: "line", width: 240, height: 16, defaults: { strokeWidth: 6, fillEnabled: false } },
 
-  { id: "seal", label: "Seal", group: "Badges", kind: "shape", shape: "ellipse", width: 96, height: 96 },
   { id: "ticket", label: "Ticket", group: "Badges", kind: "shape", shape: "rect", width: 180, height: 72, defaults: { cornerRadius: 6 } },
   { id: "tag", label: "Tag", group: "Badges", kind: "shape", shape: "hexagon", width: 140, height: 72, defaults: { sides: 4 } },
   { id: "banner", label: "Banner", group: "Badges", kind: "shape", shape: "rect", width: 280, height: 56, defaults: { cornerRadius: 2 } },
   { id: "bookmark", label: "Bookmark", group: "Badges", kind: "shape", shape: "rect", width: 56, height: 140, defaults: { cornerRadius: 2 } },
-  { id: "ring", label: "Ring", group: "Frames", kind: "shape", shape: "ellipse", width: 120, height: 120, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 10 } },
-  { id: "plaque", label: "Plaque", group: "Frames", kind: "shape", shape: "rect", width: 220, height: 100, defaults: { cornerRadius: 4, strokeWidth: 3 } },
 
   mark("heart", "Heart", "Nature", { width: 120, height: 110 }, [
     { tag: "path", d: "M32 56S8 40 8 24a12 12 0 0 1 24-4 12 12 0 0 1 24 4c0 16-24 32-24 32Z" },
@@ -166,6 +159,58 @@ export const ELEMENT_CATALOG: CatalogElement[] = [
   ]),
   mark("plus", "Plus", "Marks", { width: 88, height: 88 }, [
     { tag: "path", d: "M28 8h8v16h16v8H36v16h-8V32H12v-8h16Z" },
+  ]),
+  mark("house", "House", "Marks", { width: 120, height: 110 }, [
+    { tag: "path", d: "M8 30 32 10 56 30v26H38V40H26v16H8Z" },
+  ]),
+  mark("flag", "Flag", "Marks", { width: 110, height: 120 }, [
+    { tag: "path", d: "M16 8v48M16 8h32l-8 12 8 12H16Z" },
+  ]),
+  mark("envelope", "Envelope", "Marks", { width: 130, height: 90 }, [
+    { tag: "path", d: "M8 16h48v32H8Z" },
+    { tag: "path", d: "M8 16 32 34 56 16" },
+  ]),
+  mark("crown", "Crown", "Marks", { width: 130, height: 90 }, [
+    { tag: "path", d: "M8 44 16 20l16 14 16-18 8 28H8Zm4 6h40v6H12Z" },
+  ]),
+  mark("pin", "Pin", "Marks", { width: 90, height: 130 }, [
+    { tag: "path", d: "M32 6a16 16 0 0 1 16 16c0 14-16 34-16 34S16 36 16 22A16 16 0 0 1 32 6Zm0 10a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z" },
+  ]),
+  mark("bell", "Bell", "Marks", { width: 100, height: 110 }, [
+    { tag: "path", d: "M32 8a14 14 0 0 1 14 14v12l6 10H12l6-10V22A14 14 0 0 1 32 8Zm-8 40a8 8 0 0 0 16 0" },
+  ]),
+  mark("book", "Book", "Marks", { width: 110, height: 120 }, [
+    { tag: "path", d: "M12 10h18a12 12 0 0 1 12 0h10v44H42a12 12 0 0 0-12 0H12Z" },
+    { tag: "path", d: "M32 10v44", fill: "none", stroke: "stroke", strokeWidth: 2 },
+  ], { strokeEnabled: true, strokeWidth: 2 }),
+  mark("key", "Key", "Marks", { width: 130, height: 70 }, [
+    { tag: "path", d: "M22 20a12 12 0 1 1 8 16H56v8H48v-4h-6v4h-8V36A12 12 0 0 1 22 20Zm0 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" },
+  ]),
+  mark("shield", "Shield", "Marks", { width: 100, height: 120 }, [
+    { tag: "path", d: "M32 6 52 14v18c0 14-10 24-20 28C22 56 12 46 12 32V14Z" },
+  ]),
+  mark("chat", "Chat", "Marks", { width: 130, height: 110 }, [
+    { tag: "path", d: "M10 12h44v28H24L10 52Z" },
+  ]),
+  mark("user", "User", "Marks", { width: 100, height: 120 }, [
+    { tag: "circle", cx: 32, cy: 20, r: 12 },
+    { tag: "path", d: "M12 54c2-12 10-18 20-18s18 6 20 18" },
+  ]),
+  mark("tree", "Tree", "Nature", { width: 110, height: 140 }, [
+    { tag: "path", d: "M32 6 12 34h12L10 54h18v8h8v-8h18L40 34h12Z" },
+  ]),
+  mark("bird", "Bird", "Nature", { width: 140, height: 90 }, [
+    { tag: "path", d: "M8 36c12-4 20-16 28-16 4 0 6 2 10 2l10-12 4 8c8 2 12 10 4 18-10 10-28 8-40 4l-8 10-4-6 6-8Z" },
+  ]),
+  mark("fish", "Fish", "Nature", { width: 140, height: 80 }, [
+    { tag: "path", d: "M8 32c10-16 28-20 40-12 6 4 10 10 10 12s-4 8-10 12C36 52 18 48 8 32Zm40 0 14-10v20Z" },
+    { tag: "circle", cx: 20, cy: 30, r: 2, fill: "accent" },
+  ]),
+  mark("gift", "Gift", "Marks", { width: 110, height: 110 }, [
+    { tag: "path", d: "M10 26h44v8H10Zm4 8h36v24H14ZM32 26v32M22 18c0-6 10-8 10 8 0-16 10-14 10-8" },
+  ]),
+  mark("rocket", "Rocket", "Marks", { width: 90, height: 140 }, [
+    { tag: "path", d: "M32 4c12 12 12 28 8 40l10 10-8 4-6-8c-6 8-16 8-22 0l-6 8-8-4 10-10C20 32 20 16 32 4Zm0 20a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z" },
   ]),
 ];
 
