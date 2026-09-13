@@ -14,6 +14,7 @@ import {
   type ShapeLayer,
   type TextLayer,
 } from "./types";
+import { migrateLayerFromTopLeftOrigin } from "./transform";
 
 function base(
   partial: Partial<LayerBase> & Pick<LayerBase, "name" | "width" | "height">,
@@ -205,6 +206,7 @@ export function createDefaultPage(): Page {
     },
     grid: { type: "square", size: 24, visible: false, snap: false, lines: 12 },
     ruler: true,
+    rotationOrigin: "center",
   };
 }
 
@@ -223,6 +225,21 @@ export function normalizePage(page: Page): Page {
       snap: !!grid?.snap,
       lines: Math.max(4, Math.round(grid?.lines ?? 12)),
     },
+    rotationOrigin: page.rotationOrigin === "center" ? "center" : page.rotationOrigin,
+  };
+}
+
+export function migrateDocument(
+  page: Page,
+  layers: Layer[],
+): { page: Page; layers: Layer[] } {
+  const nextPage = normalizePage(page);
+  if (nextPage.rotationOrigin === "center") {
+    return { page: nextPage, layers };
+  }
+  return {
+    page: { ...nextPage, rotationOrigin: "center" },
+    layers: layers.map((l) => migrateLayerFromTopLeftOrigin(l)),
   };
 }
 

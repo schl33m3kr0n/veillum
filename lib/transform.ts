@@ -10,17 +10,20 @@ export type BoxLayer = {
   scaleY: number;
 };
 
+/** Map a local point through scale then rotate, both around the box center. */
 export function localToPage(
   layer: BoxLayer,
   lx: number,
   ly: number,
 ): { x: number; y: number } {
   const rad = (layer.rotation * Math.PI) / 180;
-  const x = lx * layer.scaleX;
-  const y = ly * layer.scaleY;
+  const ox = layer.width / 2;
+  const oy = layer.height / 2;
+  const sx = (lx - ox) * layer.scaleX;
+  const sy = (ly - oy) * layer.scaleY;
   return {
-    x: layer.x + x * Math.cos(rad) - y * Math.sin(rad),
-    y: layer.y + x * Math.sin(rad) + y * Math.cos(rad),
+    x: layer.x + ox + sx * Math.cos(rad) - sy * Math.sin(rad),
+    y: layer.y + oy + sx * Math.sin(rad) + sy * Math.cos(rad),
   };
 }
 
@@ -29,16 +32,70 @@ export function pageToLocal(
   px: number,
   py: number,
 ): { x: number; y: number } {
-  const dx = px - layer.x;
-  const dy = py - layer.y;
+  const ox = layer.width / 2;
+  const oy = layer.height / 2;
+  const dx = px - layer.x - ox;
+  const dy = py - layer.y - oy;
   const rad = -(layer.rotation * Math.PI) / 180;
   const x = dx * Math.cos(rad) - dy * Math.sin(rad);
   const y = dx * Math.sin(rad) + dy * Math.cos(rad);
-  return { x: x / (layer.scaleX || 1), y: y / (layer.scaleY || 1) };
+  return {
+    x: x / (layer.scaleX || 1) + ox,
+    y: y / (layer.scaleY || 1) + oy,
+  };
 }
 
 export function layerCenter(layer: BoxLayer): { x: number; y: number } {
-  return localToPage(layer, layer.width / 2, layer.height / 2);
+  return {
+    x: layer.x + layer.width / 2,
+    y: layer.y + layer.height / 2,
+  };
+}
+
+/** Place the layer so local (lx, ly) sits on a page point. */
+export function placeLocalAt(
+  layer: BoxLayer,
+  lx: number,
+  ly: number,
+  page: { x: number; y: number },
+): { x: number; y: number } {
+  const origin = localToPage({ ...layer, x: 0, y: 0 }, lx, ly);
+  return { x: page.x - origin.x, y: page.y - origin.y };
+}
+
+/** Convert a top-left-origin box so it looks the same with center rotation. */
+export function migrateLayerFromTopLeftOrigin<T extends BoxLayer>(layer: T): T {
+  const next = migrateBoxFromTopLeftOrigin(layer);
+  const keyframes = (layer as T & { keyframes?: { x: number; y: number; rotation: number; scaleX: number; scaleY: number }[] }).keyframes;
+  if (!keyframes?.length) return next;
+  return {
+    ...next,
+    keyframes: keyframes.map((k) => {
+      const box = migrateBoxFromTopLeftOrigin({
+        x: k.x,
+        y: k.y,
+        width: layer.width,
+        height: layer.height,
+        rotation: k.rotation,
+        scaleX: k.scaleX,
+        scaleY: k.scaleY,
+      });
+      return { ...k, x: box.x, y: box.y };
+    }),
+  } as T;
+}
+
+function migrateBoxFromTopLeftOrigin<T extends BoxLayer>(layer: T): T {
+  const ox = layer.width / 2;
+  const oy = layer.height / 2;
+  const hw = ox * layer.scaleX;
+  const hh = oy * layer.scaleY;
+  const rad = (layer.rotation * Math.PI) / 180;
+  return {
+    ...layer,
+    x: layer.x - ox + hw * Math.cos(rad) - hh * Math.sin(rad),
+    y: layer.y - oy + hw * Math.sin(rad) + hh * Math.cos(rad),
+  };
 }
 
 export function layerAabb(layer: BoxLayer): {
@@ -126,21 +183,10 @@ export function rotateAroundCenter(
   pageY: number,
   snap = false,
 ): { x: number; y: number; rotation: number } {
-  const cx = (layer.width * layer.scaleX) / 2;
-  const cy = (layer.height * layer.scaleY) / 2;
-  const old = (layer.rotation * Math.PI) / 180;
-  const center = {
-    x: layer.x + cx * Math.cos(old) - cy * Math.sin(old),
-    y: layer.y + cx * Math.sin(old) + cy * Math.cos(old),
-  };
+  const center = layerCenter(layer);
   let deg = (Math.atan2(pageY - center.y, pageX - center.x) * 180) / Math.PI + 90;
   if (snap) deg = Math.round(deg / 15) * 15;
-  const neu = (deg * Math.PI) / 180;
-  return {
-    rotation: deg,
-    x: center.x - (cx * Math.cos(neu) - cy * Math.sin(neu)),
-    y: center.y - (cx * Math.sin(neu) + cy * Math.cos(neu)),
-  };
+  return { rotation: deg, x: layer.x, y: layer.y };
 }
 
 export function rotateLayerAround(
@@ -155,14 +201,13 @@ export function rotateLayerAround(
   const nx = origin.x + dx * Math.cos(rad) - dy * Math.sin(rad);
   const ny = origin.y + dx * Math.sin(rad) + dy * Math.cos(rad);
   const rotation = layer.rotation + deltaDeg;
-  const hw = (layer.width * layer.scaleX) / 2;
-  const hh = (layer.height * layer.scaleY) / 2;
-  const r = (rotation * Math.PI) / 180;
-  return {
-    rotation,
-    x: nx - (hw * Math.cos(r) - hh * Math.sin(r)),
-    y: ny - (hw * Math.sin(r) + hh * Math.cos(r)),
-  };
+  const pos = placeLocalAt(
+    { ...layer, rotation },
+    layer.width / 2,
+    layer.height / 2,
+    { x: nx, y: ny },
+  );
+  return { rotation, x: pos.x, y: pos.y };
 }
 
 export function resizeFromHandle(
@@ -201,8 +246,9 @@ export function resizeFromHandle(
     if (handle.includes("w")) ox = origin.width - width;
     if (handle.includes("n")) oy = origin.height - height;
   }
-  const page = localToPage(origin, ox, oy);
-  return { x: page.x, y: page.y, width, height };
+  const fixed = localToPage(origin, ox, oy);
+  const pos = placeLocalAt({ ...origin, width, height }, 0, 0, fixed);
+  return { x: pos.x, y: pos.y, width, height };
 }
 
 export function resizeGroupFromHandle(

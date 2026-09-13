@@ -42,7 +42,7 @@ export function HtmlLayer({
     width: layer.width,
     height: layer.height,
     transform: `rotate(${layer.rotation + extra}deg) scale(${layer.scaleX}, ${layer.scaleY})`,
-    transformOrigin: "top left",
+    transformOrigin: "center",
     opacity: layer.opacity,
     mixBlendMode: cssBlend(layer.blendMode),
     visibility: layer.visible ? "visible" : "hidden",

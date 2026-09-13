@@ -365,6 +365,8 @@ export interface Page {
     lines: number;
   };
   ruler: boolean;
+  /** Layers rotate around the box center. Missing means legacy top-left. */
+  rotationOrigin?: "center";
 }
 
 export interface Palette {

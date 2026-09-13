@@ -18,7 +18,7 @@ import {
   createPathLayer,
   createShapeLayer,
   createTextLayer,
-  normalizePage,
+  migrateDocument,
 } from "./document";
 import type {
   Anchor,
@@ -286,11 +286,12 @@ export const useEditorStore = create<EditorState>()(
       setSiteId: (siteId) => set({ siteId }),
       setFileError: (fileError) => set({ fileError }),
       hydrateDraft: (draft) => {
-        const framed = draft.zoom == null ? framePage(draft.page) : null;
+        const migrated = migrateDocument(draft.page, draft.layers);
+        const framed = draft.zoom == null ? framePage(migrated.page) : null;
         useEditorStore.temporal.getState().pause();
         set({
-          page: normalizePage(draft.page),
-          layers: draft.layers,
+          page: migrated.page,
+          layers: migrated.layers,
           recentColors: draft.recentColors ?? get().recentColors,
           duration: draft.duration ?? get().duration,
           zoom: framed ? framed.zoom : (draft.zoom as number),

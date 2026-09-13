@@ -1,5 +1,5 @@
 import { downloadBlob, projectJson } from "./export";
-import { normalizePage } from "./document";
+import { migrateDocument } from "./document";
 import type { Layer, Page } from "./types";
 
 export const PROJECT_ACCEPT = ".veillum,.json,application/json";
@@ -35,7 +35,7 @@ export function parseProjectJson(text: string): { page: Page; layers: Layer[] } 
   if (!rec.page || typeof rec.page !== "object" || !Array.isArray(rec.layers)) {
     throw new Error("This file is not a veillum page.");
   }
-  return { page: normalizePage(rec.page), layers: rec.layers };
+  return migrateDocument(rec.page, rec.layers);
 }
 
 function isAbort(err: unknown) {

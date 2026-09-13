@@ -38,11 +38,15 @@ function applyLayerTransform(
   layerEl: HTMLElement,
 ) {
   ctx.translate(layerEl.offsetLeft, layerEl.offsetTop);
+  const ox = layerEl.offsetWidth / 2;
+  const oy = layerEl.offsetHeight / 2;
+  ctx.translate(ox, oy);
   const t = getComputedStyle(layerEl).transform;
   if (t && t !== "none") {
     const m = new DOMMatrix(t);
     ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
   }
+  ctx.translate(-ox, -oy);
   const opacity = Number(getComputedStyle(layerEl).opacity);
   if (Number.isFinite(opacity)) ctx.globalAlpha *= opacity;
   const blend = getComputedStyle(layerEl).mixBlendMode;

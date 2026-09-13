@@ -6,6 +6,7 @@ import type { Layer } from "@/lib/types";
 import { snapAabbResize } from "@/lib/snap";
 import {
   groupAabb,
+  layerCenter,
   localToPage,
   pageToLocal,
   resizeFromHandle,
@@ -67,10 +68,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
       const lockAspect = shift || !!origin.lockProportions;
       const s = useEditorStore.getState();
       if (kind === "rotate") {
-        const center = {
-          x: origin.x + ((origin.width * origin.scaleX) / 2) * Math.cos((origin.rotation * Math.PI) / 180) - ((origin.height * origin.scaleY) / 2) * Math.sin((origin.rotation * Math.PI) / 180),
-          y: origin.y + ((origin.width * origin.scaleX) / 2) * Math.sin((origin.rotation * Math.PI) / 180) + ((origin.height * origin.scaleY) / 2) * Math.cos((origin.rotation * Math.PI) / 180),
-        };
+        const center = layerCenter(origin);
         let deg =
           (Math.atan2(page.y - center.y, page.x - center.x) * 180) / Math.PI +
           90 -
@@ -119,13 +117,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
     if (e.cancelable) e.preventDefault();
     const origin = { ...layerRef.current };
     const page = clientToPage(e.clientX, e.clientY);
-    const cx = (origin.width * origin.scaleX) / 2;
-    const cy = (origin.height * origin.scaleY) / 2;
-    const old = (origin.rotation * Math.PI) / 180;
-    const center = {
-      x: origin.x + cx * Math.cos(old) - cy * Math.sin(old),
-      y: origin.y + cx * Math.sin(old) + cy * Math.cos(old),
-    };
+    const center = layerCenter(origin);
     const startAngle = page
       ? (Math.atan2(page.y - center.y, page.x - center.x) * 180) / Math.PI + 90
       : 0;

@@ -33,7 +33,9 @@ function dash(style: string, width: number): string {
 }
 
 function layerToSvg(layer: Layer): string {
-  const t = `transform="translate(${layer.x} ${layer.y}) rotate(${layer.rotation}) scale(${layer.scaleX} ${layer.scaleY})"`;
+  const cx = layer.width / 2;
+  const cy = layer.height / 2;
+  const t = `transform="translate(${layer.x} ${layer.y}) translate(${cx} ${cy}) rotate(${layer.rotation}) scale(${layer.scaleX} ${layer.scaleY}) translate(${-cx} ${-cy})"`;
   const op = `opacity="${layer.opacity}"`;
   if (layer.type === "text") {
     const l = layer as TextLayer;

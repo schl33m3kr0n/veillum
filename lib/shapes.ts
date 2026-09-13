@@ -113,11 +113,14 @@ export function frameLineFromEndpoints(
     (origin.arrowHead ?? 0) + 4,
     16,
   );
-  const rad = (rotation * Math.PI) / 180;
-  const hy = height / 2;
+  const pos = localToPage(
+    { x: 0, y: 0, width, height, rotation, scaleX: 1, scaleY: 1 },
+    0,
+    height / 2,
+  );
   return {
-    x: start.x + hy * Math.sin(rad),
-    y: start.y - hy * Math.cos(rad),
+    x: start.x - pos.x,
+    y: start.y - pos.y,
     width,
     height,
     rotation,
