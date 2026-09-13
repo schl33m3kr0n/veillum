@@ -1,10 +1,14 @@
 "use client";
 
+import { compassArcPath } from "@/lib/compass";
+
 export type CompassDraft = {
   cx: number;
   cy: number;
   r: number;
   angle: number;
+  arcStart?: number;
+  arcSweep?: number;
 };
 
 export type CompassHit = "needle" | "pencil" | "empty";
@@ -41,6 +45,8 @@ export function CompassOverlay({
   angle,
   color,
   focus = null,
+  arcStart,
+  arcSweep = 0,
 }: {
   cx: number;
   cy: number;
@@ -48,6 +54,8 @@ export function CompassOverlay({
   angle: number;
   color: string;
   focus?: CompassHit | null;
+  arcStart?: number;
+  arcSweep?: number;
 }) {
   const radius = Math.max(0, r);
   const px = cx + Math.cos(angle) * radius;
@@ -66,6 +74,15 @@ export function CompassOverlay({
   const lift = Math.max(28, radius * 0.55);
   const hx = mx + nx * lift;
   const hy = my + ny * lift;
+  const ink =
+    arcStart != null ? compassArcPath(cx, cy, radius, arcStart, arcSweep) : null;
+  const mark =
+    arcStart != null && Math.abs(arcSweep) < 1e-4
+      ? {
+          x: cx + Math.cos(arcStart) * radius,
+          y: cy + Math.sin(arcStart) * radius,
+        }
+      : null;
 
   return (
     <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
@@ -80,6 +97,18 @@ export function CompassOverlay({
           strokeDasharray="5 4"
           opacity={0.9}
         />
+      )}
+      {ink && (
+        <path
+          d={ink}
+          fill="none"
+          stroke={color}
+          strokeWidth={2.4}
+          strokeLinecap="round"
+        />
+      )}
+      {mark && (
+        <circle cx={mark.x} cy={mark.y} r={2.2} fill={color} />
       )}
       <line
         x1={hx}

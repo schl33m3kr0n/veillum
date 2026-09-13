@@ -20,8 +20,10 @@ import { applyStudioColor } from "@/lib/apply-color";
 import {
   CompassOverlay,
   hitCompass,
+  type CompassDraft,
   type CompassHit,
 } from "./compass-overlay";
+import { shortestAngleDelta } from "@/lib/compass";
 
 export default function HtmlStage({
   width,
@@ -71,23 +73,21 @@ export default function HtmlStage({
     w: number;
     h: number;
   } | null>(null);
-  const [compassDraft, setCompassDraft] = useState<{
-    cx: number;
-    cy: number;
-    r: number;
-    angle: number;
-  } | null>(null);
+  const [compassDraft, setCompassDraft] = useState<CompassDraft | null>(null);
   const compassDraftRef = useRef(compassDraft);
   compassDraftRef.current = compassDraft;
   const compassGesture = useRef<{
-    mode: "place" | "needle" | "pencil" | "stamp";
+    mode: "place" | "needle" | "pencil" | "arc";
     ox: number;
     oy: number;
     startCx: number;
     startCy: number;
+    startAngle: number;
+    lastAngle: number;
+    sweep: number;
   } | null>(null);
   const [compassDrag, setCompassDrag] = useState<
-    "place" | "needle" | "pencil" | "stamp" | null
+    "place" | "needle" | "pencil" | "arc" | null
   >(null);
   const [bezierDraft, setBezierDraft] = useState<BezierPoint[]>([]);
   const [bezierDragging, setBezierDragging] = useState(false);
@@ -384,20 +384,46 @@ export default function HtmlStage({
           oy: p.y,
           startCx: p.x,
           startCy: p.y,
+          startAngle: -Math.PI / 2,
+          lastAngle: -Math.PI / 2,
+          sweep: 0,
         };
         setCompassDrag("place");
         setCompassDraft({ cx: p.x, cy: p.y, r: 0, angle: -Math.PI / 2 });
       } else {
         const hit = hitCompass(existing, p);
-        const mode = hit === "empty" ? "stamp" : hit;
-        compassGesture.current = {
-          mode,
-          ox: p.x,
-          oy: p.y,
-          startCx: existing.cx,
-          startCy: existing.cy,
-        };
-        setCompassDrag(mode);
+        if (hit === "needle" || hit === "pencil") {
+          compassGesture.current = {
+            mode: hit,
+            ox: p.x,
+            oy: p.y,
+            startCx: existing.cx,
+            startCy: existing.cy,
+            startAngle: existing.angle,
+            lastAngle: existing.angle,
+            sweep: 0,
+          };
+          setCompassDrag(hit);
+        } else if (existing.r > 4) {
+          const startAngle = Math.atan2(p.y - existing.cy, p.x - existing.cx);
+          compassGesture.current = {
+            mode: "arc",
+            ox: p.x,
+            oy: p.y,
+            startCx: existing.cx,
+            startCy: existing.cy,
+            startAngle,
+            lastAngle: startAngle,
+            sweep: 0,
+          };
+          setCompassDrag("arc");
+          setCompassDraft({
+            ...existing,
+            angle: startAngle,
+            arcStart: startAngle,
+            arcSweep: 0,
+          });
+        }
       }
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       e.stopPropagation();
@@ -527,6 +553,29 @@ export default function HtmlStage({
               }
             : d,
         );
+      } else if (compassG.mode === "arc") {
+        const d = compassDraftRef.current;
+        if (d && d.r > 4) {
+          const ang = Math.atan2(p.y - d.cy, p.x - d.cx);
+          const nextSweep = compassG.sweep + shortestAngleDelta(compassG.lastAngle, ang);
+          const clamped =
+            Math.abs(nextSweep) > Math.PI * 2
+              ? Math.sign(nextSweep) * Math.PI * 2
+              : nextSweep;
+          compassG.lastAngle = ang;
+          compassG.sweep = clamped;
+          let sweep = clamped;
+          if (e.shiftKey) {
+            const snap = Math.PI / 12;
+            sweep = Math.round(sweep / snap) * snap;
+          }
+          setCompassDraft({
+            ...d,
+            angle: compassG.startAngle + sweep,
+            arcStart: compassG.startAngle,
+            arcSweep: sweep,
+          });
+        }
       }
       return;
     }
@@ -573,12 +622,19 @@ export default function HtmlStage({
           r: 80,
           angle: compass.r < 1 ? -Math.PI / 2 : compass.angle,
         });
-      } else if (compassG.mode === "stamp" && compass.r > 4) {
-        const moved = Math.hypot(
-          store.pointer.x - compassG.ox,
-          store.pointer.y - compassG.oy,
-        );
-        if (moved < 4) store.addCompassCircle(compass.cx, compass.cy, compass.r);
+      } else if (compassG.mode === "arc" && compass.r > 4) {
+        let sweep = compass.arcSweep ?? compassG.sweep;
+        const minSweep = 8 / Math.max(compass.r, 1);
+        if (Math.abs(sweep) < minSweep) {
+          sweep = minSweep * (sweep < 0 ? -1 : 1);
+        }
+        store.addCompassArc(compass.cx, compass.cy, compass.r, compassG.startAngle, sweep);
+        setCompassDraft({
+          cx: compass.cx,
+          cy: compass.cy,
+          r: compass.r,
+          angle: compassG.startAngle + sweep,
+        });
       }
     }
     if (maskPts && maskPts.length > 4) {
@@ -757,13 +813,15 @@ export default function HtmlStage({
       : [];
 
   const compassFocus: CompassHit | null =
-    compassDrag === "needle" || compassDrag === "pencil"
-      ? compassDrag
-      : compassDrag === "place"
-        ? "pencil"
-        : compassDraft && tool === "compass"
-          ? hitCompass(compassDraft, pointer)
-          : null;
+    compassDrag === "arc"
+      ? null
+      : compassDrag === "needle" || compassDrag === "pencil"
+        ? compassDrag
+        : compassDrag === "place"
+          ? "pencil"
+          : compassDraft && tool === "compass"
+            ? hitCompass(compassDraft, pointer)
+            : null;
   const compassCursor =
     compassFocus === "needle" || compassFocus === "pencil"
       ? compassDrag
@@ -911,6 +969,8 @@ export default function HtmlStage({
               angle={compassDraft.angle}
               color={color}
               focus={compassFocus}
+              arcStart={compassDraft.arcStart}
+              arcSweep={compassDraft.arcSweep ?? 0}
             />
           )}
           {shapeDraft && (

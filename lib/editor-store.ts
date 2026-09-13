@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { temporal } from "zundo";
 import { useStoreWithEqualityFn } from "zustand/traditional";
 import type { TemporalState } from "zundo";
+import { sampleCompassArc } from "./compass";
 import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTarget, boundsOfBezier, boundsOfPoints, localizeBezier } from "./geometry";
 import { flipLayer, layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
@@ -137,6 +138,13 @@ interface EditorState {
   addTextAt: (x: number, y: number) => string;
   addShapeAt: (x: number, y: number, w: number, h: number) => string;
   addCompassCircle: (cx: number, cy: number, r: number) => string;
+  addCompassArc: (
+    cx: number,
+    cy: number,
+    r: number,
+    start: number,
+    sweep: number,
+  ) => string;
   addPath: (tool: "pencil" | "pen" | "highlighter", points: number[]) => string;
   addBezier: (points: BezierPoint[], closed: boolean) => string;
   setBezierPoints: (
@@ -526,6 +534,28 @@ export const useEditorStore = create<EditorState>()(
           fillTo: s.shapeFillTo,
           fillStops: s.shapeFillStops,
           fillAngle: s.shapeFillAngle,
+        });
+        get().addLayer(layer);
+        return layer.id;
+      },
+
+      addCompassArc: (cx, cy, r, start, sweep) => {
+        if (Math.abs(sweep) >= Math.PI * 2 - 0.02) {
+          return get().addCompassCircle(cx, cy, r);
+        }
+        const s = get();
+        const points = sampleCompassArc(cx, cy, r, start, sweep);
+        const b = boundsOfPoints(points);
+        const local = points.map((v, i) => (i % 2 === 0 ? v - b.x : v - b.y));
+        const layer = createPathLayer("pen", local, {
+          name: "Arc",
+          x: b.x,
+          y: b.y,
+          width: Math.max(1, b.width),
+          height: Math.max(1, b.height),
+          stroke: s.color,
+          strokeWidth: Math.max(1.25, s.shapeStrokeWidth),
+          tension: 0,
         });
         get().addLayer(layer);
         return layer.id;
