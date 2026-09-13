@@ -132,6 +132,7 @@ interface EditorState {
   addLayer: (layer: Layer, select?: boolean) => void;
   updateLayer: (id: string, partial: Partial<Layer>) => void;
   updateLayers: (ids: string[], partial: Partial<Layer>) => void;
+  patchSelected: (fn: (layer: Layer) => Partial<Layer> | null) => void;
   patchLayer: (id: string, fn: (layer: Layer) => Layer) => void;
   deleteSelected: () => void;
   duplicateSelected: () => void;
@@ -441,6 +442,18 @@ export const useEditorStore = create<EditorState>()(
             ids.includes(l.id) ? ({ ...l, ...partial } as Layer) : l,
           ),
         })),
+
+      patchSelected: (fn) =>
+        set((s) => {
+          const ids = new Set(expandSelection(s.layers, s.selectedIds));
+          return {
+            layers: s.layers.map((l) => {
+              if (!ids.has(l.id) || l.locked) return l;
+              const partial = fn(l);
+              return partial ? ({ ...l, ...partial } as Layer) : l;
+            }),
+          };
+        }),
 
       patchLayer: (id, fn) =>
         set((s) => ({

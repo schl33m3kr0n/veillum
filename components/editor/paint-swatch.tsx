@@ -112,3 +112,31 @@ export function ColorCircle({
     </button>
   );
 }
+
+export function ColorInputCircle({
+  value,
+  onChange,
+  title,
+  size = "md",
+}: {
+  value: string;
+  onChange: (hex: string) => void;
+  title?: string;
+  size?: "sm" | "md";
+}) {
+  return (
+    <label
+      className="relative inline-flex cursor-pointer"
+      title={title ?? value}
+    >
+      <ColorCircleLook color={value} size={size} />
+      <input
+        type="color"
+        value={value}
+        aria-label={title ?? "Color"}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 cursor-pointer opacity-0"
+      />
+    </label>
+  );
+}

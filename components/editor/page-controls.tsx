@@ -19,6 +19,7 @@ import {
 import { SYMMETRY_FOLDS, symmetryMode } from "@/lib/symmetry";
 import type { GridType, SymmetryMode } from "@/lib/types";
 import { Field, NumberField, SliderField, historyFieldProps } from "./fields";
+import { ColorInputCircle } from "./paint-swatch";
 
 export function PageControls() {
   const page = useEditorStore((s) => s.page);
@@ -52,11 +53,10 @@ export function PageControls() {
         </Button>
       </div>
       <Field label="Paper">
-        <Input
-          type="color"
+        <ColorInputCircle
           value={page.background}
-          onChange={(e) => updatePage({ background: e.target.value })}
-          className="h-7 p-1"
+          title="Page color"
+          onChange={(background) => updatePage({ background })}
         />
       </Field>
       <div className="flex items-center justify-between">

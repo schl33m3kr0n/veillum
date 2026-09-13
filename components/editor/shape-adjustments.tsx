@@ -8,8 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEditorStore } from "@/lib/editor-store";
-import type { DashStyle, ShapeKind, ShapeLayer } from "@/lib/types";
-import { SHAPE_KINDS } from "@/lib/shapes";
+import type { DashStyle, Layer, ShapeLayer } from "@/lib/types";
 import { Field, OpacityField, SliderField, historyFieldProps } from "./fields";
 import { FillStylePicker } from "./fill-style-picker";
 import { GradientStopsEditor } from "./gradient-stops";
@@ -67,7 +66,38 @@ export function ShapeAdjustments({
 
   const patch = (partial: Partial<ShapeLayer>) => {
     const s = useEditorStore.getState();
-    if (layer) {
+    s.patchSelected((l) => {
+      if (l.type === "shape") return partial;
+      if (l.type === "text") {
+        const next: Partial<Layer> = {};
+        if (partial.fill != null) Object.assign(next, { color: partial.fill });
+        if (partial.opacity != null) next.opacity = partial.opacity;
+        return Object.keys(next).length ? next : null;
+      }
+      if (l.type === "path") {
+        const next: Record<string, unknown> = {};
+        if (partial.stroke != null) next.stroke = partial.stroke;
+        if (partial.strokeWidth != null) next.strokeWidth = partial.strokeWidth;
+        if (partial.opacity != null) next.opacity = partial.opacity;
+        return Object.keys(next).length ? (next as Partial<Layer>) : null;
+      }
+      if (l.type === "bezier") {
+        const next: Record<string, unknown> = {};
+        if (partial.stroke != null) next.stroke = partial.stroke;
+        if (partial.strokeWidth != null) next.strokeWidth = partial.strokeWidth;
+        if (partial.fill != null) next.fill = partial.fill;
+        if (partial.fillEnabled != null) next.fillEnabled = partial.fillEnabled;
+        if (partial.fillStops) next.fillStops = partial.fillStops;
+        if (partial.fillStyle) next.fillStyle = partial.fillStyle;
+        if (partial.fillTo) next.fillTo = partial.fillTo;
+        if (partial.fillAngle != null) next.fillAngle = partial.fillAngle;
+        if (partial.opacity != null) next.opacity = partial.opacity;
+        return Object.keys(next).length ? (next as Partial<Layer>) : null;
+      }
+      if (partial.opacity != null) return { opacity: partial.opacity };
+      return null;
+    });
+    if (layer && s.selectedIds.length === 0) {
       s.updateLayer(layer.id, partial);
     }
     if (partial.shape) s.setShapeKind(partial.shape);
@@ -91,25 +121,6 @@ export function ShapeAdjustments({
 
   return (
     <div className="space-y-2">
-      {!compact && kind !== "svg" && (
-        <Field label="Kind">
-          <Select
-            value={kind}
-            onValueChange={(shape) => patch({ shape: shape as ShapeKind })}
-          >
-            <SelectTrigger size="sm" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SHAPE_KINDS.filter((k) => k.id !== "svg").map((k) => (
-                <SelectItem key={k.id} value={k.id}>
-                  {k.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      )}
       <div className="grid grid-cols-2 gap-2">
         <PaintField
           label="Fill"

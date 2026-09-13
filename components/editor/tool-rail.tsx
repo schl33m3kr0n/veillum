@@ -27,6 +27,7 @@ import { extractRawPreview } from "@/lib/raw";
 import type { Tool } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { HighlighterIcon } from "./highlighter-icon";
+import { AnimationRail } from "./animation-rail";
 
 const TOOLS: { id: Tool; label: string; shortcut: string; icon: typeof Type }[] = [
   { id: "select", label: "Select", shortcut: "V", icon: MousePointer2 },
@@ -50,7 +51,7 @@ export function ToolRail() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <aside className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border/70 bg-card py-2">
+    <aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border/70 bg-card py-2">
       {TOOLS.map((t) => {
         const Icon = t.icon;
         return (
@@ -81,7 +82,7 @@ export function ToolRail() {
           </Tooltip>
         );
       })}
-      <div className="mt-auto flex flex-col items-center gap-1 pb-2">
+      <div className="mt-auto flex w-full flex-col items-center gap-1">
         <input
           ref={fileRef}
           type="file"
@@ -120,6 +121,7 @@ export function ToolRail() {
           </TooltipTrigger>
           <TooltipContent side="right">Place image / RAW</TooltipContent>
         </Tooltip>
+        <AnimationRail />
       </div>
     </aside>
   );

@@ -326,22 +326,64 @@ export function squareGridLines(
   return lines;
 }
 
+/** Liang–Barsky clip of a segment to [0,w] × [0,h]. */
+function clipSegmentToRect(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  w: number,
+  h: number,
+): number[] | null {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  let t0 = 0;
+  let t1 = 1;
+  const clip = (p: number, q: number) => {
+    if (p === 0) return q >= 0;
+    const r = q / p;
+    if (p < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+    return true;
+  };
+  if (
+    clip(-dx, x1) &&
+    clip(dx, w - x1) &&
+    clip(-dy, y1) &&
+    clip(dy, h - y1)
+  ) {
+    return [x1 + t0 * dx, y1 + t0 * dy, x1 + t1 * dx, y1 + t1 * dy];
+  }
+  return null;
+}
+
 export function triangleGridLines(
   width: number,
   height: number,
   size: number,
 ): number[][] {
   const step = Math.max(4, size);
+  const row = (step * Math.sqrt(3)) / 2;
+  const sqrt3 = Math.sqrt(3);
   const lines: number[][] = [];
-  const h = step * Math.sin(Math.PI / 3);
-  for (let y = 0; y <= height + h; y += h) {
-    lines.push([0, y, width, y]);
+  const add = (x1: number, y1: number, x2: number, y2: number) => {
+    const clipped = clipSegmentToRect(x1, y1, x2, y2, width, height);
+    if (clipped) lines.push(clipped);
+  };
+
+  for (let y = 0; y <= height + 0.5; y += row) {
+    add(0, y, width, y);
   }
-  const angle = Math.PI / 3;
-  const len = Math.hypot(width, height) * 2;
-  for (let x = -height; x < width + height; x += step) {
-    lines.push([x, 0, x + len * Math.cos(angle), len * Math.sin(angle)]);
-    lines.push([x, 0, x + len * Math.cos(-angle), len * Math.sin(-angle)]);
+
+  const span = width + height * 2;
+  for (let x0 = -span; x0 <= width + span; x0 += step) {
+    add(x0 - span, -sqrt3 * span, x0 + span, sqrt3 * span);
+    add(x0 - span, sqrt3 * span, x0 + span, -sqrt3 * span);
   }
   return lines;
 }
