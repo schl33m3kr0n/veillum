@@ -49,27 +49,34 @@ export function ColorLoupe({
     ctx.strokeRect(half * CELL + 2, half * CELL + 2, CELL - 4, CELL - 4);
   }, [snapshot, pageX, pageY]);
 
-  if (!snapshot || hex == null) return null;
+  const MAG = SIZE * CELL;
 
   return (
     <div
       className="pointer-events-none absolute z-50"
-      style={{ left: screenX + 18, top: screenY + 18 }}
+      style={{
+        left: screenX - MAG / 2,
+        top: screenY - MAG / 2,
+        width: MAG,
+        height: MAG,
+      }}
     >
       <canvas
         ref={canvasRef}
-        width={SIZE * CELL}
-        height={SIZE * CELL}
+        width={MAG}
+        height={MAG}
         className="rounded-full border-2 border-[#161310] shadow-xl"
         style={{ imageRendering: "pixelated" }}
       />
-      <div className="mt-1 flex items-center gap-1.5 rounded-md bg-[#161310] px-2 py-1 text-[11px] text-[#f7f1e6] shadow-md">
-        <span
-          className="size-3 rounded-sm border border-white/20"
-          style={{ background: hex }}
-        />
-        <span className="font-mono">{hex}</span>
-      </div>
+      {hex ? (
+        <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md bg-[#161310]/90 px-1.5 py-0.5 text-[10px] text-[#f7f1e6]">
+          <span
+            className="size-2.5 rounded-sm border border-white/20"
+            style={{ background: hex }}
+          />
+          <span className="font-mono">{hex}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

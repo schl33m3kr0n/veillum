@@ -74,6 +74,7 @@ interface EditorState {
   clipboard: Clipboard;
   pointer: { x: number; y: number };
   recentColors: string[];
+  colorLoupe: boolean;
   sidebarOpen: boolean;
   timelineOpen: boolean;
   snapGuides: SnapGuide[];
@@ -252,6 +253,7 @@ export const useEditorStore = create<EditorState>()(
       clipboard: null,
       pointer: { x: 0, y: 0 },
       recentColors: ["#1c1916", "#c45c26", "#d4a054", "#f7f1e6", "#8aa39b"],
+      colorLoupe: false,
       sidebarOpen: true,
       timelineOpen: true,
       snapGuides: [],
@@ -266,7 +268,8 @@ export const useEditorStore = create<EditorState>()(
       bgBusyId: null,
       bgBusyNote: "",
 
-      setTool: (tool) => set({ tool, editingTextId: null }),
+      setTool: (tool) =>
+        set({ tool, editingTextId: null, colorLoupe: tool === "eyedropper" }),
       setBgBusy: (bgBusyId, note) =>
         set({ bgBusyId, bgBusyNote: note ?? (bgBusyId ? "Cutting out…" : "") }),
       setSessionReady: (sessionReady) => set({ sessionReady }),
@@ -369,7 +372,11 @@ export const useEditorStore = create<EditorState>()(
       setShapeWedge: (shapeWedge) => set({ shapeWedge: clampWedge(shapeWedge) }),
       setShapeTrackFill: (shapeTrackFill) => set({ shapeTrackFill }),
       setColor: (color) =>
-        set((s) => ({ color, recentColors: rememberColor(s.recentColors, color) })),
+        set((s) => ({
+          color,
+          recentColors: rememberColor(s.recentColors, color),
+          colorLoupe: s.tool === "eyedropper" ? false : s.colorLoupe,
+        })),
       setHighlight: (highlight) => set({ highlight }),
       setZoom: (zoom) => set({ zoom: Math.max(0.15, Math.min(4, zoom)) }),
       zoomToward: (zoom, screenX, screenY) =>

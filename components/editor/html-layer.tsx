@@ -47,7 +47,7 @@ export function HtmlLayer({
     mixBlendMode: cssBlend(layer.blendMode),
     visibility: layer.visible ? "visible" : "hidden",
     pointerEvents: interactive && !layer.locked ? "auto" : "none",
-    cursor: interactive && !layer.locked ? "move" : "default",
+    cursor: tool === "eyedropper" ? "none" : interactive && !layer.locked ? "move" : "default",
     outline: selected && layer.locked ? "1.5px solid #c45c26" : undefined,
     outlineOffset: 2,
     boxSizing: "border-box",

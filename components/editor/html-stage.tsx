@@ -42,6 +42,7 @@ export default function HtmlStage({
   const editingTextId = useEditorStore((s) => s.editingTextId);
   const playhead = useEditorStore((s) => s.playhead);
   const playing = useEditorStore((s) => s.playing);
+  const colorLoupe = useEditorStore((s) => s.colorLoupe);
   const color = useEditorStore((s) => s.color);
   const highlight = useEditorStore((s) => s.highlight);
   const shapeKind = useEditorStore((s) => s.shapeKind);
@@ -156,6 +157,10 @@ export default function HtmlStage({
       live = false;
     };
   }, [tool]);
+
+  useEffect(() => {
+    if (!colorLoupe) setLoupe(null);
+  }, [colorLoupe]);
 
   const pagePoint = useCallback(
     (clientX: number, clientY: number) => {
@@ -333,6 +338,7 @@ export default function HtmlStage({
       const hex = snap && p ? sampleCanvasHex(snap, p.x, p.y) : null;
       if (hex) {
         applyStudioColor(hex);
+        setLoupe(null);
       } else {
         const pageEl = pageRef.current;
         if (pageEl) {
@@ -347,6 +353,7 @@ export default function HtmlStage({
               1,
             ).data;
             applyStudioColor(rgbToHex(pix[0], pix[1], pix[2]));
+            setLoupe(null);
           }
         }
       }
@@ -477,7 +484,7 @@ export default function HtmlStage({
     if (p) useEditorStore.getState().setPointer(p.x, p.y);
     const store = useEditorStore.getState();
 
-    if (store.tool === "eyedropper") {
+    if (store.tool === "eyedropper" && store.colorLoupe) {
       const board = boardRef.current;
       if (p && board) {
         const rect = board.getBoundingClientRect();
@@ -832,8 +839,13 @@ export default function HtmlStage({
   return (
     <div
       ref={boardRef}
-      className="relative h-full w-full overflow-hidden bg-[#2a2622]"
-      style={{ width, height }}
+      className="relative h-full w-full overflow-hidden bg-[#2a2622] [&[data-color-sampling]_*]:cursor-none"
+      data-color-sampling={tool === "eyedropper" && colorLoupe ? "" : undefined}
+      style={{
+        width,
+        height,
+        cursor: tool === "eyedropper" && colorLoupe ? "none" : undefined,
+      }}
       onPointerDown={onBoardPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -863,7 +875,9 @@ export default function HtmlStage({
             boxShadow: "0 18px 40px rgba(0,0,0,0.45)",
             overflow: "hidden",
             cursor:
-              tool === "text"
+              tool === "eyedropper" && colorLoupe
+                ? "none"
+                : tool === "text"
                 ? "text"
                 : tool === "pan"
                   ? "grab"
@@ -1105,7 +1119,7 @@ export default function HtmlStage({
           )}
         </div>
       </div>
-      {tool === "eyedropper" && loupe && (
+      {tool === "eyedropper" && colorLoupe && loupe && (
         <ColorLoupe
           snapshot={colorShot}
           pageX={loupe.pageX}
