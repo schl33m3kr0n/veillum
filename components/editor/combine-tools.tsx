@@ -69,8 +69,8 @@ export function CombineTools({ compact = false }: { compact?: boolean }) {
           Exclude
         </DropdownMenuItem>
         <p className="px-2 pb-1.5 pt-1 text-[11px] leading-snug text-muted-foreground">
-          Select two or more overlapping filled shapes, then Unite to make one
-          fillable outline. ⌘/Ctrl U.
+          Select two or more overlapping filled shapes. Unite, Subtract,
+          Intersect, or Exclude makes one filled outline with stroke. ⌘/Ctrl U.
         </p>
       </DropdownMenuContent>
     </DropdownMenu>

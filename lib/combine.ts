@@ -245,16 +245,19 @@ export function combineLayers(layers: Layer[], mode: CombineMode): ShapeLayer | 
   if (!result.length) return null;
   const box = boundsOf(result);
   if (!Number.isFinite(box.minX)) return null;
-  const pad = 1;
+  const top = targets[targets.length - 1];
+  const fill =
+    top.type === "shape" || top.type === "bezier" ? top.fill : "#c45c26";
+  const stroke = top.stroke || "#1c1916";
+  const strokeWidth = top.strokeWidth > 0 ? top.strokeWidth : 2;
+  const dash = top.type === "shape" ? top.dash : "solid";
+  const pad = Math.max(2, Math.ceil(strokeWidth / 2) + 1);
   const x = box.minX - pad;
   const y = box.minY - pad;
   const width = Math.max(8, box.maxX - box.minX + pad * 2);
   const height = Math.max(8, box.maxY - box.minY + pad * 2);
   const d = pathFromMultiPolygon(result, x, y);
   if (!d) return null;
-  const top = targets[targets.length - 1];
-  const fill =
-    top.type === "shape" || top.type === "bezier" ? top.fill : "#c45c26";
   return createShapeLayer("svg", {
     name: "Combined",
     x,
@@ -270,12 +273,22 @@ export function combineLayers(layers: Layer[], mode: CombineMode): ShapeLayer | 
     fillTo: "fillTo" in top ? top.fillTo : "#f4d8a8",
     fillAngle: "fillAngle" in top ? top.fillAngle : 0,
     fillStops: "fillStops" in top ? top.fillStops : undefined,
-    stroke: top.type === "shape" ? top.stroke : top.stroke,
-    strokeEnabled: top.type === "shape" ? top.strokeEnabled : true,
-    strokeWidth: top.type === "shape" ? top.strokeWidth : top.strokeWidth,
+    stroke,
+    strokeEnabled: true,
+    strokeWidth,
+    dash,
     opacity: top.opacity,
     blendMode: top.blendMode,
     svgViewBox: `0 0 ${width} ${height}`,
-    svgNodes: [{ tag: "path", d }],
+    svgNodes: [
+      {
+        tag: "path",
+        d,
+        fill: "fill",
+        stroke: "stroke",
+        strokeLinejoin: "round",
+        strokeLinecap: "round",
+      },
+    ],
   });
 }
