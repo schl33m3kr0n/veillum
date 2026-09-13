@@ -17,7 +17,11 @@ import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
 import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
-import { CompassOverlay } from "./compass-overlay";
+import {
+  CompassOverlay,
+  hitCompass,
+  type CompassHit,
+} from "./compass-overlay";
 
 export default function HtmlStage({
   width,
@@ -75,6 +79,16 @@ export default function HtmlStage({
   } | null>(null);
   const compassDraftRef = useRef(compassDraft);
   compassDraftRef.current = compassDraft;
+  const compassGesture = useRef<{
+    mode: "place" | "needle" | "pencil" | "stamp";
+    ox: number;
+    oy: number;
+    startCx: number;
+    startCy: number;
+  } | null>(null);
+  const [compassDrag, setCompassDrag] = useState<
+    "place" | "needle" | "pencil" | "stamp" | null
+  >(null);
   const [bezierDraft, setBezierDraft] = useState<BezierPoint[]>([]);
   const [bezierDragging, setBezierDragging] = useState(false);
   const [maskPts, setMaskPts] = useState<number[] | null>(null);
@@ -106,6 +120,14 @@ export default function HtmlStage({
       window.removeEventListener("keyup", onKey);
     };
   }, []);
+
+  useEffect(() => {
+    if (tool !== "compass") {
+      compassGesture.current = null;
+      setCompassDrag(null);
+      setCompassDraft(null);
+    }
+  }, [tool]);
 
   useEffect(() => {
     if (tool !== "eyedropper") {
@@ -354,7 +376,30 @@ export default function HtmlStage({
 
     if (current === "compass") {
       drawing.current = true;
-      setCompassDraft({ cx: p.x, cy: p.y, r: 0, angle: 0 });
+      const existing = compassDraftRef.current;
+      if (!existing) {
+        compassGesture.current = {
+          mode: "place",
+          ox: p.x,
+          oy: p.y,
+          startCx: p.x,
+          startCy: p.y,
+        };
+        setCompassDrag("place");
+        setCompassDraft({ cx: p.x, cy: p.y, r: 0, angle: -Math.PI / 2 });
+      } else {
+        const hit = hitCompass(existing, p);
+        const mode = hit === "empty" ? "stamp" : hit;
+        compassGesture.current = {
+          mode,
+          ox: p.x,
+          oy: p.y,
+          startCx: existing.cx,
+          startCy: existing.cy,
+        };
+        setCompassDrag(mode);
+      }
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       e.stopPropagation();
       return;
     }
@@ -459,21 +504,38 @@ export default function HtmlStage({
       return;
     }
 
+    const compassG = compassGesture.current;
+    if (compassG && p) {
+      if (compassG.mode === "place" || compassG.mode === "pencil") {
+        setCompassDraft((d) => {
+          if (!d) return d;
+          let r = Math.hypot(p.x - d.cx, p.y - d.cy);
+          if (e.shiftKey) r = Math.round(r / 8) * 8;
+          return {
+            ...d,
+            r,
+            angle: Math.atan2(p.y - d.cy, p.x - d.cx),
+          };
+        });
+      } else if (compassG.mode === "needle") {
+        setCompassDraft((d) =>
+          d
+            ? {
+                ...d,
+                cx: compassG.startCx + (p.x - compassG.ox),
+                cy: compassG.startCy + (p.y - compassG.oy),
+              }
+            : d,
+        );
+      }
+      return;
+    }
+
     if (!drawing.current || !p) return;
     if (draftPts) setDraftPts((pts) => (pts ? [...pts, p.x, p.y] : pts));
     if (shapeDraft) {
       setShapeDraft((d) => (d ? { ...d, w: p.x - d.x, h: p.y - d.y } : d));
     }
-    setCompassDraft((d) => {
-      if (!d) return d;
-      let r = Math.hypot(p.x - d.cx, p.y - d.cy);
-      if (e.shiftKey) r = Math.round(r / 8) * 8;
-      return {
-        ...d,
-        r,
-        angle: Math.atan2(p.y - d.cy, p.x - d.cx),
-      };
-    });
     if (marqueeRef.current) {
       const origin = marqueeRef.current;
       const next = { ...origin, w: p.x - origin.x, h: p.y - origin.y };
@@ -502,9 +564,22 @@ export default function HtmlStage({
       const h = Math.abs(shapeDraft.h);
       if (w > 4 && h > 4) store.addShapeAt(x, y, w, h);
     }
+    const compassG = compassGesture.current;
     const compass = compassDraftRef.current;
-    if (compass && compass.r > 4) {
-      store.addCompassCircle(compass.cx, compass.cy, compass.r);
+    if (compassG && store.tool === "compass" && compass) {
+      if (compassG.mode === "place" && compass.r < 8) {
+        setCompassDraft({
+          ...compass,
+          r: 80,
+          angle: compass.r < 1 ? -Math.PI / 2 : compass.angle,
+        });
+      } else if (compassG.mode === "stamp" && compass.r > 4) {
+        const moved = Math.hypot(
+          store.pointer.x - compassG.ox,
+          store.pointer.y - compassG.oy,
+        );
+        if (moved < 4) store.addCompassCircle(compass.cx, compass.cy, compass.r);
+      }
     }
     if (maskPts && maskPts.length > 4) {
       const id = store.selectedIds[0];
@@ -563,7 +638,8 @@ export default function HtmlStage({
     });
     setDraftPts(null);
     setShapeDraft(null);
-    setCompassDraft(null);
+    compassGesture.current = null;
+    setCompassDrag(null);
     setMarquee(null);
     marqueeRef.current = null;
     setMaskPts(null);
@@ -680,6 +756,21 @@ export default function HtmlStage({
         )
       : [];
 
+  const compassFocus: CompassHit | null =
+    compassDrag === "needle" || compassDrag === "pencil"
+      ? compassDrag
+      : compassDrag === "place"
+        ? "pencil"
+        : compassDraft && tool === "compass"
+          ? hitCompass(compassDraft, pointer)
+          : null;
+  const compassCursor =
+    compassFocus === "needle" || compassFocus === "pencil"
+      ? compassDrag
+        ? "grabbing"
+        : "grab"
+      : "crosshair";
+
   return (
     <div
       ref={boardRef}
@@ -720,7 +811,9 @@ export default function HtmlStage({
                   ? "grab"
                   : tool === "select"
                     ? "default"
-                    : "crosshair",
+                    : tool === "compass"
+                      ? compassCursor
+                      : "crosshair",
           }}
         >
           {page.header.enabled && (
@@ -817,6 +910,7 @@ export default function HtmlStage({
               r={compassDraft.r}
               angle={compassDraft.angle}
               color={color}
+              focus={compassFocus}
             />
           )}
           {shapeDraft && (

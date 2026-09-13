@@ -74,7 +74,7 @@ export function Studio() {
         )}
         {tool === "compass" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
-            Click to plant the needle, then drag the pencil to set the radius. Shift snaps the radius. Release to draw a circle.
+            Click empty page to plant, then drag. Drag the needle to move the compass, drag the pencil to change radius. Click the page to stamp a circle. Shift snaps the radius.
           </div>
         )}
         {tool === "mask" && (
