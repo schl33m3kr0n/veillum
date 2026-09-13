@@ -13,6 +13,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { LayerContextItems, prepareLayerContext } from "./layer-context-menu";
 import { useEditorStore } from "@/lib/editor-store";
 import { cn } from "@/lib/utils";
 
@@ -69,9 +74,14 @@ export function LayersPanel() {
           )}
           {reversed.map((layer) => (
             <li key={layer.id}>
+              <ContextMenu>
+                <ContextMenuTrigger asChild>
               <button
                 type="button"
                 onClick={(e) => select([layer.id], e.shiftKey)}
+                onContextMenu={(e) =>
+                  prepareLayerContext(layer.id, e.shiftKey)
+                }
                 className={cn(
                   "flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted",
                   selectedIds.includes(layer.id) && "bg-primary/15",
@@ -110,6 +120,9 @@ export function LayersPanel() {
                   {layer.locked ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
                 </span>
               </button>
+                </ContextMenuTrigger>
+                <LayerContextItems />
+              </ContextMenu>
             </li>
           ))}
         </ul>

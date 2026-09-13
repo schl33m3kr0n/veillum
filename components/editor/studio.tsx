@@ -29,7 +29,6 @@ export function Studio() {
   useAutosave();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
-  const [tab, setTab] = useState("properties");
   const tool = useEditorStore((s) => s.tool);
   const zoom = useEditorStore((s) => s.zoom);
   const pointer = useEditorStore((s) => s.pointer);
@@ -38,6 +37,8 @@ export function Studio() {
   const selected = layers.find((l) => l.id === selectedIds[0]);
   const sidebarOpen = useEditorStore((s) => s.sidebarOpen);
   const setSidebarOpen = useEditorStore((s) => s.setSidebarOpen);
+  const tab = useEditorStore((s) => s.sidebarTab);
+  const setSidebarTab = useEditorStore((s) => s.setSidebarTab);
 
   useEffect(() => {
     void restoreCustomFonts();
@@ -100,7 +101,9 @@ export function Studio() {
             <aside className="flex w-80 shrink-0 flex-col border-l border-border/70 bg-card">
               <Tabs
                 value={tab}
-                onValueChange={setTab}
+                onValueChange={(next) =>
+                  setSidebarTab(next === "layers" ? "layers" : "properties")
+                }
                 className="flex min-h-0 flex-1 flex-col"
               >
                 <div className="flex items-center gap-1 px-2 pt-2">

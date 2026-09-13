@@ -79,6 +79,7 @@ interface EditorState {
   recentColors: string[];
   colorLoupe: boolean;
   sidebarOpen: boolean;
+  sidebarTab: "properties" | "layers";
   timelineOpen: boolean;
   snapGuides: SnapGuide[];
   startOpen: boolean;
@@ -122,6 +123,7 @@ interface EditorState {
   setDuration: (t: number) => void;
   setPlaying: (p: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
+  setSidebarTab: (tab: "properties" | "layers") => void;
   setTimelineOpen: (open: boolean) => void;
   setSnapGuides: (guides: SnapGuide[]) => void;
   select: (ids: string[], additive?: boolean) => void;
@@ -137,6 +139,7 @@ interface EditorState {
   deleteSelected: () => void;
   duplicateSelected: () => void;
   reorderLayer: (id: string, dir: "up" | "down" | "top" | "bottom") => void;
+  reorderSelected: (dir: "up" | "down" | "top" | "bottom") => void;
   toggleVisible: (id: string) => void;
   toggleLocked: (id: string) => void;
 
@@ -263,6 +266,7 @@ export const useEditorStore = create<EditorState>()(
       recentColors: ["#1c1916", "#c45c26", "#d4a054", "#f7f1e6", "#8aa39b"],
       colorLoupe: false,
       sidebarOpen: true,
+      sidebarTab: "properties",
       timelineOpen: true,
       snapGuides: [],
       startOpen: true,
@@ -405,6 +409,7 @@ export const useEditorStore = create<EditorState>()(
       setDuration: (duration) => set({ duration }),
       setPlaying: (playing) => set({ playing }),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setSidebarTab: (sidebarTab) => set({ sidebarTab }),
       setTimelineOpen: (timelineOpen) => set({ timelineOpen }),
       setSnapGuides: (snapGuides) => set({ snapGuides }),
       select: (ids, additive) =>
@@ -496,6 +501,33 @@ export const useEditorStore = create<EditorState>()(
           if (dir === "top") j = next.length;
           if (dir === "bottom") j = 0;
           next.splice(j, 0, item);
+          return { layers: next };
+        }),
+
+      reorderSelected: (dir) =>
+        set((s) => {
+          const ids = new Set(s.selectedIds);
+          if (ids.size === 0) return s;
+          const moving = s.layers.filter((l) => ids.has(l.id));
+          const keep = s.layers.filter((l) => !ids.has(l.id));
+          if (moving.length === 0) return s;
+          if (dir === "top") return { layers: [...keep, ...moving] };
+          if (dir === "bottom") return { layers: [...moving, ...keep] };
+          const indices = s.layers
+            .map((l, i) => (ids.has(l.id) ? i : -1))
+            .filter((i) => i >= 0);
+          const minI = Math.min(...indices);
+          const maxI = Math.max(...indices);
+          const next = [...s.layers];
+          if (dir === "up") {
+            if (maxI >= next.length - 1) return s;
+            const [above] = next.splice(maxI + 1, 1);
+            next.splice(minI, 0, above);
+            return { layers: next };
+          }
+          if (minI <= 0) return s;
+          const [below] = next.splice(minI - 1, 1);
+          next.splice(maxI, 0, below);
           return { layers: next };
         }),
 

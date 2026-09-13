@@ -30,6 +30,8 @@ import {
   type CompassHit,
 } from "./compass-overlay";
 import { shortestAngleDelta } from "@/lib/compass";
+import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { LayerContextItems, prepareLayerContextAtPage } from "./layer-context-menu";
 
 export default function HtmlStage({
   width,
@@ -311,6 +313,7 @@ export default function HtmlStage({
   }, [tool, finishBezier]);
 
   const onBoardPointerDown = (e: React.PointerEvent) => {
+    if (e.button === 2) return;
     const store = useEditorStore.getState();
     const current: Tool = spacePan.current ? "pan" : store.tool;
     if (current === "pan" || e.button === 1) {
@@ -331,6 +334,7 @@ export default function HtmlStage({
   };
 
   const onPagePointerDown = async (e: React.PointerEvent) => {
+    if (e.button === 2) return;
     const p = pagePoint(e.clientX, e.clientY);
     if (!p) return;
     const store = useEditorStore.getState();
@@ -706,6 +710,10 @@ export default function HtmlStage({
   };
 
   const onLayerPointerDown = async (e: React.PointerEvent, id: string) => {
+    if (e.button !== 0) {
+      e.stopPropagation();
+      return;
+    }
     e.stopPropagation();
     const store = useEditorStore.getState();
     const p = pagePoint(e.clientX, e.clientY);
@@ -835,6 +843,8 @@ export default function HtmlStage({
       : "crosshair";
 
   return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
     <div
       ref={boardRef}
       className="relative h-full w-full overflow-hidden bg-[#2a2622] [&[data-color-sampling]_*]:cursor-none"
@@ -850,6 +860,15 @@ export default function HtmlStage({
       onPointerCancel={onPointerUp}
       onDragOver={(e) => e.preventDefault()}
       onDrop={onDrop}
+      onContextMenu={(e) => {
+        const p = pagePoint(e.clientX, e.clientY);
+        prepareLayerContextAtPage(
+          p?.x ?? -1e6,
+          p?.y ?? -1e6,
+          e.shiftKey,
+          useEditorStore.getState().layers,
+        );
+      }}
     >
       <div
         style={{
@@ -1163,6 +1182,9 @@ export default function HtmlStage({
       )}
       <span className="sr-only">{shapeKind}</span>
     </div>
+      </ContextMenuTrigger>
+      <LayerContextItems />
+    </ContextMenu>
   );
 }
 
