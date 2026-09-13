@@ -23,6 +23,7 @@ export function TextOverlay() {
   const ref = useRef<HTMLDivElement>(null);
   const skip = useRef(false);
   const fromEditor = useRef(false);
+  const blurGen = useRef(0);
   const editingTextId = useEditorStore((s) => s.editingTextId);
   const layers = useEditorStore((s) => s.layers);
   const zoom = useEditorStore((s) => s.zoom);
@@ -40,7 +41,9 @@ export function TextOverlay() {
     beginHistoryGesture();
     const el = ref.current;
     el?.focus();
+    const gen = blurGen.current;
     return () => {
+      blurGen.current = gen + 1;
       endHistoryGesture();
       setLiveTextRange(null);
     };
@@ -84,7 +87,6 @@ export function TextOverlay() {
     if (saved && saved.id === layer.id) {
       setOffsetsOnRoot(el, saved.start, saved.end);
     }
-    el.focus();
     skip.current = false;
   }, [
     layer?.id,
@@ -157,15 +159,20 @@ export function TextOverlay() {
         }
       }}
       onBlur={(e) => {
+        if (!e.currentTarget.isConnected) return;
         const next = e.relatedTarget as HTMLElement | null;
         if (next?.closest("[data-text-format-bar], [data-text-editor]")) return;
+        const gen = ++blurGen.current;
+        const id = layer.id;
         window.setTimeout(() => {
+          if (gen !== blurGen.current) return;
+          if (!ref.current?.isConnected) return;
           const active = document.activeElement as HTMLElement | null;
           if (active?.closest("[data-text-format-bar], [data-text-editor]")) return;
-          if (useEditorStore.getState().editingTextId === layer.id) {
+          if (useEditorStore.getState().editingTextId === id) {
             useEditorStore.getState().setEditingText(null);
           }
-        }, 80);
+        }, 120);
       }}
       className="absolute z-20 overflow-hidden border border-primary bg-[#f7f1e6]/95 shadow-lg outline-none"
       style={{

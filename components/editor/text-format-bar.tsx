@@ -1,7 +1,7 @@
 "use client";
 
 import { useEditorStore } from "@/lib/editor-store";
-import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
+import { PAGE_PAD_X, PAGE_PAD_Y, RULER_SIZE } from "@/lib/stage";
 import type { TextLayer } from "@/lib/types";
 import { layerAabb } from "@/lib/transform";
 import { TextFormatControls } from "./text-toolbar";
@@ -29,16 +29,20 @@ export function TextFormatBar() {
     height: (box.bottom - box.top) * zoom,
   };
   const barHeight = 44;
-  const placeAbove = screen.top - barHeight - 8 >= 8;
-  const top = placeAbove ? screen.top - 8 : screen.top + screen.height + 8;
+  const minTop = RULER_SIZE + 8;
+  const aboveTop = screen.top - 8 - barHeight;
+  const placeAbove = aboveTop >= minTop;
+  const top = placeAbove
+    ? screen.top - 8
+    : Math.max(minTop, screen.top + screen.height + 8);
   const center = screen.left + screen.width / 2;
 
   return (
     <div
       data-text-format-bar
-      className="pointer-events-auto absolute z-30 max-w-[min(calc(100%-16px),720px)] rounded-xl border border-border/80 bg-card/95 px-1 py-1 shadow-lg backdrop-blur-sm"
+      className="pointer-events-auto absolute z-40 max-w-[min(calc(100%-24px),720px)] rounded-xl border border-border/80 bg-card px-1 py-1 shadow-lg"
       style={{
-        left: center,
+        left: `clamp(12px, ${center}px, calc(100% - 12px))`,
         top,
         transform: placeAbove ? "translate(-50%, -100%)" : "translate(-50%, 0)",
       }}
