@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  FolderOpen,
+  Save,
   Undo2,
   Redo2,
   Copy,
@@ -34,6 +36,7 @@ import {
 } from "@/lib/export";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
+import { openProjectFile, saveProjectFile } from "./file-actions";
 import { isFullscreen, toggleFullscreen } from "@/lib/fullscreen";
 import Link from "next/link";
 
@@ -69,6 +72,32 @@ export function TopBar() {
         >
           New
         </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void openProjectFile()}
+            >
+              <FolderOpen />
+              Open
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Open ⌘O</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void saveProjectFile(false)}
+            >
+              <Save />
+              Save
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Save ⌘S · Save as ⌘⇧S</TooltipContent>
+        </Tooltip>
       </div>
       <SaveStatus />
       <Tooltip>
@@ -171,13 +200,24 @@ function SaveStatus() {
   const status = useEditorStore((s) => s.saveStatus);
   const savedAt = useEditorStore((s) => s.savedAt);
   const hasDocument = useEditorStore((s) => s.hasDocument);
-  if (!hasDocument || status === "idle") return null;
+  const fileName = useEditorStore((s) => s.fileName);
+  const fileError = useEditorStore((s) => s.fileError);
+  if (fileError) {
+    return (
+      <span className="hidden max-w-[220px] truncate px-2 text-[11px] text-destructive sm:inline" title={fileError}>
+        {fileError}
+      </span>
+    );
+  }
+  if (!hasDocument || (status === "idle" && !fileName)) return null;
   const label =
     status === "saving"
       ? "Saving…"
       : status === "error"
         ? "Couldn’t save in this browser"
-        : "Saved";
+        : fileName
+          ? fileName
+          : "Saved";
   return (
     <span
       className="hidden truncate px-2 text-[11px] text-muted-foreground sm:inline"
@@ -245,13 +285,13 @@ function ExportMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => void saveProjectFile(true)}>
+          Save as…
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("png")}>PNG</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("jpeg")}>JPEG</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("webp")}>WebP</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("svg")}>SVG</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => exportDoc("json")}>
-          veillum JSON
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={flatten}>Rasterize page</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

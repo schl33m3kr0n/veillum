@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start screen asks for a blank size (print, screen, social) or a template. Templates show a live thumbnail of the layout; click one to enlarge it, then **Use this layout**. **New** in the header (⌘/Ctrl N) opens the picker again. The current page is saved automatically in this browser as you work; reload to continue. Export a veillum JSON file when you need a copy you can move.
+The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start screen asks for a blank size (print, screen, social) or a template. Templates show a live thumbnail of the layout; click one to enlarge it, then **Use this layout**. **New** in the header (⌘/Ctrl N) opens the picker again. **Open** / **Save** write a `.veillum` file on disk (⌘/Ctrl O and S; Shift+S for Save as). The current page is also saved automatically in this browser.
 
 ## What you can do
 
@@ -27,7 +27,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 
 **Motion.** Add keyframes for position, scale, rotation, and opacity. Play interpolates along the timeline.
 
-**Output.** Export PNG, JPEG, WebP, SVG, or a veillum JSON project. Rasterize flattens the page to a single bitmap layer.
+**Output.** Save a `.veillum` page to disk (Open / Save / Save as). Export PNG, JPEG, WebP, or SVG. Rasterize flattens the page to a single bitmap layer.
 
 ## Shortcuts
 
@@ -46,6 +46,9 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start scree
 | Two-finger drag | Pan |
 | ⌘/Ctrl + / − | Zoom toward the pointer |
 | ⌘/Ctrl N | New page / templates |
+| ⌘/Ctrl O | Open .veillum file |
+| ⌘/Ctrl S | Save file |
+| ⌘/Ctrl Shift S | Save as |
 | ⌘/Ctrl Z | Undo |
 | ⌘/Ctrl Shift Z or ⌘/Ctrl Y | Redo |
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |

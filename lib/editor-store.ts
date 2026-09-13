@@ -36,6 +36,7 @@ import {
 import { pageFromSize, type PageSizePreset } from "./page-sizes";
 import { framePage } from "./stage";
 import { templateById } from "./templates";
+import { clearFileHandle } from "./project-file";
 
 type Clipboard = Layer[] | null;
 
@@ -80,6 +81,8 @@ interface EditorState {
   hasDocument: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
   savedAt: number | null;
+  fileName: string | null;
+  fileError: string | null;
   bgBusyId: string | null;
   bgBusyNote: string;
 
@@ -185,7 +188,10 @@ interface EditorState {
     panY?: number;
     sidebarOpen?: boolean;
     timelineOpen?: boolean;
+    fileName?: string | null;
   }) => void;
+  setFileName: (fileName: string | null) => void;
+  setFileError: (fileError: string | null) => void;
 }
 
 function selected(state: EditorState): Layer[] {
@@ -242,6 +248,8 @@ export const useEditorStore = create<EditorState>()(
       hasDocument: false,
       saveStatus: "idle",
       savedAt: null,
+      fileName: null,
+      fileError: null,
       bgBusyId: null,
       bgBusyNote: "",
 
@@ -254,6 +262,8 @@ export const useEditorStore = create<EditorState>()(
           saveStatus,
           savedAt: savedAt === undefined ? get().savedAt : savedAt,
         }),
+      setFileName: (fileName) => set({ fileName, fileError: null }),
+      setFileError: (fileError) => set({ fileError }),
       hydrateDraft: (draft) => {
         const framed = draft.zoom == null ? framePage(draft.page) : null;
         useEditorStore.temporal.getState().pause();
@@ -276,6 +286,8 @@ export const useEditorStore = create<EditorState>()(
           playhead: 0,
           tool: "select",
           snapGuides: [],
+          fileName: draft.fileName ?? get().fileName,
+          fileError: null,
         });
         useEditorStore.temporal.getState().clear();
         useEditorStore.temporal.getState().resume();
@@ -283,6 +295,7 @@ export const useEditorStore = create<EditorState>()(
       setStartOpen: (startOpen) => set({ startOpen }),
       startBlank: (preset) => {
         const page = pageFromSize(preset);
+        clearFileHandle();
         set({
           page,
           layers: [],
@@ -290,6 +303,8 @@ export const useEditorStore = create<EditorState>()(
           editingTextId: null,
           startOpen: false,
           hasDocument: true,
+          fileName: null,
+          fileError: null,
           tool: "select",
           playhead: 0,
           playing: false,
@@ -302,6 +317,7 @@ export const useEditorStore = create<EditorState>()(
         const item = templateById(id);
         if (!item) return;
         const page = item.page();
+        clearFileHandle();
         set({
           page,
           layers: item.layers(),
@@ -309,6 +325,8 @@ export const useEditorStore = create<EditorState>()(
           editingTextId: null,
           startOpen: false,
           hasDocument: true,
+          fileName: null,
+          fileError: null,
           tool: "select",
           playhead: 0,
           playing: false,

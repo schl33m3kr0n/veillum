@@ -17,6 +17,7 @@ export type AutosaveDraft = {
   panY: number;
   sidebarOpen: boolean;
   timelineOpen: boolean;
+  fileName?: string | null;
 };
 
 function openDb(): Promise<IDBDatabase> {
@@ -84,6 +85,7 @@ export function draftFromState(s: {
   panY: number;
   sidebarOpen: boolean;
   timelineOpen: boolean;
+  fileName: string | null;
 }): AutosaveDraft {
   return {
     version: 1,
@@ -97,5 +99,6 @@ export function draftFromState(s: {
     panY: s.panY,
     sidebarOpen: s.sidebarOpen,
     timelineOpen: s.timelineOpen,
+    fileName: s.fileName,
   };
 }

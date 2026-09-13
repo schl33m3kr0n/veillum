@@ -5,6 +5,7 @@ import { useEditorStore, useTemporalStore, resumeHistory } from "@/lib/editor-st
 import { isCombinable } from "@/lib/combine";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { toggleFullscreen } from "@/lib/fullscreen";
+import { openProjectFile, saveProjectFile } from "./file-actions";
 
 export function useEditorHotkeys() {
   const undo = useTemporalStore((s) => s.undo);
@@ -24,6 +25,16 @@ export function useEditorHotkeys() {
       if (meta && (e.key === "n" || e.key === "N")) {
         e.preventDefault();
         store.setStartOpen(true);
+        return;
+      }
+      if (meta && (e.key === "o" || e.key === "O")) {
+        e.preventDefault();
+        void openProjectFile();
+        return;
+      }
+      if (meta && (e.key === "s" || e.key === "S")) {
+        e.preventDefault();
+        void saveProjectFile(e.shiftKey);
         return;
       }
       if (e.key === "Escape" && store.startOpen) {

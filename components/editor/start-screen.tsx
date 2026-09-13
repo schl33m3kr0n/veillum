@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FilePlus2, LayoutTemplate } from "lucide-react";
+import { FilePlus2, FolderOpen, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEditorStore } from "@/lib/editor-store";
@@ -18,6 +18,7 @@ import {
   type StudioTemplate,
 } from "@/lib/templates";
 import { PagePreview } from "./page-preview";
+import { openProjectFile } from "./file-actions";
 import {
   Dialog,
   DialogClose,
@@ -70,17 +71,23 @@ export function StartScreen() {
               veillum
             </p>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Pick a page size, or start from a layout. The page in this browser saves itself as you work; New starts another one. Export a veillum JSON file if you want a copy you can move.
+              Pick a page size, or start from a layout. The page also saves itself in this browser. Open a .veillum file to continue work from disk.
             </p>
           </div>
-          {canContinue ? (
-            <Button
-              variant="outline"
-              onClick={() => useEditorStore.getState().setStartOpen(false)}
-            >
-              Continue this page
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => void openProjectFile()}>
+              <FolderOpen />
+              Open file
             </Button>
-          ) : null}
+            {canContinue ? (
+              <Button
+                variant="outline"
+                onClick={() => useEditorStore.getState().setStartOpen(false)}
+              >
+                Continue this page
+              </Button>
+            ) : null}
+          </div>
         </header>
 
         <Input

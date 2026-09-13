@@ -60,7 +60,8 @@ export function useAutosave() {
         state.page === prev.page &&
         state.layers === prev.layers &&
         state.recentColors === prev.recentColors &&
-        state.duration === prev.duration
+        state.duration === prev.duration &&
+        state.fileName === prev.fileName
       ) {
         return;
       }
