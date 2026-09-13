@@ -23,11 +23,14 @@ type StoredFont = {
 };
 
 let fonts: CustomFont[] = [];
+let familyCache: string[] = [];
+let restorePromise: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 const faces = new Map<string, FontFace>();
 const objectUrls = new Map<string, string>();
 
 function emit() {
+  familyCache = uniqueFamilies();
   for (const fn of listeners) fn();
 }
 
@@ -38,7 +41,7 @@ function faceKey(font: Pick<CustomFont, "family" | "weight" | "style">) {
 function familyFromFilename(name: string): string {
   return (
     name
-      .replace(/\.(ttf|otf|woff2?)$/i, "")
+      .replace(/\.(ttf|otf|ttc|otc|woff2?)$/i, "")
       .replace(/[-_]+/g, " ")
       .replace(
         /\s+(variable|regular|italic|oblique|thin|hairline|extra\s*light|ultra\s*light|light|book|medium|semibold|semi\s*bold|demibold|demi\s*bold|bold|extra\s*bold|ultra\s*bold|black|heavy|w\d{3})$/gi,
@@ -66,11 +69,18 @@ function descriptorsFromFilename(name: string): { weight: string; style: string 
   return { weight, style };
 }
 
-function formatFromName(name: string): CustomFont["format"] {
-  if (/\.woff2$/i.test(name)) return "woff2";
-  if (/\.woff$/i.test(name)) return "woff";
-  if (/\.otf$/i.test(name)) return "opentype";
-  return "truetype";
+function sniffFormat(buffer: ArrayBuffer): CustomFont["format"] | null {
+  if (buffer.byteLength < 4) return null;
+  const magic = new DataView(buffer).getUint32(0);
+  if (magic === 0x774f4632) return "woff2";
+  if (magic === 0x774f4646) return "woff";
+  if (magic === 0x4f54544f) return "opentype";
+  if (magic === 0x00010000 || magic === 0x74727565) return "truetype";
+  return null;
+}
+
+function copyBytes(buffer: ArrayBuffer): ArrayBuffer {
+  return buffer.slice(0);
 }
 
 function mimeForFormat(format: CustomFont["format"]): string {
@@ -194,7 +204,7 @@ function uniqueFamilies(): string[] {
 }
 
 export function getCustomFontFamilies(): string[] {
-  return uniqueFamilies();
+  return familyCache;
 }
 
 async function registerFace(font: CustomFont) {
@@ -203,20 +213,37 @@ async function registerFace(font: CustomFont) {
   const previous = faces.get(key);
   if (previous) {
     document.fonts.delete(previous);
-    const oldUrl = objectUrls.get(key);
-    if (oldUrl) URL.revokeObjectURL(oldUrl);
+    faces.delete(key);
   }
-  const blob = new Blob([font.bytes], { type: font.mime });
-  const url = URL.createObjectURL(blob);
-  objectUrls.set(key, url);
-  const face = new FontFace(font.family, `url(${url}) format('${font.format}')`, {
+  const oldUrl = objectUrls.get(key);
+  if (oldUrl) {
+    URL.revokeObjectURL(oldUrl);
+    objectUrls.delete(key);
+  }
+
+  const descriptors: FontFaceDescriptors = {
     weight: font.weight,
     style: font.style,
     display: "swap",
+  };
+  try {
+    const face = new FontFace(font.family, copyBytes(font.bytes), descriptors);
+    await face.load();
+    document.fonts.add(face);
+    faces.set(key, face);
+    return;
+  } catch {
+    /* try a blob URL next */
+  }
+  const blob = new Blob([copyBytes(font.bytes)], {
+    type: font.mime || "application/octet-stream",
   });
+  const url = URL.createObjectURL(blob);
+  const face = new FontFace(font.family, `url(${url})`, descriptors);
   await face.load();
   document.fonts.add(face);
   faces.set(key, face);
+  objectUrls.set(key, url);
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -307,20 +334,36 @@ async function loadLegacy(): Promise<CustomFont[]> {
 
 export async function restoreCustomFonts(): Promise<void> {
   if (typeof window === "undefined") return;
+  if (!restorePromise) restorePromise = restoreOnce();
+  return restorePromise;
+}
+
+async function restoreOnce(): Promise<void> {
   let stored = await loadStored();
+  if (stored.length === 0) stored = await loadLegacy();
   if (stored.length === 0) {
-    stored = await loadLegacy();
-    if (stored.length) fonts = stored;
-    if (stored.length) await persist();
-  } else {
-    fonts = stored;
+    emit();
+    return;
   }
+  const have = new Set(fonts.map((font) => faceKey(font)));
+  const incoming = stored.filter((font) => !have.has(faceKey(font)));
+  if (incoming.length) fonts = [...fonts, ...incoming];
   await Promise.all(fonts.map((f) => registerFace(f).catch(() => undefined)));
   emit();
+  if (stored.length && !(await loadStored()).length) await persist();
 }
 
 function isFontFile(file: File): boolean {
-  return /\.(ttf|otf|woff2?)$/i.test(file.name) || file.type.startsWith("font/");
+  if (/\.(ttf|otf|ttc|otc|woff2?)$/i.test(file.name)) return true;
+  const type = file.type.toLowerCase();
+  return (
+    type.startsWith("font/") ||
+    type === "application/font-woff" ||
+    type === "application/font-woff2" ||
+    type === "application/x-font-ttf" ||
+    type === "application/x-font-otf" ||
+    type === "application/x-font-woff"
+  );
 }
 
 export function isLocalFontFile(file: File): boolean {
@@ -339,16 +382,19 @@ export async function importFontFiles(files: File[]): Promise<string[]> {
     throw new Error("Use a .ttf, .otf, .woff, or .woff2 file.");
   }
   const families: string[] = [];
+  const failures: string[] = [];
   for (const file of accepted) {
     if (file.size > MAX_BYTES) {
-      throw new Error(`${file.name} is larger than 8 MB.`);
+      failures.push(`${file.name} is larger than 8 MB.`);
+      continue;
     }
-    const bytes = await file.arrayBuffer();
-    const format = formatFromName(file.name);
+    const bytes = copyBytes(await file.arrayBuffer());
+    const format =
+      sniffFormat(bytes) ??
+      (/\.otf$/i.test(file.name) ? "opentype" : formatFromNameFallback(file.name));
     const mime = file.type.startsWith("font/") ? file.type : mimeForFormat(format);
-    const fromTable = format === "truetype" || format === "opentype"
-      ? familyFromSfnt(bytes)
-      : null;
+    const fromTable =
+      format === "truetype" || format === "opentype" ? familyFromSfnt(bytes) : null;
     const family = fromTable || familyFromFilename(file.name);
     const { weight, style } = descriptorsFromFilename(file.name);
     const font: CustomFont = {
@@ -359,17 +405,29 @@ export async function importFontFiles(files: File[]): Promise<string[]> {
       style,
       bytes,
     };
-    await registerFace(font);
     const key = faceKey(font);
-    fonts = [
-      font,
-      ...fonts.filter((f) => faceKey(f) !== key),
-    ].slice(0, MAX_FONTS);
+    fonts = [font, ...fonts.filter((f) => faceKey(f) !== key)].slice(0, MAX_FONTS);
     families.push(family);
+    emit();
+    try {
+      await registerFace(font);
+    } catch {
+      failures.push(`Could not activate ${file.name}.`);
+    }
   }
   await persist();
   emit();
+  if (families.length === 0) {
+    throw new Error(failures[0] || "Could not read that font.");
+  }
   return [...new Set(families)];
+}
+
+function formatFromNameFallback(name: string): CustomFont["format"] {
+  if (/\.woff2$/i.test(name)) return "woff2";
+  if (/\.woff$/i.test(name)) return "woff";
+  if (/\.otf$/i.test(name)) return "opentype";
+  return "truetype";
 }
 
 export async function removeCustomFont(family: string) {

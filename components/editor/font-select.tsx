@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/popover";
 import {
   getCustomFontFamilies,
-  getCustomFonts,
   importFontFiles,
   removeCustomFont,
   restoreCustomFonts,
@@ -39,21 +38,17 @@ export function FontSelect({
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const custom = useSyncExternalStore(
+  const families = useSyncExternalStore(
     subscribeCustomFonts,
-    getCustomFonts,
-    getCustomFonts,
+    getCustomFontFamilies,
+    getCustomFontFamilies,
   );
 
   useEffect(() => {
     void restoreCustomFonts();
   }, []);
 
-  const bundled = new Set<string>(FONT_OPTIONS.map((f) => f.family));
-  const extras = useMemo(
-    () => getCustomFontFamilies().filter((family) => !bundled.has(family)),
-    [custom],
-  );
+  const extras = families;
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const hit = (text: string) => !q || text.toLowerCase().includes(q);
@@ -131,6 +126,8 @@ export function FontSelect({
     pinTextFormatRange(useEditorStore.getState().editingTextId);
   };
 
+  const pickingFile = useRef(false);
+
   const addFromFiles = async (list: FileList | File[] | null) => {
     const files = list ? [...list] : [];
     if (files.length === 0) return;
@@ -141,6 +138,7 @@ export function FontSelect({
       const next = families[families.length - 1];
       if (next) onValueChange(next);
       setQuery("");
+      setOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add that font.");
     } finally {
@@ -153,11 +151,11 @@ export function FontSelect({
       <Popover
         open={open}
         onOpenChange={(next) => {
+          if (!next && pickingFile.current) return;
           if (next) pinRange();
           setOpen(next);
           if (!next) {
             setQuery("");
-            setError(null);
           }
         }}
       >
@@ -182,6 +180,12 @@ export function FontSelect({
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             searchRef.current?.focus();
+          }}
+          onInteractOutside={(event) => {
+            if (pickingFile.current) event.preventDefault();
+          }}
+          onFocusOutside={(event) => {
+            if (pickingFile.current) event.preventDefault();
           }}
           onPointerDown={(event) => {
             pinRange();
@@ -264,7 +268,10 @@ export function FontSelect({
               variant="outline"
               className="w-full justify-start"
               disabled={disabled || busy}
-              onClick={() => fileRef.current?.click()}
+              onClick={() => {
+                pickingFile.current = true;
+                fileRef.current?.click();
+              }}
             >
               <FolderOpen />
               {busy ? "Adding…" : "From file…"}
@@ -282,11 +289,13 @@ export function FontSelect({
         ref={fileRef}
         type="file"
         multiple
-        accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2"
+        accept=".ttf,.otf,.ttc,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2,application/x-font-ttf,application/font-woff"
         className="hidden"
         onChange={(e) => {
           const list = e.target.files;
           e.target.value = "";
+          pickingFile.current = false;
+          setOpen(true);
           void addFromFiles(list);
         }}
       />
