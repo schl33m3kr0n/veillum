@@ -116,7 +116,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
 
   const start = (e: React.PointerEvent, kind: HandleId | "rotate") => {
     e.stopPropagation();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const origin = { ...layerRef.current };
     const page = clientToPage(e.clientX, e.clientY);
     const cx = (origin.width * origin.scaleX) / 2;
@@ -227,7 +227,7 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
 
   const start = (e: React.PointerEvent, kind: HandleId | "rotate") => {
     e.stopPropagation();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const page = clientToPage(e.clientX, e.clientY);
     const cx = aabb.left + aabb.width / 2;
     const cy = aabb.top + aabb.height / 2;

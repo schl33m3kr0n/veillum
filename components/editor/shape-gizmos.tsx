@@ -84,7 +84,7 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
 
   const start = (e: React.PointerEvent, kind: AdjHandle) => {
     e.stopPropagation();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     drag.current = { kind, origin: { ...layerRef.current } };
     beginHistoryGesture();
   };

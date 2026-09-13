@@ -78,7 +78,7 @@ function ColorCirclePicker({
         aria-label={title}
         className="absolute inset-0 cursor-pointer opacity-0"
         onPointerDown={(e) => {
-          e.preventDefault();
+          if (e.cancelable) e.preventDefault();
           pinColorRange();
           try {
             e.currentTarget.showPicker();
@@ -162,7 +162,7 @@ function HighlightHoverPicker({
             aria-label="Highlight color"
             className="absolute inset-0 cursor-pointer opacity-0"
             onPointerDown={(e) => {
-              e.preventDefault();
+              if (e.cancelable) e.preventDefault();
               pinColorRange();
               show();
               try {

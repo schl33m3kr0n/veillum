@@ -217,7 +217,7 @@ export function BezierEditOverlay({ layer }: { layer: BezierLayer }) {
     kind: "anchor" | "in" | "out",
   ) => {
     e.stopPropagation();
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     const p = layer.points[index];
     drag.current = {
       index,

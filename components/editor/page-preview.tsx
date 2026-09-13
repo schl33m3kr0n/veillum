@@ -77,7 +77,9 @@ export function PagePreview({
             layer={layer}
             selected={false}
             tool="pan"
-            onPointerDown={(e) => e.preventDefault()}
+            onPointerDown={(e) => {
+              if (e.cancelable) e.preventDefault();
+            }}
           />
         ))}
       </div>

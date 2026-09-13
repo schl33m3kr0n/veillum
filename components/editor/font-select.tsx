@@ -112,7 +112,7 @@ export function FontSelect({
           onPointerDown={(event) => {
             pinRange();
             const target = event.target as HTMLElement;
-            if (!target.closest("input, textarea")) {
+            if (!target.closest("input, textarea") && event.cancelable) {
               event.preventDefault();
             }
           }}
@@ -233,7 +233,7 @@ function FontRow({
       )}
       style={{ fontFamily: stack ?? cssFontFamily(family) }}
       onPointerDown={(event) => {
-        event.preventDefault();
+        if (event.cancelable) event.preventDefault();
         pinTextFormatRange(useEditorStore.getState().editingTextId);
       }}
       onClick={() => onPick(family)}

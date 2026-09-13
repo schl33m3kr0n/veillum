@@ -48,7 +48,7 @@ export function TextFormatBar() {
       }}
       onPointerDown={(e) => {
         e.stopPropagation();
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         pinTextFormatRange(useEditorStore.getState().editingTextId);
       }}
     >

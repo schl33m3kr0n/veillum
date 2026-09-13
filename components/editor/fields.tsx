@@ -172,9 +172,35 @@ export function NumberField({
     onChange(current + dir * step);
   };
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  const currentRef = useRef(current);
+  const stepRef = useRef(step);
+  const onChangeRef = useRef(onChange);
+  const onEditStartRef = useRef(onEditStart);
+  currentRef.current = current;
+  stepRef.current = step;
+  onChangeRef.current = onChange;
+  onEditStartRef.current = onEditStart;
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) < 1) return;
+      e.preventDefault();
+      onEditStartRef.current?.();
+      onChangeRef.current(
+        currentRef.current + (e.deltaY < 0 ? stepRef.current : -stepRef.current),
+      );
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
   return (
     <div className={cn("relative min-w-0", className)}>
       <Input
+        ref={inputRef}
         type="number"
         step={step}
         value={focused ? draft : current}
@@ -194,12 +220,6 @@ export function NumberField({
           endHistoryGesture();
         })}
         onPointerDown={() => onEditStart?.()}
-        onWheel={(e) => {
-          if (Math.abs(e.deltaY) < 1) return;
-          e.preventDefault();
-          onEditStart?.();
-          onChange(current + (e.deltaY < 0 ? step : -step));
-        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.currentTarget.blur();

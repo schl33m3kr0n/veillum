@@ -254,18 +254,18 @@ export default function HtmlStage({
 
     let gestureStartZoom = 1;
     const onGestureStart = (e: Event) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       gestureStartZoom = useEditorStore.getState().zoom;
     };
     const onGestureChange = (e: Event) => {
-      e.preventDefault();
+      if (e.cancelable) e.preventDefault();
       const ge = e as Event & { scale: number; clientX: number; clientY: number };
       const store = useEditorStore.getState();
       const local = clientToLocal(el, ge.clientX, ge.clientY);
       store.zoomToward(gestureStartZoom * (ge.scale || 1), local.x, local.y);
     };
-    el.addEventListener("gesturestart", onGestureStart);
-    el.addEventListener("gesturechange", onGestureChange);
+    el.addEventListener("gesturestart", onGestureStart, { passive: false });
+    el.addEventListener("gesturechange", onGestureChange, { passive: false });
     return () => {
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("gesturestart", onGestureStart);
