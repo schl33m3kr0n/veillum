@@ -18,6 +18,7 @@ import {
   createPathLayer,
   createShapeLayer,
   createTextLayer,
+  normalizePage,
 } from "./document";
 import type {
   Anchor,
@@ -288,7 +289,7 @@ export const useEditorStore = create<EditorState>()(
         const framed = draft.zoom == null ? framePage(draft.page) : null;
         useEditorStore.temporal.getState().pause();
         set({
-          page: draft.page,
+          page: normalizePage(draft.page),
           layers: draft.layers,
           recentColors: draft.recentColors ?? get().recentColors,
           duration: draft.duration ?? get().duration,

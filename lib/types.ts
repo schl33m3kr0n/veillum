@@ -355,7 +355,15 @@ export interface Page {
   marginsVisible: boolean;
   header: HeaderFooter;
   footer: HeaderFooter;
-  grid: { type: GridType; size: number; visible: boolean };
+  grid: {
+    type: GridType;
+    size: number;
+    visible: boolean;
+    /** Snap moving objects to this grid. */
+    snap: boolean;
+    /** Square/triangle: density preset. Radial: spoke count. */
+    lines: number;
+  };
   ruler: boolean;
 }
 

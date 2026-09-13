@@ -11,6 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEditorStore } from "@/lib/editor-store";
+import {
+  GRID_LINE_COUNTS,
+  gridLineCount,
+  spacingFromLines,
+} from "@/lib/geometry";
+import type { GridType } from "@/lib/types";
 import { Field, NumberField, SliderField, historyFieldProps } from "./fields";
 
 export function PageControls() {
@@ -87,7 +93,9 @@ export function PageControls() {
             updatePage({
               grid: {
                 ...page.grid,
-                type: v === "none" ? "square" : (v as "square" | "triangle" | "radial"),
+                snap: page.grid.snap ?? false,
+                lines: gridLineCount(page.grid),
+                type: v === "none" ? page.grid.type : (v as GridType),
                 visible: v !== "none",
               },
             })
@@ -104,13 +112,72 @@ export function PageControls() {
           </SelectContent>
         </Select>
       </Field>
+      <div className="flex items-center justify-between">
+        <label htmlFor="grid-snap" className="text-xs">
+          Snap to grid
+        </label>
+        <Switch
+          id="grid-snap"
+          checked={!!page.grid.snap}
+          onCheckedChange={(snap) =>
+            updatePage({
+              grid: {
+                ...page.grid,
+                snap,
+                lines: gridLineCount(page.grid),
+              },
+            })
+          }
+        />
+      </div>
+      <Field label="Lines">
+        <Select
+          value={String(gridLineCount(page.grid))}
+          onValueChange={(v) => {
+            const lines = Number(v);
+            const next = { ...page.grid, lines, snap: page.grid.snap ?? false };
+            if (page.grid.type !== "radial") {
+              next.size = spacingFromLines(page.width, page.height, lines);
+            }
+            updatePage({ grid: next });
+          }}
+        >
+          <SelectTrigger size="sm" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {GRID_LINE_COUNTS.map((n) => {
+              const deg = 360 / n;
+              const cell = spacingFromLines(page.width, page.height, n);
+              const label =
+                page.grid.type === "radial"
+                  ? `${n} · ${deg % 1 === 0 ? deg : deg.toFixed(1)}°`
+                  : `${n} · ${cell}px`;
+              return (
+                <SelectItem key={n} value={String(n)}>
+                  {label}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </Field>
       <SliderField
-        label="Grid size"
+        label={page.grid.type === "radial" ? "Ring spacing" : "Grid size"}
         value={page.grid.size}
-        min={8}
-        max={64}
+        min={4}
+        max={96}
         step={1}
-        onChange={(size) => updatePage({ grid: { ...page.grid, size } })}
+        onChange={(size) =>
+          updatePage({
+            grid: {
+              ...page.grid,
+              size,
+              snap: page.grid.snap ?? false,
+              lines: gridLineCount(page.grid),
+            },
+          })
+        }
         format={(v) => `${v}px`}
       />
       <div className="space-y-2 border-t border-border/50 pt-2">

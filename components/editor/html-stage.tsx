@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
-import { interpolatedLayer, nearPoint, radialGrid, triangleGridLines } from "@/lib/geometry";
+import { interpolatedLayer, nearPoint, radialGrid, squareGridLines, triangleGridLines } from "@/lib/geometry";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
 import { cssFontFamily } from "@/lib/fonts";
@@ -772,18 +772,18 @@ export default function HtmlStage({
   const gridLines: number[][] = [];
   const gridCircles: { cx: number; cy: number; r: number }[] = [];
   if (page.grid.visible && page.grid.type === "square") {
-    for (let x = 0; x <= page.width; x += page.grid.size) {
-      gridLines.push([x, 0, x, page.height]);
-    }
-    for (let y = 0; y <= page.height; y += page.grid.size) {
-      gridLines.push([0, y, page.width, y]);
-    }
+    gridLines.push(...squareGridLines(page.width, page.height, page.grid.size));
   } else if (page.grid.visible && page.grid.type === "triangle") {
     gridLines.push(
       ...triangleGridLines(page.width, page.height, page.grid.size),
     );
   } else if (page.grid.visible && page.grid.type === "radial") {
-    const radial = radialGrid(page.width, page.height, page.grid.size);
+    const radial = radialGrid(
+      page.width,
+      page.height,
+      page.grid.size,
+      page.grid.lines ?? 12,
+    );
     gridLines.push(...radial.lines);
     gridCircles.push(...radial.circles);
   }
@@ -1068,6 +1068,29 @@ export default function HtmlStage({
                       <line x1={guide.pos} y1={a} x2={guide.pos} y2={b} stroke="#ff4fa3" strokeWidth={2} />
                       <line x1={guide.pos - 5} y1={a} x2={guide.pos + 5} y2={a} stroke="#ff4fa3" strokeWidth={2} />
                       <line x1={guide.pos - 5} y1={b} x2={guide.pos + 5} y2={b} stroke="#ff4fa3" strokeWidth={2} />
+                    </g>
+                  );
+                }
+                if (guide.axis === "radial") {
+                  const cx = guide.cx ?? page.width / 2;
+                  const cy = guide.cy ?? page.height / 2;
+                  const reach = Math.hypot(page.width, page.height);
+                  const x2 = cx + Math.cos(guide.pos) * reach;
+                  const y2 = cy + Math.sin(guide.pos) * reach;
+                  return (
+                    <g key={`radial-${i}`}>
+                      <line x1={cx} y1={cy} x2={x2} y2={y2} stroke="#fff" strokeWidth={4} />
+                      <line x1={cx} y1={cy} x2={x2} y2={y2} stroke="#ff4fa3" strokeWidth={2} />
+                    </g>
+                  );
+                }
+                if (guide.axis === "ring") {
+                  const cx = guide.cx ?? page.width / 2;
+                  const cy = guide.cy ?? page.height / 2;
+                  return (
+                    <g key={`ring-${i}`}>
+                      <circle cx={cx} cy={cy} r={Math.max(0, guide.pos)} fill="none" stroke="#fff" strokeWidth={4} />
+                      <circle cx={cx} cy={cy} r={Math.max(0, guide.pos)} fill="none" stroke="#ff4fa3" strokeWidth={2} />
                     </g>
                   );
                 }

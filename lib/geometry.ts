@@ -1,4 +1,4 @@
-import type { Anchor, BezierPoint, DashStyle, Layer } from "./types";
+import type { Anchor, BezierPoint, DashStyle, Layer, Page } from "./types";
 import { groupAabb, layerAabb } from "./transform";
 
 export const ANCHOR_OFFSET: Record<Anchor, { x: number; y: number }> = {
@@ -292,26 +292,57 @@ export function distributeLayers(layers: Layer[], axis: "horizontal" | "vertical
   });
 }
 
+/** Density presets shared by square, triangle, and radial grids. */
+export const GRID_LINE_COUNTS = [8, 12, 16, 18, 24, 36, 48, 72] as const;
+
+export function gridLineCount(grid: Page["grid"] | undefined): number {
+  const n = grid?.lines ?? 12;
+  return Math.max(4, Math.round(n));
+}
+
+export function gridSpacing(grid: Page["grid"] | undefined): number {
+  return Math.max(4, grid?.size ?? 24);
+}
+
+/** Cell size so `lines` divisions fit the shorter page edge. */
+export function spacingFromLines(width: number, height: number, lines: number): number {
+  const n = Math.max(4, Math.round(lines));
+  return Math.max(4, Math.round(Math.min(width, height) / n));
+}
+
+export function squareGridLines(
+  width: number,
+  height: number,
+  size: number,
+): number[][] {
+  const step = Math.max(4, size);
+  const lines: number[][] = [];
+  for (let x = 0; x <= width + 0.5; x += step) {
+    lines.push([x, 0, x, height]);
+  }
+  for (let y = 0; y <= height + 0.5; y += step) {
+    lines.push([0, y, width, y]);
+  }
+  return lines;
+}
+
 export function triangleGridLines(
   width: number,
   height: number,
   size: number,
 ): number[][] {
+  const step = Math.max(4, size);
   const lines: number[][] = [];
-  const h = size * Math.sin(Math.PI / 3);
+  const h = step * Math.sin(Math.PI / 3);
   for (let y = 0; y <= height + h; y += h) {
     lines.push([0, y, width, y]);
   }
   const angle = Math.PI / 3;
-  const dx = size * Math.cos(angle);
-  const dy = size * Math.sin(angle);
   const len = Math.hypot(width, height) * 2;
-  for (let x = -height; x < width + height; x += size) {
+  for (let x = -height; x < width + height; x += step) {
     lines.push([x, 0, x + len * Math.cos(angle), len * Math.sin(angle)]);
     lines.push([x, 0, x + len * Math.cos(-angle), len * Math.sin(-angle)]);
   }
-  void dx;
-  void dy;
   return lines;
 }
 
@@ -319,25 +350,26 @@ export function radialGrid(
   width: number,
   height: number,
   size: number,
+  lines = 12,
 ): { lines: number[][]; circles: { cx: number; cy: number; r: number }[] } {
   const cx = width / 2;
   const cy = height / 2;
   const maxR = Math.hypot(cx, cy);
-  const step = Math.max(8, size);
+  const step = Math.max(4, size);
   const circles: { cx: number; cy: number; r: number }[] = [];
   for (let r = step; r <= maxR + step; r += step) {
     circles.push({ cx, cy, r });
   }
-  const spokes = 12;
-  const lines: number[][] = [];
+  const spokes = Math.max(4, Math.round(lines));
+  const rays: number[][] = [];
   for (let i = 0; i < spokes; i++) {
     const a = (i / spokes) * Math.PI * 2;
-    lines.push([
+    rays.push([
       cx,
       cy,
       cx + Math.cos(a) * maxR,
       cy + Math.sin(a) * maxR,
     ]);
   }
-  return { lines, circles };
+  return { lines: rays, circles };
 }

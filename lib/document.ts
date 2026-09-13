@@ -203,8 +203,26 @@ export function createDefaultPage(): Page {
       color: "#7a7268",
       height: 36,
     },
-    grid: { type: "square", size: 24, visible: false },
+    grid: { type: "square", size: 24, visible: false, snap: false, lines: 12 },
     ruler: true,
+  };
+}
+
+export function normalizePage(page: Page): Page {
+  const grid = page.grid;
+  const type =
+    grid?.type === "triangle" || grid?.type === "radial" || grid?.type === "square"
+      ? grid.type
+      : "square";
+  return {
+    ...page,
+    grid: {
+      type,
+      size: Math.max(4, grid?.size ?? 24),
+      visible: !!grid?.visible,
+      snap: !!grid?.snap,
+      lines: Math.max(4, Math.round(grid?.lines ?? 12)),
+    },
   };
 }
 

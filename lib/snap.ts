@@ -1,10 +1,13 @@
 import type { Layer, Page } from "./types";
+import { gridLineCount, gridSpacing } from "./geometry";
 import { groupAabb, layerAabb } from "./transform";
 
 export type SnapGuide = {
-  axis: "x" | "y";
+  axis: "x" | "y" | "radial" | "ring";
   pos: number;
   span?: { start: number; end: number };
+  cx?: number;
+  cy?: number;
 };
 
 const THRESHOLD = 10;
@@ -33,7 +36,88 @@ export function pageSnapLines(page: Page): { xs: number[]; ys: number[] } {
     xs.push(ml, (ml + mr) / 2, mr);
     ys.push(mt, (mt + mb) / 2, mb);
   }
+  if (page.grid.snap && page.grid.type === "square") {
+    const step = gridSpacing(page.grid);
+    for (let x = 0; x <= page.width; x += step) xs.push(x);
+    for (let y = 0; y <= page.height; y += step) ys.push(y);
+  }
   return { xs, ys };
+}
+
+function snapToTriangle(x: number, y: number, step: number) {
+  const h = step * Math.sin(Math.PI / 3);
+  const row = Math.round(y / h);
+  const odd = Math.abs(row) % 2 === 1;
+  const offset = odd ? step / 2 : 0;
+  const col = Math.round((x - offset) / step);
+  return { x: col * step + offset, y: row * h };
+}
+
+function polarPoint(cx: number, cy: number, angle: number, r: number) {
+  return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+}
+
+function snapToRadial(
+  x: number,
+  y: number,
+  page: Page,
+  threshold: number,
+): { x: number; y: number; guides: SnapGuide[] } | null {
+  const cx = page.width / 2;
+  const cy = page.height / 2;
+  const step = gridSpacing(page.grid);
+  const spokes = gridLineCount(page.grid);
+  const dx = x - cx;
+  const dy = y - cy;
+  const r = Math.hypot(dx, dy);
+  const a = Math.atan2(dy, dx);
+  const aStep = (Math.PI * 2) / spokes;
+  const na = Math.round(a / aStep) * aStep;
+  const nr = Math.round(r / step) * step;
+  const spoke = polarPoint(cx, cy, na, r);
+  const ring = polarPoint(cx, cy, a, nr);
+  const both = polarPoint(cx, cy, na, nr);
+  const cands = [
+    { pt: both, spoke: true, ring: true },
+    { pt: spoke, spoke: true, ring: false },
+    { pt: ring, spoke: false, ring: true },
+  ];
+  let best: (typeof cands)[number] | null = null;
+  let bestD = threshold;
+  for (const c of cands) {
+    const d = Math.hypot(c.pt.x - x, c.pt.y - y);
+    if (d <= bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  if (!best) return null;
+  const guides: SnapGuide[] = [];
+  if (best.spoke) guides.push({ axis: "radial", pos: na, cx, cy });
+  if (best.ring) guides.push({ axis: "ring", pos: nr, cx, cy });
+  return { x: best.pt.x, y: best.pt.y, guides };
+}
+
+function snapCenterToGrid(
+  x: number,
+  y: number,
+  page: Page,
+): { x: number; y: number; guides: SnapGuide[] } | null {
+  if (!page.grid.snap) return null;
+  const step = gridSpacing(page.grid);
+  if (page.grid.type === "triangle") {
+    const pt = snapToTriangle(x, y, step);
+    if (Math.hypot(pt.x - x, pt.y - y) > THRESHOLD) return null;
+    return {
+      ...pt,
+      guides: [
+        { axis: "x", pos: pt.x },
+        { axis: "y", pos: pt.y },
+      ],
+    };
+  }
+  if (page.grid.type === "radial") return snapToRadial(x, y, page, THRESHOLD);
+  return null;
 }
 
 export function pageSizes(page: Page): { widths: number[]; heights: number[] } {
@@ -172,6 +256,24 @@ export function snapDelta(
     }
   }
 
+  const objectDist = gx !== null || gy !== null ? Math.hypot(dx, dy) : Infinity;
+  const gridHit = snapCenterToGrid(moving.cx, moving.cy, page);
+  const guides: SnapGuide[] = [];
+  if (gridHit) {
+    const gdx = gridHit.x - moving.cx;
+    const gdy = gridHit.y - moving.cy;
+    const gridDist = Math.hypot(gdx, gdy);
+    if (gridDist <= objectDist) {
+      dx = gdx;
+      dy = gdy;
+      guides.push(...gridHit.guides);
+    }
+  }
+  if (guides.length === 0) {
+    if (gx !== null) guides.push({ axis: "x", pos: gx });
+    if (gy !== null) guides.push({ axis: "y", pos: gy });
+  }
+
   const snapped = {
     left: moving.left + dx,
     right: moving.right + dx,
@@ -180,9 +282,6 @@ export function snapDelta(
     cx: moving.cx + dx,
     cy: moving.cy + dy,
   };
-  const guides: SnapGuide[] = [];
-  if (gx !== null) guides.push({ axis: "x", pos: gx });
-  if (gy !== null) guides.push({ axis: "y", pos: gy });
   guides.push(...dimensionGuides(snapped, others, page));
   return { dx, dy, guides };
 }
