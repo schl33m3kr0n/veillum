@@ -11,6 +11,7 @@ import {
   type FillStop,
 } from "@/lib/fill";
 import { cn } from "@/lib/utils";
+import { beginHistoryGesture, endHistoryGesture } from "@/lib/editor-store";
 
 export function GradientStopsEditor({
   fill,
@@ -102,6 +103,8 @@ export function GradientStopsEditor({
                 value={Math.round((spans[i] ?? 0) * 100)}
                 aria-label={`Stop ${i + 1} length`}
                 className="h-1.5 w-full accent-primary"
+                onPointerDown={() => beginHistoryGesture()}
+                onPointerUp={() => endHistoryGesture()}
                 onChange={(e) =>
                   commit(setStopSpan(stops, i, Number(e.target.value) / 100))
                 }

@@ -5,7 +5,7 @@ import { Pipette, Search } from "lucide-react";
 import { hexToHsv, hsvToHex } from "@/lib/colors";
 import { PALETTE_GROUPS, PALETTES } from "@/lib/palettes";
 import { applyStudioColor, applyStudioNone } from "@/lib/apply-color";
-import { useEditorStore } from "@/lib/editor-store";
+import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -227,6 +227,8 @@ function ColorWheel({
         max={1}
         step={0.01}
         value={hsv.v}
+        onPointerDown={() => beginHistoryGesture()}
+        onPointerUp={() => endHistoryGesture()}
         onChange={(e) => {
           const v = Number(e.target.value);
           onChange(hsvToHex(hsv.h, hsv.s, v));

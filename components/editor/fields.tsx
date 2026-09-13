@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type KeyboardEvent, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type FocusEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -70,6 +70,30 @@ export function SliderField({
   onChange: (v: number) => void;
   format?: (v: number) => string;
 }) {
+  const dragging = useRef(false);
+
+  const start = () => {
+    if (dragging.current) return;
+    dragging.current = true;
+    beginHistoryGesture();
+  };
+
+  const stop = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    endHistoryGesture();
+  };
+
+  useEffect(() => {
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+      stop();
+    };
+  }, []);
+
   return (
     <div className="space-y-1 py-1">
       <div className="flex items-center justify-between gap-2">
@@ -85,9 +109,11 @@ export function SliderField({
         min={min}
         max={max}
         step={step}
-        onValueChange={(v) => onChange(v[0] ?? value)}
-        onPointerDown={() => beginHistoryGesture()}
-        onPointerUp={() => endHistoryGesture()}
+        onValueChange={(v) => {
+          start();
+          onChange(v[0] ?? value);
+        }}
+        onValueCommit={stop}
       />
     </div>
   );
