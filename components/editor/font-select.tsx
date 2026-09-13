@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { FolderOpen, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -51,7 +50,10 @@ export function FontSelect({
   }, []);
 
   const bundled = new Set<string>(FONT_OPTIONS.map((f) => f.family));
-  const extras = getCustomFontFamilies().filter((family) => !bundled.has(family));
+  const extras = useMemo(
+    () => getCustomFontFamilies().filter((family) => !bundled.has(family)),
+    [custom],
+  );
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const hit = (text: string) => !q || text.toLowerCase().includes(q);
@@ -59,19 +61,71 @@ export function FontSelect({
       group,
       fonts: FONT_OPTIONS.filter(
         (font) =>
-          font.group === group &&
-          (hit(group) || hit(font.label) || hit(font.family)),
+          font.group === group && (hit(font.label) || hit(font.family)),
       ),
     })).filter((g) => g.fonts.length > 0);
     const imported = extras.filter((family) => hit(family));
     return { groups, imported };
-  }, [query, extras, custom]);
+  }, [query, extras]);
 
   const pick = (family: string) => {
     onValueChange(family);
     setOpen(false);
     setError(null);
   };
+
+  const firstMatch =
+    filtered.imported[0] ?? filtered.groups[0]?.fonts[0]?.family;
+  const firstMatchRef = useRef(firstMatch);
+  firstMatchRef.current = firstMatch;
+
+  useEffect(() => {
+    if (!open) return;
+    const focus = window.requestAnimationFrame(() => {
+      searchRef.current?.focus();
+      searchRef.current?.select();
+    });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const field = searchRef.current;
+      const target = event.target as HTMLElement | null;
+      const inSearch =
+        target === field || !!target?.closest("[data-font-search]");
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen(false);
+        return;
+      }
+      if (event.key === "Enter") {
+        const match = firstMatchRef.current;
+        if (!match) return;
+        event.preventDefault();
+        event.stopPropagation();
+        pick(match);
+        return;
+      }
+      if (inSearch) return;
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        event.stopPropagation();
+        setQuery((value) => value.slice(0, -1));
+        field?.focus();
+        return;
+      }
+      if (event.key.length === 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        setQuery((value) => value + event.key);
+        field?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      window.cancelAnimationFrame(focus);
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
 
   const pinRange = () => {
     pinTextFormatRange(useEditorStore.getState().editingTextId);
@@ -93,9 +147,6 @@ export function FontSelect({
       setBusy(false);
     }
   };
-
-  const firstMatch =
-    filtered.imported[0] ?? filtered.groups[0]?.fonts[0]?.family;
 
   return (
     <div className={cn("flex min-w-0 items-center gap-1", className)}>
@@ -130,9 +181,7 @@ export function FontSelect({
           className="w-72 gap-0 p-0"
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            if (!useEditorStore.getState().editingTextId) {
-              searchRef.current?.focus();
-            }
+            searchRef.current?.focus();
           }}
           onPointerDown={(event) => {
             pinRange();
@@ -145,13 +194,14 @@ export function FontSelect({
           <div className="border-b border-border/70 p-1.5">
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
+              <input
                 ref={searchRef}
+                data-font-search
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search fonts"
                 aria-label="Search fonts"
-                className="h-7 bg-transparent pl-7 text-sm"
+                className="h-7 w-full rounded-lg border border-input bg-transparent py-1 pr-2 pl-7 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 onFocus={pinRange}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && firstMatch) {
