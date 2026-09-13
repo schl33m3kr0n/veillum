@@ -75,6 +75,10 @@ export function useEditorHotkeys() {
       } else if (meta && e.key.toLowerCase() === "v") {
         e.preventDefault();
         store.paste();
+      } else if (meta && e.key.toLowerCase() === "g") {
+        e.preventDefault();
+        if (e.shiftKey) store.ungroupSelected();
+        else store.groupSelected();
       } else if (meta && e.key.toLowerCase() === "d") {
         e.preventDefault();
         store.duplicateSelected();

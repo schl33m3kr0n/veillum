@@ -15,7 +15,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘
 
 **Type.** Cut, copy, paste, undo, and redo. Double-click a text box to edit, then select characters — font, size, color, weight, decoration, and highlighter apply only to that selection. Alignment stays on the whole box. A circular color chip sits between size and bold; hover the highlighter to pick a marker color.
 
-**Arrange.** Ruler, indent, page margins you can hide, and box alignment. Flip a selection horizontally or vertically from the header. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, other objects, and matching widths or heights. Moving or transforming an object records one undo step when you release the pointer. Align to the page, the margin box, or the selection, match width or height, and distribute three or more objects. Combine two or more filled shapes with Unite, Subtract, Intersect, or Exclude (Pathfinder-style) to make one fillable outline. Square, triangle, or radial grid, plus perspective on a layer.
+**Arrange.** Ruler, indent, page margins you can hide, and box alignment. Flip a selection horizontally or vertically from the header. Select any object for corner circles, edge stretch handles, and a pastel-red rotate handle. Drag to snap to page center, margins, other objects, and matching widths or heights. Moving or transforming an object records one undo step when you release the pointer. Align to the page, the margin box, or the selection, match width or height, and distribute three or more objects. Group objects so they select and move together (⌘/Ctrl G, ⌘/Ctrl Shift G to ungroup). Combine two or more filled shapes with Unite, Subtract, Intersect, or Exclude (Pathfinder-style) to make one filled outline with stroke. Square, triangle, or radial grid, plus perspective on a layer.
 
 **Draw.** Pencil, pen, highlighter, and a compass that stays on the page: drag the needle to move it, drag the pencil to set the radius, press anywhere else and drag to mark an arc. An Elements library (circle, rectangle, and other basics, marks, badges, nature icons, and items you save). Selected elements have fill, stroke, and opacity in Inspect. Path-based marks place as live SVG — fill, stroke, and SVG export stay vector. Click to place, or drag a basic onto the page. A pie chart in Basics has an adjustable wedge (slider or yellow handle). Selected shapes keep yellow diamonds for corner radius, star inner radius, arrowhead, and pie wedge. Fill and stroke each have a no-color option.
 
@@ -53,6 +53,8 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘
 | ⌘/Ctrl Z | Undo |
 | ⌘/Ctrl Shift Z or ⌘/Ctrl Y | Redo |
 | ⌘/Ctrl C X V D | Copy / Cut / Paste / Duplicate |
+| ⌘/Ctrl G | Group |
+| ⌘/Ctrl Shift G | Ungroup |
 | ⌘/Ctrl B I U | Bold / Italic / Underline (or Unite if two+ shapes are selected) |
 | Delete | Remove layer |
 | ] | Show / hide Inspect sidebar |

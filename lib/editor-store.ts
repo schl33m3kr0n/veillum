@@ -9,6 +9,7 @@ import { alignFrame, alignLayers, distributeLayers, type AlignMode, type AlignTa
 import { flipLayer, layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
 import { combineLayers, isCombinable, type CombineMode } from "./combine";
+import { applyGroup, applyUngroup, expandSelection, remapGroupIds } from "./groups";
 import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
@@ -174,6 +175,8 @@ interface EditorState {
   alignSelected: (mode: AlignMode, target?: AlignTarget) => void;
   matchSelected: (dim: "width" | "height", target?: AlignTarget) => void;
   combineSelected: (mode: CombineMode) => void;
+  groupSelected: () => void;
+  ungroupSelected: () => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
   flipSelected: (axis: "horizontal" | "vertical") => void;
   setTextAlign: (align: TextAlign) => void;
@@ -399,11 +402,14 @@ export const useEditorStore = create<EditorState>()(
       setTimelineOpen: (timelineOpen) => set({ timelineOpen }),
       setSnapGuides: (snapGuides) => set({ snapGuides }),
       select: (ids, additive) =>
-        set((s) => ({
-          selectedIds: additive
-            ? Array.from(new Set([...s.selectedIds, ...ids]))
-            : ids,
-        })),
+        set((s) => {
+          const expanded = expandSelection(s.layers, ids);
+          return {
+            selectedIds: additive
+              ? Array.from(new Set([...s.selectedIds, ...expanded]))
+              : expanded,
+          };
+        }),
       clearSelection: () => set({ selectedIds: [], editingTextId: null }),
       setEditingText: (editingTextId) => set({ editingTextId }),
 
@@ -445,13 +451,15 @@ export const useEditorStore = create<EditorState>()(
 
       duplicateSelected: () =>
         set((s) => {
-          const copies: Layer[] = selected(s).map((l) => ({
-            ...structuredClone(l),
-            id: `l_${Math.random().toString(36).slice(2, 12)}`,
-            name: `${l.name} copy`,
-            x: l.x + 16,
-            y: l.y + 16,
-          }));
+          const copies = remapGroupIds(
+            selected(s).map((l) => ({
+              ...structuredClone(l),
+              id: `l_${Math.random().toString(36).slice(2, 12)}`,
+              name: `${l.name} copy`,
+              x: l.x + 16,
+              y: l.y + 16,
+            })),
+          );
           return {
             layers: [...s.layers, ...copies],
             selectedIds: copies.map((c) => c.id),
@@ -720,12 +728,14 @@ export const useEditorStore = create<EditorState>()(
       paste: () => {
         const clip = get().clipboard;
         if (!clip || clip.length === 0) return;
-        const copies = clip.map((l) => ({
-          ...structuredClone(l),
-          id: `l_${Math.random().toString(36).slice(2, 12)}`,
-          x: l.x + 24,
-          y: l.y + 24,
-        }));
+        const copies = remapGroupIds(
+          clip.map((l) => ({
+            ...structuredClone(l),
+            id: `l_${Math.random().toString(36).slice(2, 12)}`,
+            x: l.x + 24,
+            y: l.y + 24,
+          })),
+        );
         set((s) => ({
           layers: [...s.layers, ...copies],
           selectedIds: copies.map((c) => c.id),
@@ -804,6 +814,29 @@ export const useEditorStore = create<EditorState>()(
         next.splice(Math.max(0, at), 0, combined);
         set({ layers: next, selectedIds: [combined.id], tool: "select" });
       },
+
+      groupSelected: () =>
+        set((s) => {
+          const next = applyGroup(s.layers, s.selectedIds);
+          if (!next) return s;
+          return {
+            layers: next,
+            selectedIds: expandSelection(
+              next,
+              s.selectedIds.filter((id) =>
+                next.some((l) => l.id === id && !l.locked),
+              ),
+            ),
+          };
+        }),
+
+      ungroupSelected: () =>
+        set((s) => {
+          if (!s.selectedIds.some((id) => s.layers.find((l) => l.id === id)?.groupId)) {
+            return s;
+          }
+          return { layers: applyUngroup(s.layers, s.selectedIds) };
+        }),
 
       distributeSelected: (axis) =>
         set((s) => {

@@ -77,7 +77,7 @@ export function LayersPanel() {
                 )}
               >
                 <span className="w-10 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {layer.type}
+                  {layer.groupId ? "group" : layer.type}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{layer.name}</span>
                 <span className="w-8 shrink-0 text-right tabular-nums text-[10px] text-muted-foreground">

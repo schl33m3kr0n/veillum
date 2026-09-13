@@ -39,6 +39,7 @@ function base(
     maskInverted: false,
     maskSrc: null,
     keyframes: [],
+    groupId: null,
     ...partial,
   };
 }

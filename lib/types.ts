@@ -229,6 +229,8 @@ export interface LayerBase {
   maskInverted: boolean;
   maskSrc: string | null;
   keyframes: Keyframe[];
+  /** Layers that share a groupId select and transform as one object. */
+  groupId?: string | null;
 }
 
 export interface TextSpan {

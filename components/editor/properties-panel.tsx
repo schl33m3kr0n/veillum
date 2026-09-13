@@ -30,6 +30,7 @@ import { GradientStopsEditor } from "./gradient-stops";
 import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
+import { GroupTools } from "./group-tools";
 import { ShapeAdjustments } from "./shape-adjustments";
 import { removeImageBackground } from "@/lib/remove-background";
 
@@ -43,6 +44,7 @@ export function PropertiesPanel() {
       {selectedIds.length > 0 && (
         <div className="space-y-2 px-3 py-2">
           <AlignTools />
+          <GroupTools />
           <CombineTools />
         </div>
       )}

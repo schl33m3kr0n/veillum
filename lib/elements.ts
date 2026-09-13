@@ -265,5 +265,6 @@ export function cloneLayerOntoPage(layer: Layer, pageWidth: number, pageHeight: 
   clone.x = Math.round((pageWidth - clone.width) / 2);
   clone.y = Math.round((pageHeight - clone.height) / 2);
   clone.keyframes = [];
+  clone.groupId = null;
   return clone;
 }
