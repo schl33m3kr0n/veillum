@@ -212,7 +212,10 @@ function HeaderFooterFields() {
 function CommonFields({ layer }: { layer: Layer }) {
   const update = useEditorStore((s) => s.updateLayer);
   const locked = !!layer.lockProportions;
-  const ratio = layer.width / Math.max(1, layer.height);
+  const ratio =
+    layer.aspectRatio && layer.aspectRatio > 0
+      ? layer.aspectRatio
+      : layer.width / Math.max(1, layer.height);
   return (
     <Section title="Transform">
       <div className="grid grid-cols-2 gap-2">
@@ -262,7 +265,12 @@ function CommonFields({ layer }: { layer: Layer }) {
           <Switch
             id="lock-proportions"
             checked={locked}
-            onCheckedChange={(lockProportions) => update(layer.id, { lockProportions })}
+            onCheckedChange={(on) =>
+              update(layer.id, {
+                lockProportions: on,
+                aspectRatio: on ? layer.width / Math.max(1, layer.height) : layer.aspectRatio,
+              })
+            }
           />
         </div>
       </div>

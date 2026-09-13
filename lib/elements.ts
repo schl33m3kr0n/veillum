@@ -79,18 +79,10 @@ export const ELEMENT_CATALOG: CatalogElement[] = [
   { id: "arrow", label: "Arrow", group: "Basics", kind: "shape", shape: "arrow", width: 200, height: 48 },
   { id: "pie", label: "Pie", group: "Basics", kind: "shape", shape: "pie", width: 160, height: 160, defaults: { wedge: 0.38, trackFill: "#efe6d8", strokeEnabled: true, strokeWidth: 1.5 } },
 
-  { id: "frame-rect", label: "Frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 0 } },
-  { id: "frame-round", label: "Round frame", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 140, defaults: { fillEnabled: false, strokeEnabled: true, strokeWidth: 8, cornerRadius: 24 } },
-  { id: "pill", label: "Pill", group: "Frames", kind: "shape", shape: "rect", width: 200, height: 56, defaults: { cornerRadius: 80 } },
-  { id: "plaque", label: "Plaque", group: "Frames", kind: "shape", shape: "rect", width: 220, height: 100, defaults: { cornerRadius: 4, strokeWidth: 3 } },
-
   { id: "chevron", label: "Chevron", group: "Marks", kind: "shape", shape: "triangle", width: 120, height: 80 },
   { id: "rule", label: "Rule", group: "Marks", kind: "shape", shape: "line", width: 240, height: 16, defaults: { strokeWidth: 6, fillEnabled: false } },
 
-  { id: "ticket", label: "Ticket", group: "Badges", kind: "shape", shape: "rect", width: 180, height: 72, defaults: { cornerRadius: 6 } },
   { id: "tag", label: "Tag", group: "Badges", kind: "shape", shape: "hexagon", width: 140, height: 72, defaults: { sides: 4 } },
-  { id: "banner", label: "Banner", group: "Badges", kind: "shape", shape: "rect", width: 280, height: 56, defaults: { cornerRadius: 2 } },
-  { id: "bookmark", label: "Bookmark", group: "Badges", kind: "shape", shape: "rect", width: 56, height: 140, defaults: { cornerRadius: 2 } },
 
   mark("heart", "Heart", "Nature", { width: 120, height: 110 }, [
     { tag: "path", d: "M32 56S8 40 8 24a12 12 0 0 1 24-4 12 12 0 0 1 24 4c0 16-24 32-24 32Z" },

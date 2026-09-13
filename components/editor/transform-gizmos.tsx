@@ -88,6 +88,7 @@ function SingleGizmo({ layer }: { layer: Layer }) {
         kind,
         others,
         s.page,
+        lockAspect,
       );
       s.updateLayer(origin.id, {
         x: snapped.left,
@@ -183,6 +184,7 @@ function GroupGizmo({ layers }: { layers: Layer[] }) {
         kind,
         others,
         s.page,
+        lockAspect,
       );
       const sx = snapped.width / Math.max(1, box.width);
       const sy = snapped.height / Math.max(1, box.height);

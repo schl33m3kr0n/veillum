@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent, FocusEvent } from "react";
+import { useEffect, useState, type KeyboardEvent, type FocusEvent } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -107,6 +107,18 @@ export function NumberField({
   steppers?: boolean;
 }) {
   const current = Number.isFinite(value) ? value : 0;
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState(String(current));
+  useEffect(() => {
+    if (!focused) setDraft(String(current));
+  }, [current, focused]);
+
+  const commit = (raw: string) => {
+    if (raw.trim() === "") return;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return;
+    onChange(n);
+  };
   const nudge = (dir: 1 | -1) => onChange(current + dir * step);
 
   return (
@@ -114,10 +126,21 @@ export function NumberField({
       <Input
         type="number"
         step={step}
-        value={current}
-        onChange={(e) => onChange(Number(e.target.value))}
-        onFocus={mergeFocus(() => beginHistoryGesture())}
-        onBlur={mergeFocus(() => endHistoryGesture())}
+        value={focused ? draft : current}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          commit(e.target.value);
+        }}
+        onFocus={mergeFocus(() => {
+          setFocused(true);
+          setDraft(String(current));
+          beginHistoryGesture();
+        })}
+        onBlur={mergeFocus(() => {
+          commit(draft);
+          setFocused(false);
+          endHistoryGesture();
+        })}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.currentTarget.blur();

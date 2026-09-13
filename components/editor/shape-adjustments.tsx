@@ -298,10 +298,7 @@ function PaintField({
 }) {
   const noneLabel = label === "Stroke" ? "No stroke" : "No fill";
   return (
-    <div className="space-y-1">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+    <div className="flex flex-col items-center gap-1">
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -317,8 +314,8 @@ function PaintField({
             )}
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-56 gap-2">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <PopoverContent align="center" className="w-56 gap-2">
+          <p className="text-center text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </p>
           <div className="flex items-center gap-2">
@@ -346,6 +343,9 @@ function PaintField({
           </div>
         </PopoverContent>
       </Popover>
+      <span className="text-center text-[10px] uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
     </div>
   );
 }

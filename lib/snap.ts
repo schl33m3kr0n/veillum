@@ -213,6 +213,7 @@ export function snapAabbResize(
   handle: string,
   others: Layer[],
   page: Page,
+  lockAspect = false,
 ): { left: number; top: number; width: number; height: number; guides: SnapGuide[] } {
   const { xs, ys } = pageSnapLines(page);
   const sizes = pageSizes(page);
@@ -236,7 +237,7 @@ export function snapAabbResize(
   if (moveW) {
     type Cand = { left: number; width: number; dist: number; edge?: number; size?: boolean };
     const cands: Cand[] = [];
-    const sizeHit = uniqueNear(widths, width, THRESHOLD);
+    const sizeHit = lockAspect ? null : uniqueNear(widths, width, THRESHOLD);
     if (sizeHit !== null) {
       const dist = Math.abs(sizeHit - width);
       if (handle.includes("e")) cands.push({ left, width: sizeHit, dist, size: true });
@@ -274,7 +275,7 @@ export function snapAabbResize(
   if (moveH) {
     type Cand = { top: number; height: number; dist: number; edge?: number; size?: boolean };
     const cands: Cand[] = [];
-    const sizeHit = uniqueNear(heights, height, THRESHOLD);
+    const sizeHit = lockAspect ? null : uniqueNear(heights, height, THRESHOLD);
     if (sizeHit !== null) {
       const dist = Math.abs(sizeHit - height);
       if (handle.includes("s")) cands.push({ top, height: sizeHit, dist, size: true });
@@ -307,6 +308,29 @@ export function snapAabbResize(
     const newEdge = handle.includes("s") ? top + height : top;
     const aligned = uniqueNear(ys, newEdge, THRESHOLD);
     if (aligned !== null) guides.push({ axis: "y", pos: aligned });
+  }
+
+  if (lockAspect && box.width > 0 && box.height > 0) {
+    const ratio = box.width / box.height;
+    const right = left + width;
+    const bottom = top + height;
+    const moveW = handle.includes("e") || handle.includes("w");
+    const moveH = handle.includes("n") || handle.includes("s");
+    if (moveW && !moveH) {
+      height = Math.max(8, width / ratio);
+      top = box.top + (box.height - height) / 2;
+    } else if (moveH && !moveW) {
+      width = Math.max(8, height * ratio);
+      left = box.left + (box.width - width) / 2;
+    } else if (Math.abs(width / Math.max(8, height) - ratio) > 0.002) {
+      if (Math.abs(width - box.width) >= Math.abs(height - box.height)) {
+        height = Math.max(8, width / ratio);
+      } else {
+        width = Math.max(8, height * ratio);
+      }
+      if (handle.includes("w")) left = right - width;
+      if (handle.includes("n")) top = bottom - height;
+    }
   }
 
   guides.push(
