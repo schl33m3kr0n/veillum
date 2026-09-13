@@ -14,9 +14,20 @@ import {
 import {
   TEMPLATE_GROUPS,
   TEMPLATES,
+  templatePreviewContent,
   type StudioTemplate,
 } from "@/lib/templates";
-import { cn } from "@/lib/utils";
+import { PagePreview } from "./page-preview";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function StartScreen() {
   const open = useEditorStore((s) => s.startOpen);
@@ -67,7 +78,7 @@ export function StartScreen() {
               variant="outline"
               onClick={() => useEditorStore.getState().setStartOpen(false)}
             >
-              Keep editing
+              Continue this page
             </Button>
           ) : null}
         </header>
@@ -159,36 +170,60 @@ function SizeCard({ preset }: { preset: PageSizePreset }) {
 }
 
 function TemplateCard({ item }: { item: StudioTemplate }) {
-  const page = useMemo(() => item.page(), [item]);
-  const maxW = 160;
-  const maxH = 92;
-  const scale = Math.min(maxW / page.width, maxH / page.height);
-  const w = page.width * scale;
-  const h = page.height * scale;
+  const { page, layers } = useMemo(() => templatePreviewContent(item), [item]);
   return (
-    <button
-      type="button"
-      onClick={() => useEditorStore.getState().loadTemplate(item.id)}
-      className="flex gap-3 rounded-xl border border-border/70 bg-card/90 p-3 text-left transition hover:border-primary/50 hover:bg-card"
-    >
-      <span
-        className={cn("mt-0.5 shrink-0 rounded-sm border border-black/20 shadow-sm")}
-        style={{
-          width: w,
-          height: h,
-          background: page.background,
-        }}
-        aria-hidden
-      />
-      <span className="min-w-0">
-        <span className="block text-sm font-medium">{item.name}</span>
-        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-          {item.blurb}
-        </span>
-        <span className="mt-2 block text-[11px] tabular-nums text-muted-foreground/80">
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 text-left transition hover:border-primary/50 hover:bg-card"
+        >
+          <span className="flex h-52 items-center justify-center bg-black/35 p-3">
+            <PagePreview
+              page={page}
+              layers={layers}
+              maxWidth={280}
+              maxHeight={196}
+            />
+          </span>
+          <span className="min-w-0 p-3">
+            <span className="block text-sm font-medium">{item.name}</span>
+            <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+              {item.blurb}
+            </span>
+            <span className="mt-2 block text-[11px] tabular-nums text-muted-foreground/80">
+              {page.width} × {page.height}
+            </span>
+          </span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="z-[80] max-h-[min(92dvh,900px)] overflow-y-auto sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{item.name}</DialogTitle>
+          <DialogDescription>{item.blurb}</DialogDescription>
+        </DialogHeader>
+        <div className="flex max-h-[min(64vh,640px)] items-center justify-center overflow-auto rounded-lg bg-black/40 p-3">
+          <PagePreview
+            page={page}
+            layers={layers}
+            maxWidth={720}
+            maxHeight={560}
+          />
+        </div>
+        <p className="text-[11px] tabular-nums text-muted-foreground">
           {page.width} × {page.height}
-        </span>
-      </span>
-    </button>
+        </p>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+          <Button
+            onClick={() => useEditorStore.getState().loadTemplate(item.id)}
+          >
+            Use this layout
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -966,6 +966,20 @@ export function templateById(id: string): StudioTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }
 
+const previewCache = new Map<string, { page: Page; layers: Layer[] }>();
+
+/** Memoized page + layers for start-screen thumbnails. */
+export function templatePreviewContent(item: StudioTemplate): {
+  page: Page;
+  layers: Layer[];
+} {
+  const hit = previewCache.get(item.id);
+  if (hit) return hit;
+  const next = { page: item.page(), layers: item.layers() };
+  previewCache.set(item.id, next);
+  return next;
+}
+
 export function fitTemplateZoom(page: Page): number {
   return Math.max(0.18, Math.min(1, 760 / page.width, 520 / page.height));
 }
