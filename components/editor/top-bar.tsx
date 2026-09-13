@@ -43,6 +43,7 @@ import {
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
 import { GroupTools } from "./group-tools";
+import { SymmetryTools } from "./symmetry-tools";
 import { PageControls } from "./page-controls";
 import { openProjectFile, saveProjectFile } from "./file-actions";
 import { isFullscreen, toggleFullscreen } from "@/lib/fullscreen";
@@ -184,6 +185,7 @@ export function TopBar() {
       <Separator orientation="vertical" className="mx-1 h-6" />
       <AlignTools compact />
       <GroupTools compact />
+      <SymmetryTools compact />
       <CombineTools compact />
       <div className="ml-auto flex items-center gap-1">
         <PageMenu />

@@ -164,7 +164,23 @@ function freshCopy(layer: Layer, suffix: string): Layer {
   };
 }
 
-/** Copies of a layer around page symmetry, not including the original. */
+export function mirrorLayer<T extends Layer>(
+  layer: T,
+  page: Page,
+  axis: "horizontal" | "vertical",
+): T {
+  const { x: cx, y: cy } = pageCenter(page);
+  const c = layerCenter(layer);
+  if (axis === "horizontal") {
+    return placeCenter(flipLayer(layer, "horizontal"), 2 * cx - c.x, c.y);
+  }
+  return placeCenter(flipLayer(layer, "vertical"), c.x, 2 * cy - c.y);
+}
+
+export function mirrorCopy(layer: Layer, page: Page, axis: "horizontal" | "vertical"): Layer {
+  const suffix = axis === "horizontal" ? "L–R" : "T–B";
+  return mirrorLayer(freshCopy(layer, suffix), page, axis);
+}
 export function symmetricCopies(layer: Layer, page: Page): Layer[] {
   const mode = symmetryMode(page);
   if (mode === "none") return [];

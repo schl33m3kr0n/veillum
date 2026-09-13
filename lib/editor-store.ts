@@ -10,7 +10,7 @@ import { flipLayer, layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
 import { combineLayers, isCombinable, type CombineMode } from "./combine";
 import { applyGroup, applyUngroup, expandSelection, remapGroupIds } from "./groups";
-import { symmetricCopies } from "./symmetry";
+import { mirrorCopy, mirrorLayer, symmetricCopies } from "./symmetry";
 import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
@@ -181,6 +181,7 @@ interface EditorState {
   ungroupSelected: () => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
   flipSelected: (axis: "horizontal" | "vertical") => void;
+  mirrorSelected: (axis: "horizontal" | "vertical", copy?: boolean) => void;
   duplicateSymmetric: () => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
@@ -860,6 +861,28 @@ export const useEditorStore = create<EditorState>()(
             layers: s.layers.map((l) =>
               ids.has(l.id) && !l.locked ? flipLayer(l, axis) : l,
             ),
+          };
+        }),
+
+      mirrorSelected: (axis, copy = true) =>
+        set((s) => {
+          const ids = new Set(s.selectedIds);
+          const sources = s.layers.filter((l) => ids.has(l.id) && !l.locked);
+          if (sources.length === 0) return s;
+          if (copy) {
+            const copies = remapGroupIds(
+              sources.map((l) => mirrorCopy(l, s.page, axis)),
+            );
+            return {
+              layers: [...s.layers, ...copies],
+              selectedIds: copies.map((c) => c.id),
+            };
+          }
+          const mapped = new Map(
+            sources.map((l) => [l.id, mirrorLayer(l, s.page, axis)]),
+          );
+          return {
+            layers: s.layers.map((l) => mapped.get(l.id) ?? l),
           };
         }),
 
