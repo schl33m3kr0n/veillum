@@ -16,7 +16,8 @@ import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
 import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
-import { pageSnapshotOptions, snapshotPixelAt } from "@/lib/page-snapshot";
+import { pageSnapshotOptions, snapshotPixelFromPage } from "@/lib/page-snapshot";
+import { clientToLocal, localToPage } from "@/lib/pointer-space";
 import {
   CompassOverlay,
   hitCompass,
@@ -52,8 +53,8 @@ export default function HtmlStage({
   const [loupe, setLoupe] = useState<{
     snapX: number;
     snapY: number;
-    clientX: number;
-    clientY: number;
+    boardX: number;
+    boardY: number;
   } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -167,15 +168,20 @@ export default function HtmlStage({
 
   const pagePoint = useCallback(
     (clientX: number, clientY: number) => {
-      const el = pageRef.current;
-      if (!el) return null;
-      const rect = el.getBoundingClientRect();
-      return {
-        x: (clientX - rect.left) / zoom,
-        y: (clientY - rect.top) / zoom,
-      };
+      const board = boardRef.current;
+      if (!board) return null;
+      const local = clientToLocal(board, clientX, clientY);
+      return localToPage(
+        local.x,
+        local.y,
+        panX,
+        panY,
+        zoom,
+        PAGE_PAD_X,
+        PAGE_PAD_Y,
+      );
     },
-    [zoom],
+    [panX, panY, zoom],
   );
 
   const beginMarquee = (e: React.PointerEvent, p: { x: number; y: number }) => {
@@ -235,11 +241,8 @@ export default function HtmlStage({
       const pinch = e.ctrlKey || e.metaKey;
       if (pinch) {
         const factor = Math.exp(-dy * 0.012);
-        store.zoomToward(
-          store.zoom * factor,
-          e.clientX - rect.left,
-          e.clientY - rect.top,
-        );
+        const local = clientToLocal(el, e.clientX, e.clientY);
+        store.zoomToward(store.zoom * factor, local.x, local.y);
         return;
       }
       store.setPan(store.panX - dx, store.panY - dy);
@@ -255,12 +258,8 @@ export default function HtmlStage({
       e.preventDefault();
       const ge = e as Event & { scale: number; clientX: number; clientY: number };
       const store = useEditorStore.getState();
-      const rect = el.getBoundingClientRect();
-      store.zoomToward(
-        gestureStartZoom * (ge.scale || 1),
-        ge.clientX - rect.left,
-        ge.clientY - rect.top,
-      );
+      const local = clientToLocal(el, ge.clientX, ge.clientY);
+      store.zoomToward(gestureStartZoom * (ge.scale || 1), local.x, local.y);
     };
     el.addEventListener("gesturestart", onGestureStart);
     el.addEventListener("gesturechange", onGestureChange);
@@ -339,10 +338,15 @@ export default function HtmlStage({
     if (current === "eyedropper") {
       const snap = colorSnap.current;
       const pageEl = pageRef.current;
-      const at =
-        snap && pageEl
-          ? snapshotPixelAt(snap, pageEl, e.clientX, e.clientY)
-          : null;
+      const at = snap
+        ? snapshotPixelFromPage(
+            snap,
+            store.page.width,
+            store.page.height,
+            p.x,
+            p.y,
+          )
+        : null;
       const hex = snap && at ? sampleCanvasHex(snap, at.x, at.y) : null;
       if (hex) {
         applyStudioColor(hex);
@@ -353,7 +357,13 @@ export default function HtmlStage({
           pageEl,
           pageSnapshotOptions(store.page.width, store.page.height),
         );
-        const pixAt = snapshotPixelAt(shot, pageEl, e.clientX, e.clientY);
+        const pixAt = snapshotPixelFromPage(
+          shot,
+          store.page.width,
+          store.page.height,
+          p.x,
+          p.y,
+        );
         const sampled = sampleCanvasHex(shot, pixAt.x, pixAt.y);
         if (sampled) applyStudioColor(sampled);
         setLoupe(null);
@@ -486,15 +496,22 @@ export default function HtmlStage({
     const store = useEditorStore.getState();
 
     if (store.tool === "eyedropper" && store.colorLoupe) {
-      const pageEl = pageRef.current;
+      const board = boardRef.current;
       const snap = colorSnap.current;
-      if (pageEl && snap) {
-        const at = snapshotPixelAt(snap, pageEl, e.clientX, e.clientY);
+      if (p && board && snap) {
+        const local = clientToLocal(board, e.clientX, e.clientY);
+        const at = snapshotPixelFromPage(
+          snap,
+          store.page.width,
+          store.page.height,
+          p.x,
+          p.y,
+        );
         setLoupe({
           snapX: at.x,
           snapY: at.y,
-          clientX: e.clientX,
-          clientY: e.clientY,
+          boardX: local.x,
+          boardY: local.y,
         });
       } else {
         setLoupe(null);
@@ -1126,8 +1143,8 @@ export default function HtmlStage({
           snapshot={colorShot}
           snapX={loupe.snapX}
           snapY={loupe.snapY}
-          clientX={loupe.clientX}
-          clientY={loupe.clientY}
+          boardX={loupe.boardX}
+          boardY={loupe.boardY}
         />
       )}
       <span className="sr-only">{shapeKind}</span>

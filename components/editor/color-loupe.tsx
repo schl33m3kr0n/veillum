@@ -1,7 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { rgbToHex } from "@/lib/colors";
 
 const SIZE = 11;
@@ -13,14 +12,14 @@ export function ColorLoupe({
   snapshot,
   snapX,
   snapY,
-  clientX,
-  clientY,
+  boardX,
+  boardY,
 }: {
   snapshot: HTMLCanvasElement | null;
   snapX: number;
   snapY: number;
-  clientX: number;
-  clientY: number;
+  boardX: number;
+  boardY: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hex = snapshot ? sampleHex(snapshot, snapX, snapY) : null;
@@ -51,17 +50,15 @@ export function ColorLoupe({
     ctx.strokeRect(cell + 2, cell + 2, CELL - 4, CELL - 4);
   }, [snapshot, snapX, snapY]);
 
-  return createPortal(
+  return (
     <div
-      className="pointer-events-none"
+      className="pointer-events-none absolute z-50"
       style={{
-        position: "fixed",
-        left: clientX,
-        top: clientY,
+        left: boardX,
+        top: boardY,
         width: MAG,
         height: MAG,
         transform: "translate(-50%, -50%)",
-        zIndex: 80,
       }}
     >
       <canvas
@@ -82,8 +79,7 @@ export function ColorLoupe({
           <span className="font-mono">{hex}</span>
         </div>
       ) : null}
-    </div>,
-    document.body,
+    </div>
   );
 }
 
