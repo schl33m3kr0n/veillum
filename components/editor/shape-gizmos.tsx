@@ -3,12 +3,13 @@
 import { useEffect, useRef } from "react";
 import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import type { ShapeLayer } from "@/lib/types";
-import { pieGeometry, wedgeFromLocal } from "@/lib/shapes";
+import { pieGeometry, wedgeFromLocal, frameLineFromEndpoints } from "@/lib/shapes";
 import { localToPage, pageToLocal } from "@/lib/transform";
+import { clientToLocal } from "@/lib/pointer-space";
 
 const YELLOW = "#e8b923";
 
-type AdjHandle = "radius" | "inner" | "head" | "wedge";
+type AdjHandle = "radius" | "inner" | "head" | "wedge" | "start" | "end";
 
 export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
   const drag = useRef<{ kind: AdjHandle; origin: ShapeLayer } | null>(null);
@@ -19,16 +20,27 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     const onMove = (e: PointerEvent) => {
       if (!drag.current) return;
       const pageEl = document.querySelector("[data-veillum-page]");
-      if (!pageEl) return;
-      const zoom = useEditorStore.getState().zoom;
-      const rect = pageEl.getBoundingClientRect();
-      const page = {
-        x: (e.clientX - rect.left) / zoom,
-        y: (e.clientY - rect.top) / zoom,
-      };
+      if (!(pageEl instanceof HTMLElement)) return;
+      const page = clientToLocal(pageEl, e.clientX, e.clientY);
       const { kind, origin } = drag.current;
       const local = pageToLocal(origin, page.x, page.y);
       const s = useEditorStore.getState();
+      if (kind === "start" || kind === "end") {
+        const midY = origin.height / 2;
+        const fixed = localToPage(
+          origin,
+          kind === "start" ? origin.width : 0,
+          midY,
+        );
+        const moving = page;
+        const start = kind === "start" ? moving : fixed;
+        const end = kind === "end" ? moving : fixed;
+        s.updateLayer(
+          origin.id,
+          frameLineFromEndpoints(start, end, origin, e.shiftKey),
+        );
+        return;
+      }
       if (kind === "radius") {
         const r = Math.max(
           0,
@@ -107,13 +119,14 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     layer.shape === "rect" ||
     layer.shape === "star" ||
     layer.shape === "arrow" ||
+    layer.shape === "line" ||
     layer.shape === "pie";
   if (!show) return null;
 
   return (
     <svg
       className="absolute inset-0 h-full w-full overflow-visible"
-      style={{ pointerEvents: "none", zIndex: 19 }}
+      style={{ pointerEvents: "none", zIndex: 21 }}
     >
       {layer.shape === "rect" && (
         <YellowHandle
@@ -132,6 +145,24 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
           title="Inner radius"
           onPointerDown={(e) => start(e, "inner")}
         />
+      )}
+      {(layer.shape === "line" || layer.shape === "arrow") && (
+        <>
+          <YellowHandle
+            layer={layer}
+            lx={0}
+            ly={h / 2}
+            title="Start"
+            onPointerDown={(e) => start(e, "start")}
+          />
+          <YellowHandle
+            layer={layer}
+            lx={w}
+            ly={h / 2}
+            title="End"
+            onPointerDown={(e) => start(e, "end")}
+          />
+        </>
       )}
       {layer.shape === "arrow" && (
         <YellowHandle

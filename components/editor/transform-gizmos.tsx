@@ -133,11 +133,16 @@ function SingleGizmo({ layer }: { layer: Layer }) {
     beginHistoryGesture();
   };
 
+  const isLine =
+    layer.type === "shape" &&
+    (layer.shape === "line" || layer.shape === "arrow");
+
   return (
     <GizmoSvg
       box={layer}
       rotation={layer.rotation}
       onStart={start}
+      hideResize={isLine}
     />
   );
 }
@@ -251,6 +256,7 @@ function GizmoSvg({
   box,
   rotation,
   onStart,
+  hideResize = false,
 }: {
   box: {
     x: number;
@@ -263,6 +269,7 @@ function GizmoSvg({
   };
   rotation: number;
   onStart: (e: React.PointerEvent, kind: HandleId | "rotate") => void;
+  hideResize?: boolean;
 }) {
   const w = box.width;
   const h = box.height;
@@ -313,6 +320,7 @@ function GizmoSvg({
         pointerEvents="none"
       />
       {HANDLES.map((handle) => {
+        if (hideResize) return null;
         const p = localToPage(box, handle.x * w, handle.y * h);
         const edge = handle.kind === "edge";
         const horizontal = handle.id === "n" || handle.id === "s";

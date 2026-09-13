@@ -80,6 +80,52 @@ export function arrowGeometry(
   };
 }
 
+/** Rebuild a line/arrow box so local (0, h/2)→(w, h/2) matches two page points. */
+export function frameLineFromEndpoints(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  origin: Pick<ShapeLayer, "height" | "strokeWidth" | "arrowHead">,
+  snapAngle = false,
+): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+} {
+  let dx = end.x - start.x;
+  let dy = end.y - start.y;
+  let len = Math.hypot(dx, dy);
+  if (snapAngle && len > 0.5) {
+    const step = Math.PI / 8;
+    const ang = Math.round(Math.atan2(dy, dx) / step) * step;
+    dx = Math.cos(ang) * len;
+    dy = Math.sin(ang) * len;
+    len = Math.hypot(dx, dy);
+  }
+  const width = Math.max(8, len);
+  const rotation = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const height = Math.max(
+    origin.height,
+    origin.strokeWidth + 8,
+    (origin.arrowHead ?? 0) + 4,
+    16,
+  );
+  const rad = (rotation * Math.PI) / 180;
+  const hy = height / 2;
+  return {
+    x: start.x + hy * Math.sin(rad),
+    y: start.y - hy * Math.cos(rad),
+    width,
+    height,
+    rotation,
+    scaleX: 1,
+    scaleY: 1,
+  };
+}
+
 export function clampWedge(value: number): number {
   if (!Number.isFinite(value)) return 0.38;
   return Math.min(0.98, Math.max(0.02, value));
