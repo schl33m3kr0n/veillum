@@ -13,7 +13,6 @@ import { TopBar } from "./top-bar";
 import { ToolRail } from "./tool-rail";
 import { PropertiesPanel } from "./properties-panel";
 import { LayersPanel } from "./layers-panel";
-import { ColorStudio } from "./color-studio";
 import { Timeline } from "./timeline";
 import { Rulers } from "./rulers";
 import { TextOverlay } from "./text-overlay";
@@ -105,10 +104,9 @@ export function Studio() {
                 className="flex min-h-0 flex-1 flex-col"
               >
                 <div className="flex items-center gap-1 px-2 pt-2">
-                  <TabsList className="grid min-w-0 flex-1 grid-cols-3">
+                  <TabsList className="grid min-w-0 flex-1 grid-cols-2">
                     <TabsTrigger value="properties">Inspect</TabsTrigger>
                     <TabsTrigger value="layers">Layers</TabsTrigger>
-                    <TabsTrigger value="color">Color</TabsTrigger>
                   </TabsList>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -127,7 +125,6 @@ export function Studio() {
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   {tab === "properties" && <PropertiesPanel />}
                   {tab === "layers" && <LayersPanel />}
-                  {tab === "color" && <ColorStudio />}
                 </div>
               </Tabs>
             </aside>
