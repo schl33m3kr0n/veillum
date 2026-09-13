@@ -6,28 +6,64 @@ export const LOUPE_CELL = 10;
 export const LOUPE_PX = LOUPE_GRID * LOUPE_CELL;
 export const LOUPE_MID = Math.floor(LOUPE_GRID / 2);
 
+const CAPTURE_STYLE = {
+  boxShadow: "none",
+  transform: "none",
+  left: "0",
+  top: "0",
+  zoom: "1",
+  scale: "1",
+  overflow: "hidden",
+};
+
+/** html-to-image's toCanvas sets `canvas.style.width = "${n}"` without `px`.
+Chromium treats that as invalid, so the canvas CSS size falls back to the
+default 300×150. Firefox is looser. Drawing the SVG into that mismatch
+stretches the snapshot — pointer mapping then reads the wrong pixel. */
 export async function capturePageSnapshot(
   pageEl: HTMLElement,
   pageWidth: number,
   pageHeight: number,
 ): Promise<HTMLCanvasElement> {
-  const { toCanvas } = await import("html-to-image");
-  return toCanvas(pageEl, {
-    pixelRatio: 1,
+  const { toSvg } = await import("html-to-image");
+  const url = await toSvg(pageEl, {
     cacheBust: true,
     width: pageWidth,
     height: pageHeight,
-    canvasWidth: pageWidth,
-    canvasHeight: pageHeight,
-    style: {
-      boxShadow: "none",
-      transform: "none",
-      left: "0",
-      top: "0",
-      zoom: "1",
-      overflow: "hidden",
-    },
+    pixelRatio: 1,
+    style: CAPTURE_STYLE,
   });
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("color snapshot failed"));
+    img.src = url;
+  });
+  if (img.decode) {
+    await img.decode().catch(() => undefined);
+  }
+
+  return rasterToPageSize(img, pageWidth, pageHeight);
+}
+
+function rasterToPageSize(
+  source: CanvasImageSource,
+  pageWidth: number,
+  pageHeight: number,
+): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = pageWidth;
+  canvas.height = pageHeight;
+  canvas.style.width = `${pageWidth}px`;
+  canvas.style.height = `${pageHeight}px`;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return canvas;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(source, 0, 0, pageWidth, pageHeight);
+  return canvas;
 }
 
 export function snapshotPixelFromClient(
@@ -75,8 +111,8 @@ export function paintLoupe(
   snapX: number,
   snapY: number,
 ) {
-  dest.width = LOUPE_PX;
-  dest.height = LOUPE_PX;
+  if (dest.width !== LOUPE_PX) dest.width = LOUPE_PX;
+  if (dest.height !== LOUPE_PX) dest.height = LOUPE_PX;
   dest.style.width = `${LOUPE_PX}px`;
   dest.style.height = `${LOUPE_PX}px`;
   const ctx = dest.getContext("2d");
