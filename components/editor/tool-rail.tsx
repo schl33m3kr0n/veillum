@@ -51,7 +51,7 @@ export function ToolRail() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <aside className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-border/70 bg-card py-2">
+    <aside className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border/70 bg-card py-2">
       {TOOLS.map((t) => {
         const Icon = t.icon;
         return (
