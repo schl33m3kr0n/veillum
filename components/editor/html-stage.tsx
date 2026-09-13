@@ -14,9 +14,13 @@ import { TransformGizmos } from "./transform-gizmos";
 import { snapMovingLayers } from "@/lib/snap";
 import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
-import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
+import { ColorLoupe } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
-import { pageSnapshotOptions, snapshotPixelFromPage } from "@/lib/page-snapshot";
+import {
+  capturePageSnapshot,
+  pageToSnapshotPixel,
+  pickColorAtPage,
+} from "@/lib/color-loupe";
 import { clientToLocal, localToPage } from "@/lib/pointer-space";
 import {
   CompassOverlay,
@@ -143,11 +147,7 @@ export default function HtmlStage({
       const el = pageRef.current;
       if (!el) return;
       try {
-        const { toCanvas } = await import("html-to-image");
-        const canvas = await toCanvas(
-          el,
-          pageSnapshotOptions(page.width, page.height),
-        );
+        const canvas = await capturePageSnapshot(el, page.width, page.height);
         if (live) {
           colorSnap.current = canvas;
           setColorShot(canvas);
@@ -338,34 +338,21 @@ export default function HtmlStage({
     if (current === "eyedropper") {
       const snap = colorSnap.current;
       const pageEl = pageRef.current;
-      const at = snap
-        ? snapshotPixelFromPage(
-            snap,
-            store.page.width,
-            store.page.height,
-            p.x,
-            p.y,
-          )
+      const hex = snap
+        ? pickColorAtPage(snap, store.page.width, store.page.height, p.x, p.y)
         : null;
-      const hex = snap && at ? sampleCanvasHex(snap, at.x, at.y) : null;
       if (hex) {
         applyStudioColor(hex);
         setLoupe(null);
       } else if (pageEl) {
-        const { toCanvas } = await import("html-to-image");
-        const shot = await toCanvas(
+        const shot = await capturePageSnapshot(
           pageEl,
-          pageSnapshotOptions(store.page.width, store.page.height),
-        );
-        const pixAt = snapshotPixelFromPage(
-          shot,
           store.page.width,
           store.page.height,
-          p.x,
-          p.y,
         );
-        const sampled = sampleCanvasHex(shot, pixAt.x, pixAt.y);
-        if (sampled) applyStudioColor(sampled);
+        applyStudioColor(
+          pickColorAtPage(shot, store.page.width, store.page.height, p.x, p.y),
+        );
         setLoupe(null);
       }
       e.stopPropagation();
@@ -500,7 +487,7 @@ export default function HtmlStage({
       const snap = colorSnap.current;
       if (p && board && snap) {
         const local = clientToLocal(board, e.clientX, e.clientY);
-        const at = snapshotPixelFromPage(
+        const at = pageToSnapshotPixel(
           snap,
           store.page.width,
           store.page.height,
@@ -1138,7 +1125,7 @@ export default function HtmlStage({
           )}
         </div>
       </div>
-      {tool === "eyedropper" && colorLoupe && loupe && (
+      {tool === "eyedropper" && colorLoupe && loupe && colorShot && (
         <ColorLoupe
           snapshot={colorShot}
           snapX={loupe.snapX}
