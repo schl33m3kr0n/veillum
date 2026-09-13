@@ -206,6 +206,7 @@ export function createDefaultPage(): Page {
     },
     grid: { type: "square", size: 24, visible: false, snap: false, lines: 12 },
     ruler: true,
+    symmetry: { mode: "none", folds: 6, snap: false },
     rotationOrigin: "center",
   };
 }
@@ -224,6 +225,17 @@ export function normalizePage(page: Page): Page {
       visible: !!grid?.visible,
       snap: !!grid?.snap,
       lines: Math.max(4, Math.round(grid?.lines ?? 12)),
+    },
+    symmetry: {
+      mode:
+        page.symmetry?.mode === "horizontal" ||
+        page.symmetry?.mode === "vertical" ||
+        page.symmetry?.mode === "quad" ||
+        page.symmetry?.mode === "radial"
+          ? page.symmetry.mode
+          : "none",
+      folds: Math.max(2, Math.round(page.symmetry?.folds ?? 6)),
+      snap: !!page.symmetry?.snap,
     },
     rotationOrigin: page.rotationOrigin === "center" ? "center" : page.rotationOrigin,
   };

@@ -7,6 +7,7 @@ import { pieGeometry, wedgeFromLocal, frameLineFromEndpoints } from "@/lib/shape
 import { localToPage, pageToLocal } from "@/lib/transform";
 import { clientToLocal } from "@/lib/pointer-space";
 import { snapPointToGrid } from "@/lib/snap";
+import { symmetryMates } from "@/lib/symmetry";
 
 const YELLOW = "#e8b923";
 
@@ -51,7 +52,12 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
               };
             }
           }
-          return snapPointToGrid(moving.x, moving.y, s.page);
+          return snapPointToGrid(
+            moving.x,
+            moving.y,
+            s.page,
+            symmetryMates(fixed, s.page),
+          );
         })();
         const moving = { x: snappedMove.x, y: snappedMove.y };
         const start = kind === "start" ? moving : fixed;

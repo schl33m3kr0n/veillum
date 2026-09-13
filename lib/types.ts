@@ -151,6 +151,7 @@ export type Anchor =
   | "bottom-center"
   | "bottom-right";
 export type GridType = "none" | "square" | "triangle" | "radial";
+export type SymmetryMode = "none" | "horizontal" | "vertical" | "quad" | "radial";
 export type DashStyle = "solid" | "dash" | "dot" | "dashdot";
 export type FillStyle =
   | "solid"
@@ -365,6 +366,11 @@ export interface Page {
     lines: number;
   };
   ruler: boolean;
+  symmetry: {
+    mode: SymmetryMode;
+    folds: number;
+    snap: boolean;
+  };
   /** Layers rotate around the box center. Missing means legacy top-left. */
   rotationOrigin?: "center";
 }

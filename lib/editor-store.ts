@@ -10,6 +10,7 @@ import { flipLayer, layerAabb } from "./transform";
 import { clampWedge } from "./shapes";
 import { combineLayers, isCombinable, type CombineMode } from "./combine";
 import { applyGroup, applyUngroup, expandSelection, remapGroupIds } from "./groups";
+import { symmetricCopies } from "./symmetry";
 import type { SnapGuide } from "./snap";
 import {
   createBezierLayer,
@@ -180,6 +181,7 @@ interface EditorState {
   ungroupSelected: () => void;
   distributeSelected: (axis: "horizontal" | "vertical") => void;
   flipSelected: (axis: "horizontal" | "vertical") => void;
+  duplicateSymmetric: () => void;
   setTextAlign: (align: TextAlign) => void;
   nudge: (dx: number, dy: number) => void;
   applyAnchor: (anchor: Anchor) => void;
@@ -858,6 +860,21 @@ export const useEditorStore = create<EditorState>()(
             layers: s.layers.map((l) =>
               ids.has(l.id) && !l.locked ? flipLayer(l, axis) : l,
             ),
+          };
+        }),
+
+      duplicateSymmetric: () =>
+        set((s) => {
+          if (s.page.symmetry?.mode === "none" || !s.page.symmetry?.mode) return s;
+          const sources = selected(s).filter((l) => !l.locked);
+          if (sources.length === 0) return s;
+          const copies = remapGroupIds(
+            sources.flatMap((l) => symmetricCopies(l, s.page)),
+          );
+          if (copies.length === 0) return s;
+          return {
+            layers: [...s.layers, ...copies],
+            selectedIds: copies.map((c) => c.id),
           };
         }),
 

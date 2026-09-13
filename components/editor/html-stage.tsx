@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import { interpolatedLayer, nearPoint, radialGrid, squareGridLines, triangleGridLines } from "@/lib/geometry";
+import { symmetryGuideLines } from "@/lib/symmetry";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
 import { cssFontFamily } from "@/lib/fonts";
@@ -788,6 +789,7 @@ export default function HtmlStage({
     gridCircles.push(...radial.circles);
   }
 
+  const symmetryLines = symmetryGuideLines(page);
   const draftStroke =
     tool === "highlighter" ? highlight : color;
   const draftWidth =
@@ -933,6 +935,18 @@ export default function HtmlStage({
                 r={c.r}
                 fill="none"
                 stroke="rgba(28,25,22,0.12)"
+              />
+            ))}
+            {symmetryLines.map((pts, i) => (
+              <line
+                key={`sym-${i}`}
+                x1={pts[0]}
+                y1={pts[1]}
+                x2={pts[2]}
+                y2={pts[3]}
+                stroke="rgba(45, 122, 118, 0.45)"
+                strokeWidth={1.25}
+                strokeDasharray="7 5"
               />
             ))}
             {page.marginsVisible !== false && (

@@ -1,5 +1,6 @@
 import type { Layer, Page } from "./types";
 import { gridLineCount, gridSpacing } from "./geometry";
+import { snapPointToSymmetry } from "./symmetry";
 import { groupAabb, layerAabb } from "./transform";
 
 export type SnapGuide = {
@@ -116,6 +117,21 @@ function nearestGridIntersection(
   return hit;
 }
 
+function nearestConstraint(
+  x: number,
+  y: number,
+  page: Page,
+): { x: number; y: number; guides: SnapGuide[] } | null {
+  const grid = nearestGridIntersection(x, y, page);
+  const sym = snapPointToSymmetry(x, y, page);
+  if (grid && sym) {
+    const dg = Math.hypot(grid.x - x, grid.y - y);
+    const ds = Math.hypot(sym.x - x, sym.y - y);
+    return ds < dg ? { ...sym, guides: sym.guides } : grid;
+  }
+  return grid ?? (sym ? { ...sym, guides: sym.guides } : null);
+}
+
 function bestGridTranslation(
   moving: { left: number; right: number; top: number; bottom: number; cx: number; cy: number },
   page: Page,
@@ -130,7 +146,7 @@ function bestGridTranslation(
   let best: { dx: number; dy: number; guides: SnapGuide[] } | null = null;
   let bestD = THRESHOLD_2D;
   for (const p of pts) {
-    const hit = nearestGridIntersection(p.x, p.y, page);
+    const hit = nearestConstraint(p.x, p.y, page);
     if (!hit) continue;
     const d = Math.hypot(hit.x - p.x, hit.y - p.y);
     if (d <= bestD) {
@@ -141,14 +157,40 @@ function bestGridTranslation(
   return best;
 }
 
-/** Snap a free page point onto a grid crossing (square, triangle, or polar). */
+/** Snap a free page point onto a grid crossing, symmetry axis, or mate. */
 export function snapPointToGrid(
   x: number,
   y: number,
   page: Page,
+  extras: { x: number; y: number }[] = [],
 ): { x: number; y: number; guides: SnapGuide[] } {
-  const hit = nearestGridIntersection(x, y, page);
-  return hit ?? { x, y, guides: [] };
+  type Cand = { x: number; y: number; guides: SnapGuide[]; d: number };
+  const cands: Cand[] = [];
+  const hit = nearestConstraint(x, y, page);
+  if (hit) {
+    cands.push({
+      ...hit,
+      d: Math.hypot(hit.x - x, hit.y - y),
+    });
+  }
+  for (const extra of extras) {
+    const d = Math.hypot(extra.x - x, extra.y - y);
+    if (d <= THRESHOLD_2D) {
+      cands.push({
+        x: extra.x,
+        y: extra.y,
+        d,
+        guides: [
+          { axis: "x", pos: extra.x },
+          { axis: "y", pos: extra.y },
+        ],
+      });
+    }
+  }
+  if (cands.length === 0) return { x, y, guides: [] };
+  cands.sort((a, b) => a.d - b.d);
+  const best = cands[0];
+  return { x: best.x, y: best.y, guides: best.guides };
 }
 
 export function pageSizes(page: Page): { widths: number[]; heights: number[] } {

@@ -31,6 +31,7 @@ import { FontSelect } from "./font-select";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
 import { GroupTools } from "./group-tools";
+import { SymmetryTools } from "./symmetry-tools";
 import { ShapeAdjustments } from "./shape-adjustments";
 import { removeImageBackground } from "@/lib/remove-background";
 
@@ -45,6 +46,7 @@ export function PropertiesPanel() {
         <div className="space-y-2 px-3 py-2">
           <AlignTools />
           <GroupTools />
+          <SymmetryTools />
           <CombineTools />
         </div>
       )}

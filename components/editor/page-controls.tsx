@@ -16,12 +16,14 @@ import {
   gridLineCount,
   spacingFromLines,
 } from "@/lib/geometry";
-import type { GridType } from "@/lib/types";
+import { SYMMETRY_FOLDS, symmetryMode } from "@/lib/symmetry";
+import type { GridType, SymmetryMode } from "@/lib/types";
 import { Field, NumberField, SliderField, historyFieldProps } from "./fields";
 
 export function PageControls() {
   const page = useEditorStore((s) => s.page);
   const updatePage = useEditorStore((s) => s.updatePage);
+  const hasSelection = useEditorStore((s) => s.selectedIds.length > 0);
 
   return (
     <div className="space-y-2">
@@ -180,6 +182,95 @@ export function PageControls() {
         }
         format={(v) => `${v}px`}
       />
+      <Field label="Symmetry">
+        <Select
+          value={symmetryMode(page)}
+          onValueChange={(v) => {
+            const mode = v as SymmetryMode;
+            updatePage({
+              symmetry: {
+                mode,
+                folds: Math.max(2, page.symmetry?.folds ?? 6),
+                snap:
+                  mode === "none"
+                    ? false
+                    : symmetryMode(page) === "none"
+                      ? true
+                      : !!page.symmetry?.snap,
+              },
+            });
+          }}
+        >
+          <SelectTrigger size="sm" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Off</SelectItem>
+            <SelectItem value="horizontal">Left–right</SelectItem>
+            <SelectItem value="vertical">Top–bottom</SelectItem>
+            <SelectItem value="quad">Quad</SelectItem>
+            <SelectItem value="radial">Radial</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      {symmetryMode(page) !== "none" && (
+        <>
+          <div className="flex items-center justify-between">
+            <label htmlFor="symmetry-snap" className="text-xs">
+              Snap to symmetry
+            </label>
+            <Switch
+              id="symmetry-snap"
+              checked={!!page.symmetry?.snap}
+              onCheckedChange={(snap) =>
+                updatePage({
+                  symmetry: {
+                    mode: symmetryMode(page),
+                    folds: Math.max(2, page.symmetry?.folds ?? 6),
+                    snap,
+                  },
+                })
+              }
+            />
+          </div>
+          {symmetryMode(page) === "radial" && (
+            <Field label="Folds">
+              <Select
+                value={String(Math.max(2, page.symmetry?.folds ?? 6))}
+                onValueChange={(v) =>
+                  updatePage({
+                    symmetry: {
+                      mode: "radial",
+                      folds: Number(v),
+                      snap: page.symmetry?.snap ?? true,
+                    },
+                  })
+                }
+              >
+                <SelectTrigger size="sm" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SYMMETRY_FOLDS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}-fold · {360 / n}°
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+          <Button
+            size="xs"
+            variant="outline"
+            className="w-full"
+            disabled={!hasSelection}
+            onClick={() => useEditorStore.getState().duplicateSymmetric()}
+          >
+            Repeat around symmetry
+          </Button>
+        </>
+      )}
       <div className="space-y-2 border-t border-border/50 pt-2">
         <div className="flex items-center justify-between">
           <span className="text-xs">Header</span>
