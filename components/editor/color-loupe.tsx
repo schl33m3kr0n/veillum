@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { rgbToHex } from "@/lib/colors";
 
 const SIZE = 11;
@@ -12,23 +12,27 @@ export function ColorLoupe({
   snapshot,
   snapX,
   snapY,
-  screenX,
-  screenY,
+  clientX,
+  clientY,
 }: {
   snapshot: HTMLCanvasElement | null;
   snapX: number;
   snapY: number;
-  screenX: number;
-  screenY: number;
+  clientX: number;
+  clientY: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hex = snapshot ? sampleHex(snapshot, snapX, snapY) : null;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !snapshot) return;
+    const dpr = window.devicePixelRatio || 1;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    canvas.width = Math.round(MAG * dpr);
+    canvas.height = Math.round(MAG * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, MAG, MAG);
     for (let y = 0; y < SIZE; y++) {
@@ -48,23 +52,26 @@ export function ColorLoupe({
 
   return (
     <div
-      className="pointer-events-none absolute z-50"
+      className="pointer-events-none fixed z-50"
       style={{
-        left: screenX - MAG / 2,
-        top: screenY - MAG / 2,
+        left: clientX,
+        top: clientY,
         width: MAG,
         height: MAG,
+        transform: "translate(-50%, -50%)",
       }}
     >
       <canvas
         ref={canvasRef}
-        width={MAG}
-        height={MAG}
         className="block rounded-full shadow-[0_0_0_2px_#161310,0_10px_24px_rgba(0,0,0,0.45)]"
-        style={{ imageRendering: "pixelated" }}
+        style={{
+          width: MAG,
+          height: MAG,
+          imageRendering: "pixelated",
+        }}
       />
       {hex ? (
-        <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-md bg-[#161310]/90 px-1.5 py-0.5 text-[10px] text-[#f7f1e6]">
+        <div className="absolute top-full left-1/2 mt-1 flex -translate-x-1/2 items-center gap-1 rounded-md bg-[#161310]/90 px-1.5 py-0.5 text-[10px] text-[#f7f1e6]">
           <span
             className="size-2.5 rounded-sm border border-white/20"
             style={{ background: hex }}

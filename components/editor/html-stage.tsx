@@ -52,8 +52,8 @@ export default function HtmlStage({
   const [loupe, setLoupe] = useState<{
     snapX: number;
     snapY: number;
-    screenX: number;
-    screenY: number;
+    clientX: number;
+    clientY: number;
   } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -490,13 +490,12 @@ export default function HtmlStage({
       const pageEl = pageRef.current;
       const snap = colorSnap.current;
       if (p && board && pageEl && snap) {
-        const rect = board.getBoundingClientRect();
         const at = snapshotPixelAt(snap, pageEl, e.clientX, e.clientY);
         setLoupe({
           snapX: at.x,
           snapY: at.y,
-          screenX: e.clientX - rect.left,
-          screenY: e.clientY - rect.top,
+          clientX: e.clientX,
+          clientY: e.clientY,
         });
       } else {
         setLoupe(null);
@@ -1128,8 +1127,8 @@ export default function HtmlStage({
           snapshot={colorShot}
           snapX={loupe.snapX}
           snapY={loupe.snapY}
-          screenX={loupe.screenX}
-          screenY={loupe.screenY}
+          clientX={loupe.clientX}
+          clientY={loupe.clientY}
         />
       )}
       <span className="sr-only">{shapeKind}</span>
