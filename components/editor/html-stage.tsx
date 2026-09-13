@@ -16,7 +16,7 @@ import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
 import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
-import { pageSnapshotOptions, pagePixelClientCenter, snapshotPixelForPage, statusPagePixel } from "@/lib/page-snapshot";
+import { pageSnapshotOptions, snapshotPixelAt } from "@/lib/page-snapshot";
 import {
   CompassOverlay,
   hitCompass,
@@ -339,16 +339,9 @@ export default function HtmlStage({
     if (current === "eyedropper") {
       const snap = colorSnap.current;
       const pageEl = pageRef.current;
-      const pixel = statusPagePixel(p.x, p.y);
       const at =
-        snap
-          ? snapshotPixelForPage(
-              snap,
-              store.page.width,
-              store.page.height,
-              pixel.x,
-              pixel.y,
-            )
+        snap && pageEl
+          ? snapshotPixelAt(snap, pageEl, e.clientX, e.clientY)
           : null;
       const hex = snap && at ? sampleCanvasHex(snap, at.x, at.y) : null;
       if (hex) {
@@ -360,13 +353,7 @@ export default function HtmlStage({
           pageEl,
           pageSnapshotOptions(store.page.width, store.page.height),
         );
-        const pixAt = snapshotPixelForPage(
-          shot,
-          store.page.width,
-          store.page.height,
-          pixel.x,
-          pixel.y,
-        );
+        const pixAt = snapshotPixelAt(shot, pageEl, e.clientX, e.clientY);
         const sampled = sampleCanvasHex(shot, pixAt.x, pixAt.y);
         if (sampled) applyStudioColor(sampled);
         setLoupe(null);
@@ -499,30 +486,15 @@ export default function HtmlStage({
     const store = useEditorStore.getState();
 
     if (store.tool === "eyedropper" && store.colorLoupe) {
-      const board = boardRef.current;
       const pageEl = pageRef.current;
       const snap = colorSnap.current;
-      if (p && board && pageEl && snap) {
-        const pixel = statusPagePixel(p.x, p.y);
-        const at = snapshotPixelForPage(
-          snap,
-          store.page.width,
-          store.page.height,
-          pixel.x,
-          pixel.y,
-        );
-        const { clientX, clientY } = pagePixelClientCenter(
-          pageEl,
-          store.page.width,
-          store.page.height,
-          pixel.x,
-          pixel.y,
-        );
+      if (pageEl && snap) {
+        const at = snapshotPixelAt(snap, pageEl, e.clientX, e.clientY);
         setLoupe({
           snapX: at.x,
           snapY: at.y,
-          clientX,
-          clientY,
+          clientX: e.clientX,
+          clientY: e.clientY,
         });
       } else {
         setLoupe(null);
