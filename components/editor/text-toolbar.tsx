@@ -198,7 +198,10 @@ export function TextFormatControls({
   const mixed = range ? rangeMarks(layer, range) : null;
 
   const applyMarks = (marks: TextMark) => {
-    const target = getApplyTextRange(layer.id);
+    const target = getApplyTextRange(layer.id) ??
+      (layer.text.length > 0
+        ? { start: 0, end: layer.text.length }
+        : null);
     if (!target) return;
     const spans = applyRangeMarks(normalizeSpans(layer), target, marks);
     update(layer.id, { spans, text: spansToText(spans) });

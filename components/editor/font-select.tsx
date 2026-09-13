@@ -63,10 +63,24 @@ export function FontSelect({
     return { groups, imported };
   }, [query, extras]);
 
-  const pick = (family: string) => {
+  const pinRange = () => {
+    pinTextFormatRange(useEditorStore.getState().editingTextId);
+  };
+
+  const applyFamily = (family: string) => {
+    pinRange();
     onValueChange(family);
-    setOpen(false);
     setError(null);
+  };
+
+  const closeMenu = () => {
+    setOpen(false);
+    setQuery("");
+  };
+
+  const pick = (family: string) => {
+    applyFamily(family);
+    closeMenu();
   };
 
   const firstMatch =
@@ -121,10 +135,6 @@ export function FontSelect({
       window.removeEventListener("keydown", onKey, true);
     };
   }, [open]);
-
-  const pinRange = () => {
-    pinTextFormatRange(useEditorStore.getState().editingTextId);
-  };
 
   const pickingFile = useRef(false);
 
@@ -230,7 +240,8 @@ export function FontSelect({
                     selected={value === family}
                     stack={`"${family}", serif`}
                     removable
-                    onPick={pick}
+                    onApply={applyFamily}
+                    onClose={closeMenu}
                     onRemove={() => {
                       void removeCustomFont(family);
                       if (value === family) onValueChange("Instrument Sans");
@@ -250,7 +261,8 @@ export function FontSelect({
                     label={font.label}
                     family={font.family}
                     selected={value === font.family}
-                    onPick={pick}
+                    onApply={applyFamily}
+                    onClose={closeMenu}
                   />
                 ))}
               </div>
@@ -309,7 +321,8 @@ function FontRow({
   selected,
   stack,
   removable,
-  onPick,
+  onApply,
+  onClose,
   onRemove,
 }: {
   label: string;
@@ -317,7 +330,8 @@ function FontRow({
   selected: boolean;
   stack?: string;
   removable?: boolean;
-  onPick: (family: string) => void;
+  onApply: (family: string) => void;
+  onClose: () => void;
   onRemove?: () => void;
 }) {
   return (
@@ -332,10 +346,22 @@ function FontRow({
         className="min-w-0 flex-1 px-1.5 py-1 text-left text-sm"
         style={{ fontFamily: stack ?? cssFontFamily(family) }}
         onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          // Keep the contenteditable selection. Firefox will not fire click after
+          // this, so apply the font here instead of waiting for click.
           if (event.cancelable) event.preventDefault();
-          pinTextFormatRange(useEditorStore.getState().editingTextId);
+          event.stopPropagation();
+          onApply(family);
         }}
-        onClick={() => onPick(family)}
+        onPointerUp={(event) => {
+          if (event.button !== 0) return;
+          event.stopPropagation();
+          window.setTimeout(onClose, 0);
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          onApply(family);
+        }}
       >
         <span className="truncate">{label}</span>
       </button>
