@@ -18,6 +18,7 @@ export type AutosaveDraft = {
   sidebarOpen: boolean;
   timelineOpen: boolean;
   fileName?: string | null;
+  siteId?: string | null;
 };
 
 function openDb(): Promise<IDBDatabase> {
@@ -86,6 +87,7 @@ export function draftFromState(s: {
   sidebarOpen: boolean;
   timelineOpen: boolean;
   fileName: string | null;
+  siteId: string | null;
 }): AutosaveDraft {
   return {
     version: 1,
@@ -100,5 +102,6 @@ export function draftFromState(s: {
     sidebarOpen: s.sidebarOpen,
     timelineOpen: s.timelineOpen,
     fileName: s.fileName,
+    siteId: s.siteId,
   };
 }

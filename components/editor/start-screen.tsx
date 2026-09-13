@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { FilePlus2, FolderOpen, LayoutTemplate } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { FilePlus2, FolderOpen, HardDrive, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEditorStore } from "@/lib/editor-store";
@@ -18,7 +18,9 @@ import {
   type StudioTemplate,
 } from "@/lib/templates";
 import { PagePreview } from "./page-preview";
-import { openProjectFile } from "./file-actions";
+import { openProjectFile, openSitePage } from "./file-actions";
+import { fetchSitePages, removeSitePage } from "@/lib/site-library";
+import type { SitePageMeta } from "@/lib/site-pages";
 import {
   Dialog,
   DialogClose,
@@ -71,7 +73,7 @@ export function StartScreen() {
               veillum
             </p>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Pick a page size, or start from a layout. The page also saves itself in this browser. Open a .veillum file to continue work from disk.
+              Pick a page size, start from a layout, or reopen a page saved on this site. Save writes here; Save as… writes a file on disk.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -93,10 +95,12 @@ export function StartScreen() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search sizes and templates"
+          placeholder="Search sizes, templates, and saved pages"
           className="max-w-sm bg-card/80"
           aria-label="Search sizes and templates"
         />
+
+        <SitePagesPanel query={q} />
 
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -145,6 +149,86 @@ export function StartScreen() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+function SitePagesPanel({ query }: { query: string }) {
+  const [pages, setPages] = useState<SitePageMeta[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void fetchSitePages()
+      .then((list) => {
+        if (live) setPages(list);
+      })
+      .catch((err: unknown) => {
+        if (live) {
+          setError(err instanceof Error ? err.message : "Could not load saved pages.");
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const filtered = (pages ?? []).filter(
+    (p) =>
+      !query ||
+      p.name.toLowerCase().includes(query) ||
+      p.id.toLowerCase().includes(query),
+  );
+  if (error) {
+    return <p className="text-sm text-destructive">{error}</p>;
+  }
+  if (pages !== null && filtered.length === 0 && !query) {
+    return null;
+  }
+  if (pages !== null && filtered.length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <HardDrive className="size-3.5" />
+        On this site
+      </h2>
+      {pages === null ? (
+        <p className="text-sm text-muted-foreground">Loading saved pages…</p>
+      ) : (
+        <div className="grid gap-2">
+          {filtered.map((page) => (
+            <div
+              key={page.id}
+              className="flex items-center gap-3 rounded-xl border border-border/70 bg-card/90 px-3 py-2"
+            >
+              <button
+                type="button"
+                className="min-w-0 flex-1 text-left"
+                onClick={() => void openSitePage(page.id)}
+              >
+                <span className="block text-sm font-medium">{page.name}</span>
+                <span className="block text-[11px] tabular-nums text-muted-foreground">
+                  {page.width} × {page.height}
+                  <span className="ml-2 font-normal">
+                    {new Date(page.savedAt).toLocaleString()}
+                  </span>
+                </span>
+              </button>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={async () => {
+                  await removeSitePage(page.id);
+                  setPages((cur) => (cur ?? []).filter((p) => p.id !== page.id));
+                }}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

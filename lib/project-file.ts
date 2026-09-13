@@ -152,6 +152,9 @@ export async function writeProjectToDisk(
   if (!saveAs && (await tryWriteExisting(text))) {
     return suggested;
   }
+  if (!saveAs) {
+    return null;
+  }
 
   if (typeof picker.showSaveFilePicker === "function") {
     try {

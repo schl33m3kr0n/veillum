@@ -96,7 +96,7 @@ export function TopBar() {
               Save
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Save ⌘S · Save as ⌘⇧S</TooltipContent>
+          <TooltipContent>Save on this site ⌘S · disk copy ⌘⇧S</TooltipContent>
         </Tooltip>
       </div>
       <SaveStatus />
@@ -286,7 +286,7 @@ function ExportMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => void saveProjectFile(true)}>
-          Save as…
+          Save as file…
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("png")}>PNG</DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportDoc("jpeg")}>JPEG</DropdownMenuItem>

@@ -82,6 +82,7 @@ interface EditorState {
   saveStatus: "idle" | "saving" | "saved" | "error";
   savedAt: number | null;
   fileName: string | null;
+  siteId: string | null;
   fileError: string | null;
   bgBusyId: string | null;
   bgBusyNote: string;
@@ -189,8 +190,10 @@ interface EditorState {
     sidebarOpen?: boolean;
     timelineOpen?: boolean;
     fileName?: string | null;
+    siteId?: string | null;
   }) => void;
   setFileName: (fileName: string | null) => void;
+  setSiteId: (siteId: string | null) => void;
   setFileError: (fileError: string | null) => void;
 }
 
@@ -249,6 +252,7 @@ export const useEditorStore = create<EditorState>()(
       saveStatus: "idle",
       savedAt: null,
       fileName: null,
+      siteId: null,
       fileError: null,
       bgBusyId: null,
       bgBusyNote: "",
@@ -263,6 +267,7 @@ export const useEditorStore = create<EditorState>()(
           savedAt: savedAt === undefined ? get().savedAt : savedAt,
         }),
       setFileName: (fileName) => set({ fileName, fileError: null }),
+      setSiteId: (siteId) => set({ siteId }),
       setFileError: (fileError) => set({ fileError }),
       hydrateDraft: (draft) => {
         const framed = draft.zoom == null ? framePage(draft.page) : null;
@@ -286,7 +291,8 @@ export const useEditorStore = create<EditorState>()(
           playhead: 0,
           tool: "select",
           snapGuides: [],
-          fileName: draft.fileName ?? get().fileName,
+          fileName: draft.fileName === undefined ? get().fileName : draft.fileName,
+          siteId: draft.siteId === undefined ? get().siteId : draft.siteId,
           fileError: null,
         });
         useEditorStore.temporal.getState().clear();
@@ -304,6 +310,7 @@ export const useEditorStore = create<EditorState>()(
           startOpen: false,
           hasDocument: true,
           fileName: null,
+          siteId: null,
           fileError: null,
           tool: "select",
           playhead: 0,
@@ -326,6 +333,7 @@ export const useEditorStore = create<EditorState>()(
           startOpen: false,
           hasDocument: true,
           fileName: null,
+          siteId: null,
           fileError: null,
           tool: "select",
           playhead: 0,
