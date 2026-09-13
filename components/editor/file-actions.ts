@@ -3,6 +3,14 @@
 import { useEditorStore } from "@/lib/editor-store";
 import { readProjectFromDisk, writeProjectToDisk } from "@/lib/project-file";
 
+function humanFileError(err: unknown, fallback: string) {
+  const msg = err instanceof Error ? err.message : "";
+  if (/createWritable|NotAllowedError|NotFoundError|security/i.test(msg)) {
+    return "Could not write that file. Try Save as…";
+  }
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
 export async function openProjectFile() {
   const store = useEditorStore.getState();
   store.setFileError(null);
@@ -15,9 +23,7 @@ export async function openProjectFile() {
       fileName: result.fileName,
     });
   } catch (err) {
-    store.setFileError(
-      err instanceof Error ? err.message : "Could not open that file.",
-    );
+    store.setFileError(humanFileError(err, "Could not open that file."));
   }
 }
 
@@ -38,8 +44,6 @@ export async function saveProjectFile(saveAs = false) {
     if (!name) return;
     store.setFileName(name);
   } catch (err) {
-    store.setFileError(
-      err instanceof Error ? err.message : "Could not save that file.",
-    );
+    store.setFileError(humanFileError(err, "Could not save that file."));
   }
 }

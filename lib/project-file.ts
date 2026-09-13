@@ -42,24 +42,44 @@ function isAbort(err: unknown) {
 }
 
 async function ensureWrite(handle: FileSystemFileHandle) {
-  const withPerm = handle as FileSystemFileHandle & {
-    queryPermission?: (d: { mode: "readwrite" }) => Promise<PermissionState>;
-    requestPermission?: (d: { mode: "readwrite" }) => Promise<PermissionState>;
-  };
-  if (typeof withPerm.queryPermission === "function") {
-    const q = await withPerm.queryPermission({ mode: "readwrite" });
-    if (q === "granted") return true;
+  try {
+    const withPerm = handle as FileSystemFileHandle & {
+      queryPermission?: (d: { mode: "readwrite" }) => Promise<PermissionState>;
+      requestPermission?: (d: { mode: "readwrite" }) => Promise<PermissionState>;
+    };
+    if (typeof withPerm.queryPermission === "function") {
+      const q = await withPerm.queryPermission({ mode: "readwrite" });
+      if (q === "granted") return true;
+      if (q === "denied") return false;
+    }
+    if (typeof withPerm.requestPermission === "function") {
+      return (await withPerm.requestPermission({ mode: "readwrite" })) === "granted";
+    }
+    return true;
+  } catch {
+    return false;
   }
-  if (typeof withPerm.requestPermission === "function") {
-    return (await withPerm.requestPermission({ mode: "readwrite" })) === "granted";
-  }
-  return true;
 }
 
 async function writeHandle(handle: FileSystemFileHandle, text: string) {
   const writable = await handle.createWritable();
   await writable.write(text);
   await writable.close();
+}
+
+async function tryWriteExisting(text: string) {
+  if (!fileHandle) return false;
+  try {
+    if (!(await ensureWrite(fileHandle))) {
+      fileHandle = null;
+      return false;
+    }
+    await writeHandle(fileHandle, text);
+    return true;
+  } catch {
+    fileHandle = null;
+    return false;
+  }
 }
 
 function normalizeName(name: string) {
@@ -100,7 +120,7 @@ export async function readProjectFromDisk(): Promise<{
       });
       const file = await handle.getFile();
       const parsed = parseProjectJson(await file.text());
-      fileHandle = handle;
+      fileHandle = (await ensureWrite(handle)) ? handle : null;
       return { ...parsed, fileName: file.name || DEFAULT_PROJECT_NAME };
     } catch (err) {
       if (isAbort(err)) return null;
@@ -129,12 +149,8 @@ export async function writeProjectToDisk(
     }) => Promise<FileSystemFileHandle>;
   };
 
-  if (!saveAs && fileHandle) {
-    const ok = await ensureWrite(fileHandle);
-    if (ok) {
-      await writeHandle(fileHandle, text);
-      return suggested;
-    }
+  if (!saveAs && (await tryWriteExisting(text))) {
+    return suggested;
   }
 
   if (typeof picker.showSaveFilePicker === "function") {
@@ -143,12 +159,19 @@ export async function writeProjectToDisk(
         suggestedName: suggested,
         types: FILE_PICKER_TYPES,
       });
-      await writeHandle(handle, text);
-      fileHandle = handle;
-      return handle.name || suggested;
+      try {
+        await writeHandle(handle, text);
+        fileHandle = handle;
+        return handle.name || suggested;
+      } catch {
+        fileHandle = null;
+        downloadBlob(new Blob([text], { type: "application/json" }), handle.name || suggested);
+        return handle.name || suggested;
+      }
     } catch (err) {
       if (isAbort(err)) return null;
-      throw err;
+      downloadBlob(new Blob([text], { type: "application/json" }), suggested);
+      return suggested;
     }
   }
 
