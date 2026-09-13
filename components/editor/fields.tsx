@@ -119,6 +119,26 @@ export function SliderField({
   );
 }
 
+export function OpacityField({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (opacity: number) => void;
+}) {
+  return (
+    <SliderField
+      label="Opacity"
+      value={Math.round(Math.max(0, Math.min(1, value)) * 100)}
+      min={0}
+      max={100}
+      step={1}
+      onChange={(v) => onChange(Math.max(0, Math.min(1, v / 100)))}
+      format={(v) => `${Math.round(v)}%`}
+    />
+  );
+}
+
 export function NumberField({
   value,
   onChange,

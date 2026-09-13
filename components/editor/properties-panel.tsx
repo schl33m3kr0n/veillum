@@ -24,7 +24,7 @@ import {
   type Orientation,
   type TextLayer,
 } from "@/lib/types";
-import { Field, NumberField, Section, SliderField, historyFieldProps } from "./fields";
+import { Field, NumberField, OpacityField, Section, SliderField, historyFieldProps } from "./fields";
 import { FillStylePicker } from "./fill-style-picker";
 import { GradientStopsEditor } from "./gradient-stops";
 import { FontSelect } from "./font-select";
@@ -142,13 +142,13 @@ function CommonFields({ layer }: { layer: Layer }) {
         onChange={(rotation) => update(layer.id, { rotation })}
         format={(v) => `${Math.round(v)}°`}
       />
-      <SliderField
-        label="Opacity"
+      <OpacityField
         value={layer.opacity}
-        min={0}
-        max={1}
-        onChange={(opacity) => update(layer.id, { opacity })}
-        format={(v) => `${Math.round(v * 100)}%`}
+        onChange={(opacity) => {
+          const ids = useEditorStore.getState().selectedIds;
+          if (ids.length > 1) useEditorStore.getState().updateLayers(ids, { opacity });
+          else update(layer.id, { opacity });
+        }}
       />
       <SliderField
         label="Perspective"

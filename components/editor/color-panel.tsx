@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ColorCircle, NoneSwatch } from "./paint-swatch";
-import { historyFieldProps } from "./fields";
+import { historyFieldProps, OpacityField } from "./fields";
 
 export function ColorPanel() {
   const color = useEditorStore((s) => s.color);
@@ -55,6 +55,17 @@ export function ColorPanel() {
         </Button>
       </div>
       <ColorWheel color={color} onChange={apply} />
+      {selected && (
+        <OpacityField
+          value={selected.opacity}
+          onChange={(opacity) => {
+            const ids = useEditorStore.getState().selectedIds;
+            useEditorStore.getState().updateLayers(ids.length ? ids : [selected.id], {
+              opacity,
+            });
+          }}
+        />
+      )}
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1">
           <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">

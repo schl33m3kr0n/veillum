@@ -23,7 +23,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘
 
 **Color.** I opens Color: a dark panel with the wheel, hex, highlighter, recent swatches, and grouped palettes. Hover the page for a pixel magnifier; click to sample. Shape fills include solid, linear, radial, diamond, angular, and reflect — shown as previews — with two to five gradient colors whose lengths you can adjust (even by default).
 
-**Layers.** Order, lock, hide, blending modes, opacity, transparency, masks (paint a keep-region), borders.
+**Layers.** Order, lock, hide, opacity, blending modes, transparency, masks (paint a keep-region), borders.
 
 **Motion.** Add keyframes for position, scale, rotation, and opacity. Play interpolates along the timeline.
 

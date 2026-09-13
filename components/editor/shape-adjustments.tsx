@@ -10,7 +10,7 @@ import {
 import { useEditorStore } from "@/lib/editor-store";
 import type { DashStyle, ShapeKind, ShapeLayer } from "@/lib/types";
 import { SHAPE_KINDS } from "@/lib/shapes";
-import { Field, SliderField, historyFieldProps } from "./fields";
+import { Field, OpacityField, SliderField, historyFieldProps } from "./fields";
 import { FillStylePicker } from "./fill-style-picker";
 import { GradientStopsEditor } from "./gradient-stops";
 import { ColorCircleLook, NoneSwatch, NoneSwatchLook } from "./paint-swatch";
@@ -126,6 +126,12 @@ export function ShapeAdjustments({
           onColor={(value) => patch({ stroke: value, strokeEnabled: true })}
         />
       </div>
+      {layer && (
+        <OpacityField
+          value={layer.opacity}
+          onChange={(opacity) => patch({ opacity })}
+        />
+      )}
       {fillEnabled && (
         <>
           <Field label="Fill style">

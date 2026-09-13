@@ -80,6 +80,9 @@ export function LayersPanel() {
                   {layer.type}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{layer.name}</span>
+                <span className="w-8 shrink-0 text-right tabular-nums text-[10px] text-muted-foreground">
+                  {Math.round(layer.opacity * 100)}%
+                </span>
                 <span
                   role="button"
                   tabIndex={0}
