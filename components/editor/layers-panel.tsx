@@ -3,6 +3,7 @@
 import {
   Eye,
   EyeOff,
+  Group,
   Lock,
   Unlock,
   ChevronUp,
@@ -77,9 +78,12 @@ export function LayersPanel() {
                 )}
               >
                 <span className="w-10 shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {layer.groupId ? "group" : layer.type}
+                  {layer.type}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{layer.name}</span>
+                {layer.groupId ? (
+                  <Group className="size-3 shrink-0 text-muted-foreground" aria-label="Grouped" />
+                ) : null}
                 <span className="w-8 shrink-0 text-right tabular-nums text-[10px] text-muted-foreground">
                   {Math.round(layer.opacity * 100)}%
                 </span>
