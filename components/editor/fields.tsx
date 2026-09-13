@@ -193,6 +193,13 @@ export function NumberField({
           setFocused(false);
           endHistoryGesture();
         })}
+        onPointerDown={() => onEditStart?.()}
+        onWheel={(e) => {
+          if (Math.abs(e.deltaY) < 1) return;
+          e.preventDefault();
+          onEditStart?.();
+          onChange(current + (e.deltaY < 0 ? step : -step));
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.currentTarget.blur();

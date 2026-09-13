@@ -15,7 +15,9 @@ import {
   restoreCustomFonts,
   subscribeCustomFonts,
 } from "@/lib/custom-fonts";
+import { useEditorStore } from "@/lib/editor-store";
 import { cssFontFamily } from "@/lib/fonts";
+import { pinTextFormatRange } from "@/lib/text-spans";
 import { FONT_GROUPS, FONT_OPTIONS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +68,10 @@ export function FontSelect({
     setOpen(false);
   };
 
+  const pinRange = () => {
+    pinTextFormatRange(useEditorStore.getState().editingTextId);
+  };
+
   const firstMatch =
     filtered.groups[0]?.fonts[0]?.family ?? filtered.imported[0]?.family;
 
@@ -74,6 +80,7 @@ export function FontSelect({
       <Popover
         open={open}
         onOpenChange={(next) => {
+          if (next) pinRange();
           setOpen(next);
           if (!next) setQuery("");
         }}
@@ -86,6 +93,7 @@ export function FontSelect({
             disabled={disabled}
             aria-label="Font"
             className="h-7 min-w-0 flex-1 justify-start px-2.5 font-normal"
+            onPointerDown={pinRange}
             style={{ fontFamily: cssFontFamily(value) }}
           >
             <span className="truncate">{value || "Font"}</span>
@@ -93,10 +101,20 @@ export function FontSelect({
         </PopoverTrigger>
         <PopoverContent
           align="start"
+          data-text-format-ui
           className="w-72 gap-0 p-0"
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            searchRef.current?.focus();
+            if (!useEditorStore.getState().editingTextId) {
+              searchRef.current?.focus();
+            }
+          }}
+          onPointerDown={(event) => {
+            pinRange();
+            const target = event.target as HTMLElement;
+            if (!target.closest("input, textarea")) {
+              event.preventDefault();
+            }
           }}
         >
           <div className="border-b border-border/70 p-1.5">
@@ -109,6 +127,7 @@ export function FontSelect({
                 placeholder="Search fonts"
                 aria-label="Search fonts"
                 className="h-7 bg-transparent pl-7 text-sm"
+                onFocus={pinRange}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && firstMatch) {
                     e.preventDefault();
@@ -213,6 +232,10 @@ function FontRow({
         selected && "bg-accent/70",
       )}
       style={{ fontFamily: stack ?? cssFontFamily(family) }}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        pinTextFormatRange(useEditorStore.getState().editingTextId);
+      }}
       onClick={() => onPick(family)}
     >
       {label}

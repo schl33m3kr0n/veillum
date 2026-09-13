@@ -1,7 +1,7 @@
 import { useEditorStore } from "./editor-store";
 import {
   applyRangeMarks,
-  getLiveTextRange,
+  getApplyTextRange,
   normalizeSpans,
   spansToText,
 } from "./text-spans";
@@ -13,8 +13,8 @@ export function applyStudioColor(next: string) {
   const selected = store.layers.find((l) => store.selectedIds.includes(l.id));
   if (!selected) return;
   if (selected.type === "text") {
-    const live = getLiveTextRange();
-    if (live && live.id === selected.id && live.end > live.start) {
+    const live = getApplyTextRange(selected.id);
+    if (live) {
       const spans = applyRangeMarks(normalizeSpans(selected), live, {
         color: next,
       });

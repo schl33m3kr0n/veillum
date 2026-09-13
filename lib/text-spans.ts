@@ -143,15 +143,85 @@ export function resolvedSpan(layer: TextLayer, span: TextSpan) {
 }
 
 let live: { id: string; start: number; end: number } | null = null;
+let sticky: { id: string; start: number; end: number } | null = null;
+let colorPicking = false;
 const listeners = new Set<() => void>();
 
-export function setLiveTextRange(next: { id: string; start: number; end: number } | null) {
-  live = next;
+function notify() {
   listeners.forEach((fn) => fn());
 }
 
+function editorIsFocused() {
+  if (typeof document === "undefined") return false;
+  const active = document.activeElement as HTMLElement | null;
+  return !!active?.closest("[data-text-editor]");
+}
+
+export const TEXT_FORMAT_UI = "[data-text-format-bar], [data-text-format-ui]";
+
+export function isTextFormatUi(node: EventTarget | null) {
+  return !!(node as HTMLElement | null)?.closest?.(TEXT_FORMAT_UI);
+}
+
+function formatBarIsActive() {
+  if (typeof document === "undefined") return false;
+  return isTextFormatUi(document.activeElement);
+}
+
+export function pinTextFormatRange(id: string | null) {
+  colorPicking = true;
+  if (!id || typeof document === "undefined") return;
+  const editor = document.querySelector("[data-text-editor]");
+  if (editor instanceof HTMLElement) captureEditorRange(id, editor);
+}
+
+export function setLiveTextRange(
+  next: { id: string; start: number; end: number } | null,
+  opts?: { fromEditor?: boolean },
+) {
+  if (!next) {
+    live = null;
+    sticky = null;
+    notify();
+    return;
+  }
+  live = next;
+  if (next.end > next.start) sticky = next;
+  else if (
+    opts?.fromEditor &&
+    !colorPicking &&
+    !formatBarIsActive() &&
+    editorIsFocused()
+  ) {
+    sticky = null;
+  }
+  notify();
+}
+
 export function getLiveTextRange() {
+  if (live && live.end > live.start) return live;
+  if (sticky && sticky.end > sticky.start) return sticky;
   return live;
+}
+
+export function getApplyTextRange(id: string) {
+  if (live && live.id === id && live.end > live.start) return live;
+  if (sticky && sticky.id === id && sticky.end > sticky.start) return sticky;
+  return null;
+}
+
+export function captureEditorRange(id: string, root: HTMLElement | null) {
+  if (!root) return;
+  const r = offsetsFromRoot(root);
+  if (r.end > r.start) setLiveTextRange({ id, ...r });
+}
+
+export function isTextColorPicking() {
+  return colorPicking;
+}
+
+export function setTextColorPicking(next: boolean) {
+  colorPicking = next;
 }
 
 export function subscribeLiveTextRange(fn: () => void) {

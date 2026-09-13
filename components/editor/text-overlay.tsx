@@ -8,6 +8,9 @@ import type { TextLayer } from "@/lib/types";
 import {
   applyRangeMarks,
   getLiveTextRange,
+  isTextColorPicking,
+  isTextFormatUi,
+  TEXT_FORMAT_UI,
   marksAttr,
   normalizeSpans,
   offsetsFromRoot,
@@ -15,6 +18,7 @@ import {
   resolvedSpan,
   setLiveTextRange,
   setOffsetsOnRoot,
+  setTextColorPicking,
   spansToText,
   type TextMark,
 } from "@/lib/text-spans";
@@ -108,10 +112,12 @@ export function TextOverlay() {
   if (!layer) return null;
 
   const remember = () => {
+    if (isTextColorPicking()) return;
+    if (isTextFormatUi(document.activeElement)) return;
     const el = ref.current;
     if (!el) return;
     const next = offsetsFromRoot(el);
-    setLiveTextRange({ id: layer.id, ...next });
+    setLiveTextRange({ id: layer.id, ...next }, { fromEditor: true });
   };
 
   const left = panX + (PAGE_PAD_X + layer.x) * zoom;
@@ -124,7 +130,10 @@ export function TextOverlay() {
       contentEditable
       suppressContentEditableWarning
       autoFocus
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        setTextColorPicking(false);
+        e.stopPropagation();
+      }}
       onKeyUp={remember}
       onMouseUp={remember}
       onSelect={remember}
@@ -160,19 +169,26 @@ export function TextOverlay() {
       }}
       onBlur={(e) => {
         if (!e.currentTarget.isConnected) return;
+        if (isTextColorPicking()) return;
         const next = e.relatedTarget as HTMLElement | null;
-        if (next?.closest("[data-text-format-bar], [data-text-editor]")) return;
+        if (isTextFormatUi(next) || next?.closest("[data-text-editor]")) return;
+        if (next?.closest("input[type='color']")) return;
         const gen = ++blurGen.current;
         const id = layer.id;
         window.setTimeout(() => {
           if (gen !== blurGen.current) return;
           if (!ref.current?.isConnected) return;
+          if (isTextColorPicking()) return;
           const active = document.activeElement as HTMLElement | null;
-          if (active?.closest("[data-text-format-bar], [data-text-editor]")) return;
+          if (isTextFormatUi(active) || active?.closest("[data-text-editor]")) return;
+          if (active?.closest("input[type='color']")) return;
+          if (document.querySelector(`${TEXT_FORMAT_UI} input[type='color']:focus`)) {
+            return;
+          }
           if (useEditorStore.getState().editingTextId === id) {
             useEditorStore.getState().setEditingText(null);
           }
-        }, 120);
+        }, 280);
       }}
       className="absolute z-20 overflow-hidden border border-primary bg-[#f7f1e6]/95 shadow-lg outline-none"
       style={{

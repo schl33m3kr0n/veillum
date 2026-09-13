@@ -24,9 +24,12 @@ import { useEditorStore } from "@/lib/editor-store";
 import { type TextAlign, type TextLayer } from "@/lib/types";
 import {
   applyRangeMarks,
+  getApplyTextRange,
   getLiveTextRange,
   normalizeSpans,
   rangeMarks,
+  setOffsetsOnRoot,
+  pinTextFormatRange,
   spansToText,
   subscribeLiveTextRange,
   type TextMark,
@@ -48,6 +51,10 @@ function asHex(color: string, fallback: string) {
   return fallback;
 }
 
+function pinColorRange() {
+  pinTextFormatRange(useEditorStore.getState().editingTextId);
+}
+
 function ColorCirclePicker({
   color,
   title,
@@ -62,6 +69,7 @@ function ColorCirclePicker({
     <label
       className="relative flex size-6 shrink-0 cursor-pointer items-center justify-center"
       title={title}
+      onPointerDown={pinColorRange}
     >
       <ColorCircleLook color={hex} size="sm" />
       <input
@@ -69,6 +77,16 @@ function ColorCirclePicker({
         value={hex}
         aria-label={title}
         className="absolute inset-0 cursor-pointer opacity-0"
+        onPointerDown={(e) => {
+          e.preventDefault();
+          pinColorRange();
+          try {
+            e.currentTarget.showPicker();
+          } catch {
+            /* showPicker needs a user gesture in some browsers */
+          }
+        }}
+        onFocus={pinColorRange}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
@@ -90,6 +108,7 @@ function HighlightHoverPicker({
   const hex = asHex(color, DEFAULT_HIGHLIGHT);
 
   const show = () => {
+    pinColorRange();
     if (leave.current) clearTimeout(leave.current);
     setOpen(true);
   };
@@ -125,6 +144,7 @@ function HighlightHoverPicker({
         side="bottom"
         align="center"
         sideOffset={6}
+        data-text-format-ui
         className="w-auto p-1.5"
         onMouseEnter={show}
         onMouseLeave={hide}
@@ -141,6 +161,17 @@ function HighlightHoverPicker({
             value={hex}
             aria-label="Highlight color"
             className="absolute inset-0 cursor-pointer opacity-0"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              pinColorRange();
+              show();
+              try {
+                e.currentTarget.showPicker();
+              } catch {
+                /* showPicker needs a user gesture in some browsers */
+              }
+            }}
+            onFocus={pinColorRange}
             onChange={(e) => onChange(e.target.value)}
           />
         </label>
@@ -158,19 +189,24 @@ export function TextFormatControls({
 }) {
   const update = useEditorStore((s) => s.updateLayer);
   const swatch = useEditorStore((s) => s.highlight);
-  const live = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeLiveTextRange,
     getLiveTextRange,
     getLiveTextRange,
   );
-  const range =
-    live && live.id === layer.id && live.end > live.start ? live : null;
+  const range = getApplyTextRange(layer.id);
   const mixed = range ? rangeMarks(layer, range) : null;
 
   const applyMarks = (marks: TextMark) => {
-    if (!range) return;
-    const spans = applyRangeMarks(normalizeSpans(layer), range, marks);
+    const target = getApplyTextRange(layer.id);
+    if (!target) return;
+    const spans = applyRangeMarks(normalizeSpans(layer), target, marks);
     update(layer.id, { spans, text: spansToText(spans) });
+    const editor = document.querySelector("[data-text-editor]");
+    if (editor instanceof HTMLElement) {
+      editor.focus();
+      setOffsetsOnRoot(editor, target.start, target.end);
+    }
   };
 
   const flag = (key: "bold" | "italic" | "underline" | "strikethrough" | "superscript" | "subscript") => {
@@ -207,8 +243,8 @@ export function TextFormatControls({
       <NumberField
         value={fontSize}
         onChange={(v) => applyMarks({ fontSize: v })}
-        className="w-14 shrink-0"
-        steppers={false}
+        onEditStart={pinColorRange}
+        className="w-[4.25rem] shrink-0"
       />
       <ColorCirclePicker
         color={textColor}

@@ -5,7 +5,7 @@ import { PAGE_PAD_X, PAGE_PAD_Y, RULER_SIZE } from "@/lib/stage";
 import type { TextLayer } from "@/lib/types";
 import { layerAabb } from "@/lib/transform";
 import { TextFormatControls } from "./text-toolbar";
-import { offsetsFromRoot, setLiveTextRange } from "@/lib/text-spans";
+import { pinTextFormatRange } from "@/lib/text-spans";
 
 export function TextFormatBar() {
   const selectedIds = useEditorStore((s) => s.selectedIds);
@@ -48,16 +48,8 @@ export function TextFormatBar() {
       }}
       onPointerDown={(e) => {
         e.stopPropagation();
-        const editor = document.querySelector("[data-text-editor]");
-        const editingId = useEditorStore.getState().editingTextId;
-        if (editor instanceof HTMLElement && editingId) {
-          const r = offsetsFromRoot(editor);
-          setLiveTextRange({ id: editingId, ...r });
-        }
-        const target = e.target as HTMLElement;
-        if (!target.closest("input, textarea, [contenteditable]")) {
-          e.preventDefault();
-        }
+        e.preventDefault();
+        pinTextFormatRange(useEditorStore.getState().editingTextId);
       }}
     >
       <TextFormatControls layer={layer} compact />
