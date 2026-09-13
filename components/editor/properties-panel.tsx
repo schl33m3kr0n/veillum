@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link2, Link2Off } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,110 +36,10 @@ import { removeImageBackground } from "@/lib/remove-background";
 export function PropertiesPanel() {
   const selectedIds = useEditorStore((s) => s.selectedIds);
   const layers = useEditorStore((s) => s.layers);
-  const page = useEditorStore((s) => s.page);
   const layer = layers.find((l) => l.id === selectedIds[0]);
-  const updatePage = useEditorStore((s) => s.updatePage);
 
   return (
     <div>
-      <Section title="Page">
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Width">
-            <NumberField value={page.width} onChange={(width) => updatePage({ width })} />
-          </Field>
-          <Field label="Height">
-            <NumberField value={page.height} onChange={(height) => updatePage({ height })} />
-          </Field>
-        </div>
-        <div className="mt-2 flex gap-1">
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => updatePage({ width: 960, height: 720 })}
-          >
-            Landscape
-          </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => updatePage({ width: 720, height: 960 })}
-          >
-            Portrait
-          </Button>
-        </div>
-        <Field label="Paper" className="mt-2">
-          <Input
-            type="color"
-            value={page.background}
-            onChange={(e) => updatePage({ background: e.target.value })}
-            className="h-7 p-1"
-          />
-        </Field>
-        <div className="mt-2 flex items-center justify-between">
-          <label htmlFor="margins-visible" className="text-xs">
-            Margins
-          </label>
-          <Switch
-            id="margins-visible"
-            checked={page.marginsVisible !== false}
-            onCheckedChange={(marginsVisible) => updatePage({ marginsVisible })}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {(["top", "right", "bottom", "left"] as const).map((side) => (
-            <Field key={side} label={side}>
-              <NumberField
-                value={page.margins[side]}
-                onChange={(v) =>
-                  updatePage({ margins: { ...page.margins, [side]: v } })
-                }
-              />
-            </Field>
-          ))}
-        </div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs">Ruler</span>
-          <Switch
-            checked={page.ruler}
-            onCheckedChange={(ruler) => updatePage({ ruler })}
-          />
-        </div>
-        <Field label="Grid">
-          <Select
-            value={page.grid.visible ? page.grid.type : "none"}
-            onValueChange={(v) =>
-              updatePage({
-                grid: {
-                  ...page.grid,
-                  type: v === "none" ? "square" : (v as "square" | "triangle" | "radial"),
-                  visible: v !== "none",
-                },
-              })
-            }
-          >
-            <SelectTrigger size="sm" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Hidden</SelectItem>
-              <SelectItem value="square">Square</SelectItem>
-              <SelectItem value="triangle">Triangle</SelectItem>
-              <SelectItem value="radial">Radial</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <SliderField
-          label="Grid size"
-          value={page.grid.size}
-          min={8}
-          max={64}
-          step={1}
-          onChange={(size) => updatePage({ grid: { ...page.grid, size } })}
-          format={(v) => `${v}px`}
-        />
-        <HeaderFooterFields />
-      </Section>
-
       {selectedIds.length > 0 && (
         <div className="space-y-2 px-3 py-2">
           <AlignTools />
@@ -166,56 +66,29 @@ export function PropertiesPanel() {
   );
 }
 
-function HeaderFooterFields() {
-  const page = useEditorStore((s) => s.page);
-  const updatePage = useEditorStore((s) => s.updatePage);
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs">Header</span>
-        <Switch
-          checked={page.header.enabled}
-          onCheckedChange={(enabled) =>
-            updatePage({ header: { ...page.header, enabled } })
-          }
-        />
-      </div>
-      <Input
-        value={page.header.text}
-        onChange={(e) =>
-          updatePage({ header: { ...page.header, text: e.target.value } })
-        }
-        className="h-7 text-xs"
-        {...historyFieldProps<HTMLInputElement>()}
-      />
-      <div className="flex items-center justify-between">
-        <span className="text-xs">Footer</span>
-        <Switch
-          checked={page.footer.enabled}
-          onCheckedChange={(enabled) =>
-            updatePage({ footer: { ...page.footer, enabled } })
-          }
-        />
-      </div>
-      <Input
-        value={page.footer.text}
-        onChange={(e) =>
-          updatePage({ footer: { ...page.footer, text: e.target.value } })
-        }
-        className="h-7 text-xs"
-        {...historyFieldProps<HTMLInputElement>()}
-      />
-    </div>
-  );
-}
-
 function CommonFields({ layer }: { layer: Layer }) {
   const update = useEditorStore((s) => s.updateLayer);
   const locked = !!layer.lockProportions;
-  const ratio =
-    layer.aspectRatio && layer.aspectRatio > 0
-      ? layer.aspectRatio
-      : layer.width / Math.max(1, layer.height);
+  const ratioRef = useRef(layer.width / Math.max(1, layer.height));
+  const captureRatio = () => {
+    ratioRef.current = layer.width / Math.max(1, layer.height);
+  };
+  const applyWidth = (width: number) => {
+    if (!locked) {
+      update(layer.id, { width });
+      return;
+    }
+    const ratio = ratioRef.current > 0 ? ratioRef.current : layer.width / Math.max(1, layer.height);
+    update(layer.id, { width, height: Math.max(8, width / ratio) });
+  };
+  const applyHeight = (height: number) => {
+    if (!locked) {
+      update(layer.id, { height });
+      return;
+    }
+    const ratio = ratioRef.current > 0 ? ratioRef.current : layer.width / Math.max(1, layer.height);
+    update(layer.id, { height, width: Math.max(8, height * ratio) });
+  };
   return (
     <Section title="Transform">
       <div className="grid grid-cols-2 gap-2">
@@ -228,27 +101,15 @@ function CommonFields({ layer }: { layer: Layer }) {
         <Field label="W">
           <NumberField
             value={Math.round(layer.width)}
-            onChange={(width) =>
-              update(
-                layer.id,
-                locked
-                  ? { width, height: Math.max(8, width / ratio) }
-                  : { width },
-              )
-            }
+            onEditStart={captureRatio}
+            onChange={applyWidth}
           />
         </Field>
         <Field label="H">
           <NumberField
             value={Math.round(layer.height)}
-            onChange={(height) =>
-              update(
-                layer.id,
-                locked
-                  ? { height, width: Math.max(8, height * ratio) }
-                  : { height },
-              )
-            }
+            onEditStart={captureRatio}
+            onChange={applyHeight}
           />
         </Field>
       </div>
@@ -265,12 +126,10 @@ function CommonFields({ layer }: { layer: Layer }) {
           <Switch
             id="lock-proportions"
             checked={locked}
-            onCheckedChange={(on) =>
-              update(layer.id, {
-                lockProportions: on,
-                aspectRatio: on ? layer.width / Math.max(1, layer.height) : layer.aspectRatio,
-              })
-            }
+            onCheckedChange={(lockProportions) => {
+              if (lockProportions) captureRatio();
+              update(layer.id, { lockProportions });
+            }}
           />
         </div>
       </div>

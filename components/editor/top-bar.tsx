@@ -13,6 +13,7 @@ import {
   Minimize2,
   FlipHorizontal2,
   FlipVertical2,
+  FileSliders,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   documentToSvg,
   downloadBlob,
   projectJson,
 } from "@/lib/export";
 import { AlignTools } from "./align-tools";
 import { CombineTools } from "./combine-tools";
+import { PageControls } from "./page-controls";
 import { openProjectFile, saveProjectFile } from "./file-actions";
 import { isFullscreen, toggleFullscreen } from "@/lib/fullscreen";
 import Link from "next/link";
@@ -98,6 +105,7 @@ export function TopBar() {
           </TooltipTrigger>
           <TooltipContent>Save on this site ⌘S · disk copy ⌘⇧S</TooltipContent>
         </Tooltip>
+        <PageMenu />
       </div>
       <SaveStatus />
       <Tooltip>
@@ -193,6 +201,34 @@ export function TopBar() {
         <ExportMenu />
       </div>
     </header>
+  );
+}
+
+function PageMenu() {
+  const page = useEditorStore((s) => s.page);
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="ghost">
+          <FileSliders />
+          Page
+          <span className="hidden tabular-nums text-muted-foreground lg:inline">
+            {Math.round(page.width)}×{Math.round(page.height)}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 max-h-[min(80vh,560px)] overflow-y-auto">
+        <div className="mb-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Page
+          </p>
+          <p className="text-[11px] tabular-nums text-muted-foreground">
+            {Math.round(page.width)} × {Math.round(page.height)}
+          </p>
+        </div>
+        <PageControls />
+      </PopoverContent>
+    </Popover>
   );
 }
 

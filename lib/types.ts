@@ -214,8 +214,6 @@ export interface LayerBase {
   width: number;
   height: number;
   lockProportions?: boolean;
-  /** width / height captured when proportions were locked */
-  aspectRatio?: number;
   rotation: number;
   scaleX: number;
   scaleY: number;

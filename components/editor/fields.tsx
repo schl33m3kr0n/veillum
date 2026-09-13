@@ -96,12 +96,14 @@ export function SliderField({
 export function NumberField({
   value,
   onChange,
+  onEditStart,
   className,
   step = 1,
   steppers = true,
 }: {
   value: number;
   onChange: (v: number) => void;
+  onEditStart?: () => void;
   className?: string;
   step?: number;
   steppers?: boolean;
@@ -119,7 +121,10 @@ export function NumberField({
     if (!Number.isFinite(n)) return;
     onChange(n);
   };
-  const nudge = (dir: 1 | -1) => onChange(current + dir * step);
+  const nudge = (dir: 1 | -1) => {
+    onEditStart?.();
+    onChange(current + dir * step);
+  };
 
   return (
     <div className={cn("relative min-w-0", className)}>
@@ -134,6 +139,7 @@ export function NumberField({
         onFocus={mergeFocus(() => {
           setFocused(true);
           setDraft(String(current));
+          onEditStart?.();
           beginHistoryGesture();
         })}
         onBlur={mergeFocus(() => {
