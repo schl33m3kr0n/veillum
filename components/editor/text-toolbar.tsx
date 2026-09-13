@@ -2,7 +2,6 @@
 
 import {
   Bold,
-  Highlighter,
   Italic,
   Strikethrough,
   Subscript,
@@ -19,6 +18,7 @@ import { useEditorStore } from "@/lib/editor-store";
 import { type TextAlign, type TextLayer } from "@/lib/types";
 import { NumberField } from "./fields";
 import { FontSelect } from "./font-select";
+import { HighlighterIcon } from "./highlighter-icon";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_HIGHLIGHT = "#f5d76e";
@@ -138,7 +138,7 @@ export function TextFormatControls({
         aria-label="Highlight"
         title="Highlight"
       >
-        <Highlighter />
+        <HighlighterIcon color={highlightColor} />
       </Toggle>
       <label
         className="relative flex size-7 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-input"

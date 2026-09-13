@@ -26,6 +26,7 @@ import { useEditorStore } from "@/lib/editor-store";
 import { extractRawPreview } from "@/lib/raw";
 import type { Tool } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { HighlighterIcon } from "./highlighter-icon";
 
 const TOOLS: { id: Tool; label: string; shortcut: string; icon: typeof Type }[] = [
   { id: "select", label: "Select", shortcut: "V", icon: MousePointer2 },
@@ -45,6 +46,7 @@ const TOOLS: { id: Tool; label: string; shortcut: string; icon: typeof Type }[] 
 export function ToolRail() {
   const tool = useEditorStore((s) => s.tool);
   const setTool = useEditorStore((s) => s.setTool);
+  const highlight = useEditorStore((s) => s.highlight);
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -59,12 +61,17 @@ export function ToolRail() {
                 variant="ghost"
                 className={cn(
                   "size-9",
-                  tool === t.id && "bg-primary/15 text-primary",
+                  tool === t.id && "bg-primary/15",
+                  tool === t.id && t.id !== "highlighter" && "text-primary",
                 )}
                 onClick={() => setTool(t.id)}
                 aria-label={t.label}
               >
-                <Icon />
+                {t.id === "highlighter" ? (
+                  <HighlighterIcon color={highlight} />
+                ) : (
+                  <Icon />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
