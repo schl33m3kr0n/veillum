@@ -1,4 +1,5 @@
 import { rgbToHex } from "./colors";
+import { clientToLocal } from "./pointer-space";
 
 export const LOUPE_GRID = 11;
 export const LOUPE_CELL = 10;
@@ -24,29 +25,23 @@ export async function capturePageSnapshot(
       left: "0",
       top: "0",
       zoom: "1",
+      overflow: "hidden",
     },
   });
 }
 
-export function pageToSnapshotPixel(
+export function snapshotPixelFromClient(
   snapshot: HTMLCanvasElement,
-  pageWidth: number,
-  pageHeight: number,
-  pageX: number,
-  pageY: number,
+  pageEl: HTMLElement,
+  clientX: number,
+  clientY: number,
 ): { x: number; y: number } {
-  if (pageWidth <= 0 || pageHeight <= 0) return { x: 0, y: 0 };
+  const local = clientToLocal(pageEl, clientX, clientY);
+  const w = Math.max(1, pageEl.offsetWidth);
+  const h = Math.max(1, pageEl.offsetHeight);
   return {
-    x: clamp(
-      Math.floor((pageX / pageWidth) * snapshot.width),
-      0,
-      snapshot.width - 1,
-    ),
-    y: clamp(
-      Math.floor((pageY / pageHeight) * snapshot.height),
-      0,
-      snapshot.height - 1,
-    ),
+    x: clamp(Math.floor((local.x / w) * snapshot.width), 0, snapshot.width - 1),
+    y: clamp(Math.floor((local.y / h) * snapshot.height), 0, snapshot.height - 1),
   };
 }
 
@@ -64,14 +59,13 @@ export function snapshotHex(
   return rgbToHex(pix[0], pix[1], pix[2]);
 }
 
-export function pickColorAtPage(
+export function pickColorAtClient(
   snapshot: HTMLCanvasElement,
-  pageWidth: number,
-  pageHeight: number,
-  pageX: number,
-  pageY: number,
+  pageEl: HTMLElement,
+  clientX: number,
+  clientY: number,
 ): string {
-  const at = pageToSnapshotPixel(snapshot, pageWidth, pageHeight, pageX, pageY);
+  const at = snapshotPixelFromClient(snapshot, pageEl, clientX, clientY);
   return snapshotHex(snapshot, at.x, at.y);
 }
 

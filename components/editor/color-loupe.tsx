@@ -33,12 +33,10 @@ export function ColorLoupe({
     <div
       className="pointer-events-none absolute z-50"
       style={{
-        left: boardX,
-        top: boardY,
+        left: boardX - LOUPE_PX / 2,
+        top: boardY - LOUPE_PX / 2,
         width: LOUPE_PX,
         height: LOUPE_PX,
-        marginLeft: -LOUPE_PX / 2,
-        marginTop: -LOUPE_PX / 2,
       }}
     >
       <canvas
