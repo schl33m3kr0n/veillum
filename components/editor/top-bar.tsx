@@ -105,7 +105,6 @@ export function TopBar() {
           </TooltipTrigger>
           <TooltipContent>Save on this site ⌘S · disk copy ⌘⇧S</TooltipContent>
         </Tooltip>
-        <PageMenu />
       </div>
       <SaveStatus />
       <Tooltip>
@@ -185,6 +184,7 @@ export function TopBar() {
       <AlignTools compact />
       <CombineTools compact />
       <div className="ml-auto flex items-center gap-1">
+        <PageMenu />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -205,27 +205,18 @@ export function TopBar() {
 }
 
 function PageMenu() {
-  const page = useEditorStore((s) => s.page);
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button size="sm" variant="ghost">
           <FileSliders />
           Page
-          <span className="hidden tabular-nums text-muted-foreground lg:inline">
-            {Math.round(page.width)}×{Math.round(page.height)}
-          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 max-h-[min(80vh,560px)] overflow-y-auto">
-        <div className="mb-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Page
-          </p>
-          <p className="text-[11px] tabular-nums text-muted-foreground">
-            {Math.round(page.width)} × {Math.round(page.height)}
-          </p>
-        </div>
+      <PopoverContent align="end" className="w-80 max-h-[min(80vh,560px)] overflow-y-auto">
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Page
+        </p>
         <PageControls />
       </PopoverContent>
     </Popover>
