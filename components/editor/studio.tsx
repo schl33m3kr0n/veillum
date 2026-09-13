@@ -72,6 +72,11 @@ export function Studio() {
             Click to place an anchor; drag to pull smooth handles. Click the first point to close. Enter finishes an open curve, Escape cancels. With Select, drag handles — hold Alt to break symmetry.
           </div>
         )}
+        {tool === "compass" && (
+          <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
+            Click to plant the needle, then drag the pencil to set the radius. Shift snaps the radius. Release to draw a circle.
+          </div>
+        )}
         {tool === "mask" && (
           <div className="flex h-9 items-center border-b border-border/60 bg-card px-3 text-xs text-muted-foreground">
             Select a layer, then paint the area to keep. Invert the mask in Properties.

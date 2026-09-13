@@ -77,7 +77,8 @@ export type Tool =
   | "eyedropper"
   | "instant-alpha"
   | "mask"
-  | "pan";
+  | "pan"
+  | "compass";
 
 export type ShapeKind =
   | "rect"

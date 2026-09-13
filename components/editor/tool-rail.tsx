@@ -14,6 +14,7 @@ import {
   Lasso,
   Hand,
   ImagePlus,
+  DraftingCompass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ const TOOLS: { id: Tool; label: string; shortcut: string; icon: typeof Type }[] 
   { id: "pen", label: "Pen", shortcut: "N", icon: PenTool },
   { id: "highlighter", label: "Highlighter", shortcut: "H", icon: Highlighter },
   { id: "shape", label: "Elements", shortcut: "S", icon: Square },
+  { id: "compass", label: "Compass", shortcut: "C", icon: DraftingCompass },
   { id: "bezier", label: "Bezier curve", shortcut: "B", icon: Spline },
   { id: "eyedropper", label: "Color", shortcut: "I", icon: Pipette },
   { id: "instant-alpha", label: "Instant Alpha", shortcut: "A", icon: WandSparkles },

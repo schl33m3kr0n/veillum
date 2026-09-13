@@ -136,6 +136,7 @@ interface EditorState {
 
   addTextAt: (x: number, y: number) => string;
   addShapeAt: (x: number, y: number, w: number, h: number) => string;
+  addCompassCircle: (cx: number, cy: number, r: number) => string;
   addPath: (tool: "pencil" | "pen" | "highlighter", points: number[]) => string;
   addBezier: (points: BezierPoint[], closed: boolean) => string;
   setBezierPoints: (
@@ -501,6 +502,30 @@ export const useEditorStore = create<EditorState>()(
           arrowHead: s.shapeArrowHead,
           wedge: s.shapeWedge,
           trackFill: s.shapeTrackFill,
+        });
+        get().addLayer(layer);
+        return layer.id;
+      },
+
+      addCompassCircle: (cx, cy, r) => {
+        const s = get();
+        const d = Math.max(8, r * 2);
+        const layer = createShapeLayer("ellipse", {
+          name: "Compass",
+          x: cx - d / 2,
+          y: cy - d / 2,
+          width: d,
+          height: d,
+          lockProportions: true,
+          fill: s.color,
+          stroke: s.color,
+          fillEnabled: false,
+          strokeEnabled: true,
+          strokeWidth: Math.max(1.25, s.shapeStrokeWidth),
+          fillStyle: s.shapeFillStyle,
+          fillTo: s.shapeFillTo,
+          fillStops: s.shapeFillStops,
+          fillAngle: s.shapeFillAngle,
         });
         get().addLayer(layer);
         return layer.id;

@@ -119,6 +119,7 @@ export function useEditorHotkeys() {
       else if (e.key === "n" || e.key === "N") store.setTool("pen");
       else if (e.key === "h" || e.key === "H") store.setTool("highlighter");
       else if (e.key === "s" || e.key === "S") store.setTool("shape");
+      else if (e.key === "c" || e.key === "C") store.setTool("compass");
       else if (e.key === "b" || e.key === "B") store.setTool("bezier");
       else if (e.key === "i" || e.key === "I") store.setTool("eyedropper");
       else if (e.key === "m" || e.key === "M") store.setTool("mask");

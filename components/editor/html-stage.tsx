@@ -17,6 +17,7 @@ import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
 import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
+import { CompassOverlay } from "./compass-overlay";
 
 export default function HtmlStage({
   width,
@@ -66,6 +67,14 @@ export default function HtmlStage({
     w: number;
     h: number;
   } | null>(null);
+  const [compassDraft, setCompassDraft] = useState<{
+    cx: number;
+    cy: number;
+    r: number;
+    angle: number;
+  } | null>(null);
+  const compassDraftRef = useRef(compassDraft);
+  compassDraftRef.current = compassDraft;
   const [bezierDraft, setBezierDraft] = useState<BezierPoint[]>([]);
   const [bezierDragging, setBezierDragging] = useState(false);
   const [maskPts, setMaskPts] = useState<number[] | null>(null);
@@ -343,6 +352,13 @@ export default function HtmlStage({
       return;
     }
 
+    if (current === "compass") {
+      drawing.current = true;
+      setCompassDraft({ cx: p.x, cy: p.y, r: 0, angle: 0 });
+      e.stopPropagation();
+      return;
+    }
+
     if (current === "bezier") {
       e.stopPropagation();
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -448,6 +464,16 @@ export default function HtmlStage({
     if (shapeDraft) {
       setShapeDraft((d) => (d ? { ...d, w: p.x - d.x, h: p.y - d.y } : d));
     }
+    setCompassDraft((d) => {
+      if (!d) return d;
+      let r = Math.hypot(p.x - d.cx, p.y - d.cy);
+      if (e.shiftKey) r = Math.round(r / 8) * 8;
+      return {
+        ...d,
+        r,
+        angle: Math.atan2(p.y - d.cy, p.x - d.cx),
+      };
+    });
     if (marqueeRef.current) {
       const origin = marqueeRef.current;
       const next = { ...origin, w: p.x - origin.x, h: p.y - origin.y };
@@ -475,6 +501,10 @@ export default function HtmlStage({
       const w = Math.abs(shapeDraft.w);
       const h = Math.abs(shapeDraft.h);
       if (w > 4 && h > 4) store.addShapeAt(x, y, w, h);
+    }
+    const compass = compassDraftRef.current;
+    if (compass && compass.r > 4) {
+      store.addCompassCircle(compass.cx, compass.cy, compass.r);
     }
     if (maskPts && maskPts.length > 4) {
       const id = store.selectedIds[0];
@@ -533,6 +563,7 @@ export default function HtmlStage({
     });
     setDraftPts(null);
     setShapeDraft(null);
+    setCompassDraft(null);
     setMarquee(null);
     marqueeRef.current = null;
     setMaskPts(null);
@@ -778,6 +809,15 @@ export default function HtmlStage({
                 opacity={tool === "highlighter" ? 0.45 : 1}
               />
             </svg>
+          )}
+          {compassDraft && (
+            <CompassOverlay
+              cx={compassDraft.cx}
+              cy={compassDraft.cy}
+              r={compassDraft.r}
+              angle={compassDraft.angle}
+              color={color}
+            />
           )}
           {shapeDraft && (
             <div
