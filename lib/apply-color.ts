@@ -1,4 +1,10 @@
 import { useEditorStore } from "./editor-store";
+import {
+  applyRangeMarks,
+  getLiveTextRange,
+  normalizeSpans,
+  spansToText,
+} from "./text-spans";
 
 /** Apply a picked color to the studio swatch and the primary selection. */
 export function applyStudioColor(next: string) {
@@ -7,8 +13,18 @@ export function applyStudioColor(next: string) {
   const selected = store.layers.find((l) => store.selectedIds.includes(l.id));
   if (!selected) return;
   if (selected.type === "text") {
-    store.updateLayer(selected.id, { color: next });
-  } else if (selected.type === "shape") {
+    const live = getLiveTextRange();
+    if (live && live.id === selected.id && live.end > live.start) {
+      const spans = applyRangeMarks(normalizeSpans(selected), live, {
+        color: next,
+      });
+      store.updateLayer(selected.id, { spans, text: spansToText(spans) });
+    } else {
+      store.updateLayer(selected.id, { color: next });
+    }
+    return;
+  }
+  if (selected.type === "shape") {
     if (selected.fillEnabled === false && selected.strokeEnabled) {
       store.updateLayer(selected.id, { stroke: next, strokeEnabled: true });
     } else {
@@ -22,7 +38,9 @@ export function applyStudioColor(next: string) {
       });
       store.setShapeFillEnabled(true);
     }
-  } else if (selected.type === "path" || selected.type === "bezier") {
+    return;
+  }
+  if (selected.type === "path" || selected.type === "bezier") {
     if (selected.type === "bezier" && selected.fillEnabled) {
       const stops = selected.fillStops?.map((s, i) =>
         i === 0 ? { ...s, color: next } : s,

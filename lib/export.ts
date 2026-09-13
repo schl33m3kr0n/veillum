@@ -4,7 +4,7 @@ import { shapeSvgPoints, pieGeometry } from "./shapes";
 import { fillDefsMarkup, fillPaint } from "./fill";
 import { svgNodesToMarkup } from "./svg-mark";
 import type { BezierLayer, Layer, Page, PathLayer, ShapeLayer, TextLayer } from "./types";
-import { displayText } from "./text";
+import { normalizeSpans, resolvedSpan } from "./text-spans";
 
 export type ExportFormat = "png" | "jpeg" | "webp" | "svg" | "json";
 
@@ -37,13 +37,21 @@ function layerToSvg(layer: Layer): string {
   const op = `opacity="${layer.opacity}"`;
   if (layer.type === "text") {
     const l = layer as TextLayer;
-    const text = escapeXml(displayText(l));
-    const weight = cssFontWeight(l.fontFamily, l.bold);
-    const style = l.italic ? "italic" : "normal";
-    const deco = [l.underline ? "underline" : "", l.strikethrough ? "line-through" : ""]
-      .filter(Boolean)
-      .join(" ");
-    return `<text ${t} ${op} fill="${l.color}" font-family="${escapeXml(l.fontFamily)}" font-size="${l.fontSize}" font-weight="${weight}" font-style="${style}" letter-spacing="${l.letterSpacing}" text-decoration="${deco}">${text}</text>`;
+    const spans = normalizeSpans(l);
+    const parts = spans.map((span) => {
+      const s = resolvedSpan(l, span);
+      const weight = cssFontWeight(s.fontFamily, s.bold);
+      const style = s.italic ? "italic" : "normal";
+      const deco = [s.underline ? "underline" : "", s.strikethrough ? "line-through" : ""]
+        .filter(Boolean)
+        .join(" ");
+      const fill = escapeXml(s.color);
+      const bg = s.highlight
+        ? ` style="background:${escapeXml(s.highlight)}"`
+        : "";
+      return `<tspan fill="${fill}" font-family="${escapeXml(s.fontFamily)}" font-size="${s.fontSize}" font-weight="${weight}" font-style="${style}" text-decoration="${deco}"${bg}>${escapeXml(span.text)}</tspan>`;
+    });
+    return `<text ${t} ${op} letter-spacing="${l.letterSpacing}">${parts.join("")}</text>`;
   }
   if (layer.type === "shape") {
     const s = layer as ShapeLayer;

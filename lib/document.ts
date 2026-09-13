@@ -46,7 +46,7 @@ function base(
 export function createTextLayer(
   overrides: Partial<TextLayer> = {},
 ): TextLayer {
-  return {
+  const layer: TextLayer = {
     ...base({ name: "Text", width: 320, height: 80 }),
     type: "text",
     text: "Write here",
@@ -73,6 +73,10 @@ export function createTextLayer(
     firstLineIndent: 0,
     padding: 8,
     ...overrides,
+  };
+  return {
+    ...layer,
+    spans: layer.spans ?? [{ text: layer.text }],
   };
 }
 

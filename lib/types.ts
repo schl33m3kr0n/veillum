@@ -231,9 +231,24 @@ export interface LayerBase {
   keyframes: Keyframe[];
 }
 
+export interface TextSpan {
+  text: string;
+  fontFamily?: FontFamily;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  superscript?: boolean;
+  subscript?: boolean;
+  color?: string;
+  highlight?: string | null;
+}
+
 export interface TextLayer extends LayerBase {
   type: "text";
   text: string;
+  spans?: TextSpan[];
   fontFamily: FontFamily;
   fontSize: number;
   bold: boolean;

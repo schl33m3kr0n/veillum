@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   Bold,
   Italic,
@@ -22,6 +22,15 @@ import {
 } from "@/components/ui/popover";
 import { useEditorStore } from "@/lib/editor-store";
 import { type TextAlign, type TextLayer } from "@/lib/types";
+import {
+  applyRangeMarks,
+  getLiveTextRange,
+  normalizeSpans,
+  rangeMarks,
+  spansToText,
+  subscribeLiveTextRange,
+  type TextMark,
+} from "@/lib/text-spans";
 import { NumberField } from "./fields";
 import { FontSelect } from "./font-select";
 import { HighlighterIcon } from "./highlighter-icon";
@@ -149,19 +158,39 @@ export function TextFormatControls({
 }) {
   const update = useEditorStore((s) => s.updateLayer);
   const swatch = useEditorStore((s) => s.highlight);
-  const patch = (partial: Partial<TextLayer>) => update(layer.id, partial);
-  const highlightOn = !!layer.highlight;
-  const highlightColor = layer.highlight ?? swatch ?? DEFAULT_HIGHLIGHT;
+  const live = useSyncExternalStore(
+    subscribeLiveTextRange,
+    getLiveTextRange,
+    getLiveTextRange,
+  );
+  const range =
+    live && live.id === layer.id && live.end > live.start ? live : null;
+  const mixed = range ? rangeMarks(layer, range) : null;
 
-  const setTextColor = (color: string) => {
-    patch({ color });
-    useEditorStore.getState().setColor(color);
+  const applyMarks = (marks: TextMark) => {
+    if (!range) return;
+    const spans = applyRangeMarks(normalizeSpans(layer), range, marks);
+    update(layer.id, { spans, text: spansToText(spans) });
   };
 
-  const setHighlightColor = (highlight: string) => {
-    useEditorStore.getState().setHighlight(highlight);
-    patch({ highlight });
+  const flag = (key: "bold" | "italic" | "underline" | "strikethrough" | "superscript" | "subscript") => {
+    if (mixed) return !!mixed[key];
+    return !!layer[key];
   };
+
+  const highlightOn = mixed
+    ? mixed.highlight !== undefined
+      ? !!mixed.highlight
+      : false
+    : !!layer.highlight;
+  const highlightColor =
+    (mixed?.highlight !== undefined ? mixed.highlight : null) ??
+    layer.highlight ??
+    swatch ??
+    DEFAULT_HIGHLIGHT;
+  const textColor = mixed?.color ?? layer.color;
+  const fontFamily = mixed?.fontFamily ?? layer.fontFamily;
+  const fontSize = mixed?.fontSize ?? layer.fontSize;
 
   return (
     <div
@@ -171,59 +200,62 @@ export function TextFormatControls({
       )}
     >
       <FontSelect
-        value={layer.fontFamily}
-        onValueChange={(fontFamily) => patch({ fontFamily })}
+        value={fontFamily}
+        onValueChange={(family) => applyMarks({ fontFamily: family })}
         className={compact ? "w-36 shrink-0" : "w-44"}
       />
       <NumberField
-        value={layer.fontSize}
-        onChange={(v) => patch({ fontSize: v })}
+        value={fontSize}
+        onChange={(v) => applyMarks({ fontSize: v })}
         className="w-14 shrink-0"
         steppers={false}
       />
       <ColorCirclePicker
-        color={layer.color}
+        color={textColor}
         title="Text color"
-        onChange={setTextColor}
+        onChange={(color) => {
+          useEditorStore.getState().setColor(color);
+          applyMarks({ color });
+        }}
       />
       <Separator orientation="vertical" className="mx-0.5 h-6" />
       <Toggle
         size="sm"
-        pressed={!!layer.bold}
-        onPressedChange={(v) => patch({ bold: v })}
+        pressed={flag("bold")}
+        onPressedChange={(v) => applyMarks({ bold: v })}
         aria-label="Bold"
       >
         <Bold />
       </Toggle>
       <Toggle
         size="sm"
-        pressed={!!layer.italic}
-        onPressedChange={(v) => patch({ italic: v })}
+        pressed={flag("italic")}
+        onPressedChange={(v) => applyMarks({ italic: v })}
         aria-label="Italic"
       >
         <Italic />
       </Toggle>
       <Toggle
         size="sm"
-        pressed={!!layer.underline}
-        onPressedChange={(v) => patch({ underline: v })}
+        pressed={flag("underline")}
+        onPressedChange={(v) => applyMarks({ underline: v })}
         aria-label="Underline"
       >
         <Underline />
       </Toggle>
       <Toggle
         size="sm"
-        pressed={!!layer.strikethrough}
-        onPressedChange={(v) => patch({ strikethrough: v })}
+        pressed={flag("strikethrough")}
+        onPressedChange={(v) => applyMarks({ strikethrough: v })}
         aria-label="Strikethrough"
       >
         <Strikethrough />
       </Toggle>
       <Toggle
         size="sm"
-        pressed={!!layer.superscript}
+        pressed={flag("superscript")}
         onPressedChange={(v) =>
-          patch({ superscript: v, subscript: v ? false : layer.subscript })
+          applyMarks({ superscript: v, subscript: v ? false : undefined })
         }
         aria-label="Superscript"
       >
@@ -231,9 +263,9 @@ export function TextFormatControls({
       </Toggle>
       <Toggle
         size="sm"
-        pressed={!!layer.subscript}
+        pressed={flag("subscript")}
         onPressedChange={(v) =>
-          patch({ subscript: v, superscript: v ? false : layer.superscript })
+          applyMarks({ subscript: v, superscript: v ? false : undefined })
         }
         aria-label="Subscript"
       >
@@ -262,14 +294,17 @@ export function TextFormatControls({
       ))}
       <Separator orientation="vertical" className="mx-0.5 h-6" />
       <HighlightHoverPicker
-        color={highlightColor}
-        onChange={setHighlightColor}
+        color={highlightColor || DEFAULT_HIGHLIGHT}
+        onChange={(highlight) => {
+          useEditorStore.getState().setHighlight(highlight);
+          applyMarks({ highlight });
+        }}
       >
         <Toggle
           size="sm"
           pressed={highlightOn}
           onPressedChange={(on) =>
-            patch({ highlight: on ? highlightColor : null })
+            applyMarks({ highlight: on ? highlightColor : null })
           }
           aria-label="Highlight"
           title="Highlight"

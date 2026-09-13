@@ -5,9 +5,9 @@ import { bezierPath, dashArray } from "@/lib/geometry";
 import { fillPaint } from "@/lib/fill";
 import { pieGeometry, shapeSvgPoints } from "@/lib/shapes";
 import { resolveSvgPaint, svgMarkViewBox, svgNodeStrokeWidth } from "@/lib/svg-mark";
-import { displayText, textDecoration } from "@/lib/text";
-import { useEditorStore } from "@/lib/editor-store";
 import { cssFontFamily, cssFontWeight } from "@/lib/fonts";
+import { useEditorStore } from "@/lib/editor-store";
+import { marksAttr, normalizeSpans, resolvedSpan } from "@/lib/text-spans";
 import type { BezierLayer, ImageLayer, Layer, PathLayer, ShapeLayer, TextLayer } from "@/lib/types";
 import { FillDefs } from "./fill-defs";
 import { useProcessedImage } from "./use-processed-image";
@@ -90,10 +90,7 @@ export function HtmlLayer({
 }
 
 function TextContent({ layer }: { layer: TextLayer }) {
-  const size =
-    layer.superscript || layer.subscript
-      ? layer.fontSize * 0.62
-      : layer.fontSize;
+  const spans = normalizeSpans(layer);
   const tracking = layer.letterSpacing + layer.kerning * 0.4;
   const whiteSpace =
     layer.orientation === "vertical" ? "pre-wrap" : "pre-wrap";
@@ -105,26 +102,19 @@ function TextContent({ layer }: { layer: TextLayer }) {
         padding: layer.padding,
         paddingLeft: layer.padding + layer.indent,
         color: layer.color,
-        background: layer.highlight ?? "transparent",
         boxDecorationBreak: "clone",
         WebkitBoxDecorationBreak: "clone",
         fontFamily: cssFontFamily(layer.fontFamily),
-        fontSize: size,
+        fontSize: layer.fontSize,
         fontStyle: layer.italic ? "italic" : "normal",
         fontWeight: cssFontWeight(layer.fontFamily, layer.bold),
         lineHeight: layer.lineHeight,
         letterSpacing: tracking,
         textAlign: layer.align,
-        textDecoration: textDecoration(layer) || undefined,
         fontVariantLigatures: layer.ligatures ? "common-ligatures" : "none",
         fontKerning: layer.kerning !== 0 ? "normal" : "none",
         fontVariantCaps:
           layer.capitalization === "small-caps" ? "small-caps" : "normal",
-        verticalAlign: layer.superscript
-          ? "super"
-          : layer.subscript
-            ? "sub"
-            : undefined,
         writingMode:
           layer.orientation === "vertical" ? "vertical-rl" : "horizontal-tb",
         textIndent: layer.firstLineIndent,
@@ -133,7 +123,39 @@ function TextContent({ layer }: { layer: TextLayer }) {
         userSelect: "none",
       }}
     >
-      {displayText(layer)}
+      {spans.map((span, i) => {
+        const s = resolvedSpan(layer, span);
+        const size =
+          s.superscript || s.subscript ? s.fontSize * 0.62 : s.fontSize;
+        const deco = [
+          s.underline ? "underline" : "",
+          s.strikethrough ? "line-through" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        return (
+          <span
+            key={i}
+            data-marks={marksAttr(span)}
+            style={{
+              color: s.color,
+              background: s.highlight ?? "transparent",
+              fontFamily: cssFontFamily(s.fontFamily),
+              fontSize: size,
+              fontStyle: s.italic ? "italic" : "normal",
+              fontWeight: cssFontWeight(s.fontFamily, s.bold),
+              textDecoration: deco || undefined,
+              verticalAlign: s.superscript
+                ? "super"
+                : s.subscript
+                  ? "sub"
+                  : undefined,
+            }}
+          >
+            {span.text}
+          </span>
+        );
+      })}
     </div>
   );
 }
