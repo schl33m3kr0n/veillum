@@ -6,53 +6,125 @@ export const LOUPE_CELL = 10;
 export const LOUPE_PX = LOUPE_GRID * LOUPE_CELL;
 export const LOUPE_MID = Math.floor(LOUPE_GRID / 2);
 
-const CAPTURE_STYLE = {
-  boxShadow: "none",
-  transform: "none",
-  left: "0",
-  top: "0",
-  zoom: "1",
-  scale: "1",
-  overflow: "hidden",
-};
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image load failed"));
+    img.src = src;
+  });
+}
 
-/** html-to-image's toCanvas sets `canvas.style.width = "${n}"` without `px`.
-Chromium treats that as invalid, so the canvas CSS size falls back to the
-default 300×150. Firefox is looser. Drawing the SVG into that mismatch
-stretches the snapshot — pointer mapping then reads the wrong pixel. */
+function coverSource(
+  nw: number,
+  nh: number,
+  dw: number,
+  dh: number,
+): { sx: number; sy: number; sw: number; sh: number } {
+  const scale = Math.max(dw / Math.max(1, nw), dh / Math.max(1, nh));
+  const sw = dw / scale;
+  const sh = dh / scale;
+  return {
+    sx: (nw - sw) / 2,
+    sy: (nh - sh) / 2,
+    sw,
+    sh,
+  };
+}
+
+function applyLayerTransform(
+  ctx: CanvasRenderingContext2D,
+  layerEl: HTMLElement,
+) {
+  ctx.translate(layerEl.offsetLeft, layerEl.offsetTop);
+  const t = getComputedStyle(layerEl).transform;
+  if (t && t !== "none") {
+    const m = new DOMMatrix(t);
+    ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f);
+  }
+  const opacity = Number(getComputedStyle(layerEl).opacity);
+  if (Number.isFinite(opacity)) ctx.globalAlpha *= opacity;
+  const blend = getComputedStyle(layerEl).mixBlendMode;
+  if (blend && blend !== "normal") {
+    ctx.globalCompositeOperation = blend as GlobalCompositeOperation;
+  }
+}
+
+function drawCoverImage(
+  ctx: CanvasRenderingContext2D,
+  img: CanvasImageSource & { naturalWidth?: number; naturalHeight?: number; width: number; height: number },
+  w: number,
+  h: number,
+) {
+  const nw = img.naturalWidth || img.width;
+  const nh = img.naturalHeight || img.height;
+  const s = coverSource(nw, nh, w, h);
+  ctx.drawImage(img, s.sx, s.sy, s.sw, s.sh, 0, 0, w, h);
+}
+
+async function svgDataUrl(svg: SVGSVGElement, w: number, h: number): Promise<string> {
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("width", `${w}`);
+  clone.setAttribute("height", `${h}`);
+  const xml = new XMLSerializer().serializeToString(clone);
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
+}
+
+async function paintLayer(
+  ctx: CanvasRenderingContext2D,
+  layerEl: HTMLElement,
+) {
+  const cs = getComputedStyle(layerEl);
+  if (cs.visibility === "hidden" || cs.display === "none") return;
+
+  const w = layerEl.offsetWidth;
+  const h = layerEl.offsetHeight;
+  if (w < 1 || h < 1) return;
+
+  ctx.save();
+  applyLayerTransform(ctx, layerEl);
+
+  const img = layerEl.querySelector("img");
+  if (img && img.complete && img.naturalWidth > 0) {
+    try {
+      drawCoverImage(ctx, img, w, h);
+    } catch {
+      /* tainted */
+    }
+    ctx.restore();
+    return;
+  }
+
+  const svg = layerEl.querySelector("svg");
+  if (svg) {
+    try {
+      const url = await svgDataUrl(svg, w, h);
+      const drawn = await loadImage(url);
+      ctx.drawImage(drawn, 0, 0, w, h);
+    } catch {
+      /* skip */
+    }
+    ctx.restore();
+    return;
+  }
+
+  const color = cs.color;
+  if (color && color !== "rgba(0, 0, 0, 0)") {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, w, h);
+  }
+  ctx.restore();
+}
+
+/** Raster the live page. Avoid html-to-image: Chromium draws that SVG
+foreignObject at the wrong size, so sampled pixels drift from the pointer. */
 export async function capturePageSnapshot(
   pageEl: HTMLElement,
   pageWidth: number,
   pageHeight: number,
 ): Promise<HTMLCanvasElement> {
-  const { toSvg } = await import("html-to-image");
-  const url = await toSvg(pageEl, {
-    cacheBust: true,
-    width: pageWidth,
-    height: pageHeight,
-    pixelRatio: 1,
-    style: CAPTURE_STYLE,
-  });
-
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("color snapshot failed"));
-    img.src = url;
-  });
-  if (img.decode) {
-    await img.decode().catch(() => undefined);
-  }
-
-  return rasterToPageSize(img, pageWidth, pageHeight);
-}
-
-function rasterToPageSize(
-  source: CanvasImageSource,
-  pageWidth: number,
-  pageHeight: number,
-): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = pageWidth;
   canvas.height = pageHeight;
@@ -62,8 +134,25 @@ function rasterToPageSize(
   if (!ctx) return canvas;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(source, 0, 0, pageWidth, pageHeight);
+  ctx.fillStyle = getComputedStyle(pageEl).backgroundColor || "#ffffff";
+  ctx.fillRect(0, 0, pageWidth, pageHeight);
+
+  const layers = pageEl.querySelectorAll<HTMLElement>("[data-layer-id]");
+  for (const layerEl of layers) {
+    await paintLayer(ctx, layerEl);
+  }
   return canvas;
+}
+
+export function snapshotPixelFromPage(
+  snapshot: HTMLCanvasElement,
+  pageX: number,
+  pageY: number,
+): { x: number; y: number } {
+  return {
+    x: clamp(Math.floor(pageX), 0, snapshot.width - 1),
+    y: clamp(Math.floor(pageY), 0, snapshot.height - 1),
+  };
 }
 
 export function snapshotPixelFromClient(
@@ -73,12 +162,7 @@ export function snapshotPixelFromClient(
   clientY: number,
 ): { x: number; y: number } {
   const local = clientToLocal(pageEl, clientX, clientY);
-  const w = Math.max(1, pageEl.offsetWidth);
-  const h = Math.max(1, pageEl.offsetHeight);
-  return {
-    x: clamp(Math.floor((local.x / w) * snapshot.width), 0, snapshot.width - 1),
-    y: clamp(Math.floor((local.y / h) * snapshot.height), 0, snapshot.height - 1),
-  };
+  return snapshotPixelFromPage(snapshot, local.x, local.y);
 }
 
 export function snapshotHex(
@@ -139,7 +223,7 @@ export function paintLoupe(
   ctx.strokeStyle = "rgba(255,255,255,0.95)";
   ctx.lineWidth = 2;
   ctx.strokeRect(hole + 1, hole + 1, LOUPE_CELL - 2, LOUPE_CELL - 2);
-  ctx.strokeStyle = "rgba(0,0,0,0.85)";
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
   ctx.lineWidth = 1;
   ctx.strokeRect(hole + 3, hole + 3, LOUPE_CELL - 6, LOUPE_CELL - 6);
   ctx.restore();

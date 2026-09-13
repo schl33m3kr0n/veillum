@@ -18,8 +18,8 @@ import { ColorLoupe } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
 import {
   capturePageSnapshot,
-  pickColorAtClient,
-  snapshotPixelFromClient,
+  snapshotHex,
+  snapshotPixelFromPage,
 } from "@/lib/color-loupe";
 import { clientToLocal, localToPage } from "@/lib/pointer-space";
 import {
@@ -57,8 +57,8 @@ export default function HtmlStage({
   const [loupe, setLoupe] = useState<{
     snapX: number;
     snapY: number;
-    boardX: number;
-    boardY: number;
+    clientX: number;
+    clientY: number;
   } | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -144,8 +144,11 @@ export default function HtmlStage({
     }
     let live = true;
     const capture = async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
       const el = pageRef.current;
-      if (!el) return;
+      if (!el || !live) return;
       try {
         const canvas = await capturePageSnapshot(el, page.width, page.height);
         if (live) {
@@ -339,9 +342,7 @@ export default function HtmlStage({
       const snap = colorSnap.current;
       const pageEl = pageRef.current;
       if (snap && pageEl) {
-        applyStudioColor(
-          pickColorAtClient(snap, pageEl, e.clientX, e.clientY),
-        );
+        applyStudioColor(snapshotHex(snap, Math.floor(p.x), Math.floor(p.y)));
         setLoupe(null);
       } else if (pageEl) {
         const shot = await capturePageSnapshot(
@@ -349,9 +350,7 @@ export default function HtmlStage({
           store.page.width,
           store.page.height,
         );
-        applyStudioColor(
-          pickColorAtClient(shot, pageEl, e.clientX, e.clientY),
-        );
+        applyStudioColor(snapshotHex(shot, Math.floor(p.x), Math.floor(p.y)));
         setLoupe(null);
       }
       e.stopPropagation();
@@ -482,22 +481,14 @@ export default function HtmlStage({
     const store = useEditorStore.getState();
 
     if (store.tool === "eyedropper" && store.colorLoupe) {
-      const board = boardRef.current;
-      const pageEl = pageRef.current;
       const snap = colorSnap.current;
-      if (p && board && pageEl && snap) {
-        const local = clientToLocal(board, e.clientX, e.clientY);
-        const at = snapshotPixelFromClient(
-          snap,
-          pageEl,
-          e.clientX,
-          e.clientY,
-        );
+      if (p && snap) {
+        const at = snapshotPixelFromPage(snap, p.x, p.y);
         setLoupe({
           snapX: at.x,
           snapY: at.y,
-          boardX: local.x,
-          boardY: local.y,
+          clientX: e.clientX,
+          clientY: e.clientY,
         });
       } else {
         setLoupe(null);
@@ -1129,8 +1120,8 @@ export default function HtmlStage({
           snapshot={colorShot}
           snapX={loupe.snapX}
           snapY={loupe.snapY}
-          boardX={loupe.boardX}
-          boardY={loupe.boardY}
+          clientX={loupe.clientX}
+          clientY={loupe.clientY}
         />
       )}
       <span className="sr-only">{shapeKind}</span>

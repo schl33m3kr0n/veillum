@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   LOUPE_PX,
   paintLoupe,
@@ -11,14 +12,14 @@ export function ColorLoupe({
   snapshot,
   snapX,
   snapY,
-  boardX,
-  boardY,
+  clientX,
+  clientY,
 }: {
   snapshot: HTMLCanvasElement;
   snapX: number;
   snapY: number;
-  boardX: number;
-  boardY: number;
+  clientX: number;
+  clientY: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hex = snapshotHex(snapshot, snapX, snapY);
@@ -29,12 +30,13 @@ export function ColorLoupe({
     paintLoupe(canvas, snapshot, snapX, snapY);
   }, [snapshot, snapX, snapY]);
 
-  return (
+  return createPortal(
     <div
-      className="pointer-events-none absolute z-50"
+      className="pointer-events-none z-50"
       style={{
-        left: boardX - LOUPE_PX / 2,
-        top: boardY - LOUPE_PX / 2,
+        position: "fixed",
+        left: clientX - LOUPE_PX / 2,
+        top: clientY - LOUPE_PX / 2,
         width: LOUPE_PX,
         height: LOUPE_PX,
       }}
@@ -59,6 +61,7 @@ export function ColorLoupe({
         />
         <span className="font-mono">{hex}</span>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
