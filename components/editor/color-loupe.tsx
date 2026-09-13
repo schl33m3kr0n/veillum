@@ -47,9 +47,10 @@ export function ColorLoupe({
         height={LOUPE_PX}
         className="block rounded-full"
         style={{
-          width: LOUPE_PX,
-          height: LOUPE_PX,
-          imageRendering: "pixelated",
+          width: `${LOUPE_PX}px`,
+          height: `${LOUPE_PX}px`,
+          maxWidth: `${LOUPE_PX}px`,
+          maxHeight: `${LOUPE_PX}px`,
           boxShadow: "0 0 0 2px #161310, 0 12px 28px rgba(0,0,0,0.45)",
         }}
       />

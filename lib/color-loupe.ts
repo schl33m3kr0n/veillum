@@ -81,35 +81,38 @@ export function paintLoupe(
   snapX: number,
   snapY: number,
 ) {
-  if (dest.width !== LOUPE_PX) dest.width = LOUPE_PX;
-  if (dest.height !== LOUPE_PX) dest.height = LOUPE_PX;
+  dest.width = LOUPE_PX;
+  dest.height = LOUPE_PX;
+  dest.style.width = `${LOUPE_PX}px`;
+  dest.style.height = `${LOUPE_PX}px`;
   const ctx = dest.getContext("2d");
   if (!ctx) return;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, LOUPE_PX, LOUPE_PX);
 
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(LOUPE_PX / 2, LOUPE_PX / 2, LOUPE_PX / 2 - 1, 0, Math.PI * 2);
+  ctx.clip();
+
   const srcX = snapX - LOUPE_MID;
   const srcY = snapY - LOUPE_MID;
-  ctx.drawImage(
-    snapshot,
-    srcX,
-    srcY,
-    LOUPE_GRID,
-    LOUPE_GRID,
-    0,
-    0,
-    LOUPE_PX,
-    LOUPE_PX,
-  );
+  for (let y = 0; y < LOUPE_GRID; y++) {
+    for (let x = 0; x < LOUPE_GRID; x++) {
+      ctx.fillStyle = snapshotHex(snapshot, srcX + x, srcY + y);
+      ctx.fillRect(x * LOUPE_CELL, y * LOUPE_CELL, LOUPE_CELL, LOUPE_CELL);
+    }
+  }
 
   const hole = LOUPE_MID * LOUPE_CELL;
   ctx.strokeStyle = "rgba(255,255,255,0.95)";
   ctx.lineWidth = 2;
   ctx.strokeRect(hole + 1, hole + 1, LOUPE_CELL - 2, LOUPE_CELL - 2);
-  ctx.strokeStyle = "rgba(0,0,0,0.8)";
+  ctx.strokeStyle = "rgba(0,0,0,0.85)";
   ctx.lineWidth = 1;
   ctx.strokeRect(hole + 3, hole + 3, LOUPE_CELL - 6, LOUPE_CELL - 6);
+  ctx.restore();
 }
 
 function clamp(n: number, min: number, max: number) {
