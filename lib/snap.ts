@@ -36,12 +36,16 @@ export function pageSnapLines(page: Page): { xs: number[]; ys: number[] } {
     xs.push(ml, (ml + mr) / 2, mr);
     ys.push(mt, (mt + mb) / 2, mb);
   }
-  if (page.grid.snap && page.grid.type === "square") {
-    const step = gridSpacing(page.grid);
-    for (let x = 0; x <= page.width; x += step) xs.push(x);
-    for (let y = 0; y <= page.height; y += step) ys.push(y);
-  }
   return { xs, ys };
+}
+
+const THRESHOLD_2D = 14;
+
+function snapToSquare(x: number, y: number, step: number) {
+  return {
+    x: Math.round(x / step) * step,
+    y: Math.round(y / step) * step,
+  };
 }
 
 function snapToTriangle(x: number, y: number, step: number) {
@@ -61,8 +65,7 @@ function snapToRadial(
   x: number,
   y: number,
   page: Page,
-  threshold: number,
-): { x: number; y: number; guides: SnapGuide[] } | null {
+): { x: number; y: number; guides: SnapGuide[] } {
   const cx = page.width / 2;
   const cy = page.height / 2;
   const step = gridSpacing(page.grid);
@@ -70,45 +73,38 @@ function snapToRadial(
   const dx = x - cx;
   const dy = y - cy;
   const r = Math.hypot(dx, dy);
-  const a = Math.atan2(dy, dx);
+  const a = r < 0.5 ? 0 : Math.atan2(dy, dx);
   const aStep = (Math.PI * 2) / spokes;
   const na = Math.round(a / aStep) * aStep;
   const nr = Math.round(r / step) * step;
-  const spoke = polarPoint(cx, cy, na, r);
-  const ring = polarPoint(cx, cy, a, nr);
-  const both = polarPoint(cx, cy, na, nr);
-  const cands = [
-    { pt: both, spoke: true, ring: true },
-    { pt: spoke, spoke: true, ring: false },
-    { pt: ring, spoke: false, ring: true },
-  ];
-  let best: (typeof cands)[number] | null = null;
-  let bestD = threshold;
-  for (const c of cands) {
-    const d = Math.hypot(c.pt.x - x, c.pt.y - y);
-    if (d <= bestD) {
-      bestD = d;
-      best = c;
-    }
-  }
-  if (!best) return null;
-  const guides: SnapGuide[] = [];
-  if (best.spoke) guides.push({ axis: "radial", pos: na, cx, cy });
-  if (best.ring) guides.push({ axis: "ring", pos: nr, cx, cy });
-  return { x: best.pt.x, y: best.pt.y, guides };
+  const pt = polarPoint(cx, cy, na, nr);
+  const guides: SnapGuide[] = [{ axis: "ring", pos: nr, cx, cy }];
+  if (nr > 0.5) guides.unshift({ axis: "radial", pos: na, cx, cy });
+  return { x: pt.x, y: pt.y, guides };
 }
 
-function snapCenterToGrid(
+function nearestGridIntersection(
   x: number,
   y: number,
   page: Page,
 ): { x: number; y: number; guides: SnapGuide[] } | null {
   if (!page.grid.snap) return null;
   const step = gridSpacing(page.grid);
+  let hit: { x: number; y: number; guides: SnapGuide[] };
   if (page.grid.type === "triangle") {
     const pt = snapToTriangle(x, y, step);
-    if (Math.hypot(pt.x - x, pt.y - y) > THRESHOLD) return null;
-    return {
+    hit = {
+      ...pt,
+      guides: [
+        { axis: "x", pos: pt.x },
+        { axis: "y", pos: pt.y },
+      ],
+    };
+  } else if (page.grid.type === "radial") {
+    hit = snapToRadial(x, y, page);
+  } else {
+    const pt = snapToSquare(x, y, step);
+    hit = {
       ...pt,
       guides: [
         { axis: "x", pos: pt.x },
@@ -116,35 +112,42 @@ function snapCenterToGrid(
       ],
     };
   }
-  if (page.grid.type === "radial") return snapToRadial(x, y, page, THRESHOLD);
-  return null;
+  if (Math.hypot(hit.x - x, hit.y - y) > THRESHOLD_2D) return null;
+  return hit;
 }
 
-/** Snap a free page point (line tips, compass, etc.) onto the active grid. */
+function bestGridTranslation(
+  moving: { left: number; right: number; top: number; bottom: number; cx: number; cy: number },
+  page: Page,
+): { dx: number; dy: number; guides: SnapGuide[] } | null {
+  const pts = [
+    { x: moving.left, y: moving.top },
+    { x: moving.right, y: moving.top },
+    { x: moving.right, y: moving.bottom },
+    { x: moving.left, y: moving.bottom },
+    { x: moving.cx, y: moving.cy },
+  ];
+  let best: { dx: number; dy: number; guides: SnapGuide[] } | null = null;
+  let bestD = THRESHOLD_2D;
+  for (const p of pts) {
+    const hit = nearestGridIntersection(p.x, p.y, page);
+    if (!hit) continue;
+    const d = Math.hypot(hit.x - p.x, hit.y - p.y);
+    if (d <= bestD) {
+      bestD = d;
+      best = { dx: hit.x - p.x, dy: hit.y - p.y, guides: hit.guides };
+    }
+  }
+  return best;
+}
+
+/** Snap a free page point onto a grid crossing (square, triangle, or polar). */
 export function snapPointToGrid(
   x: number,
   y: number,
   page: Page,
 ): { x: number; y: number; guides: SnapGuide[] } {
-  if (!page.grid.snap) return { x, y, guides: [] };
-  if (page.grid.type === "square") {
-    const { xs, ys } = pageSnapLines(page);
-    let nx = x;
-    let ny = y;
-    const guides: SnapGuide[] = [];
-    const hx = uniqueNear(xs, x, THRESHOLD);
-    const hy = uniqueNear(ys, y, THRESHOLD);
-    if (hx !== null) {
-      nx = hx;
-      guides.push({ axis: "x", pos: hx });
-    }
-    if (hy !== null) {
-      ny = hy;
-      guides.push({ axis: "y", pos: hy });
-    }
-    return { x: nx, y: ny, guides };
-  }
-  const hit = snapCenterToGrid(x, y, page);
+  const hit = nearestGridIntersection(x, y, page);
   return hit ?? { x, y, guides: [] };
 }
 
@@ -285,15 +288,13 @@ export function snapDelta(
   }
 
   const objectDist = gx !== null || gy !== null ? Math.hypot(dx, dy) : Infinity;
-  const gridHit = snapCenterToGrid(moving.cx, moving.cy, page);
+  const gridHit = bestGridTranslation(moving, page);
   const guides: SnapGuide[] = [];
   if (gridHit) {
-    const gdx = gridHit.x - moving.cx;
-    const gdy = gridHit.y - moving.cy;
-    const gridDist = Math.hypot(gdx, gdy);
+    const gridDist = Math.hypot(gridHit.dx, gridHit.dy);
     if (gridDist <= objectDist) {
-      dx = gdx;
-      dy = gdy;
+      dx = gridHit.dx;
+      dy = gridHit.dy;
       guides.push(...gridHit.guides);
     }
   }
@@ -457,6 +458,28 @@ export function snapAabbResize(
       }
       if (handle.includes("w")) left = right - width;
       if (handle.includes("n")) top = bottom - height;
+    }
+  }
+
+  if (handle.length === 2 && page.grid.snap && !lockAspect) {
+    const r = left + width;
+    const b = top + height;
+    const px = handle.includes("e") ? r : left;
+    const py = handle.includes("s") ? b : top;
+    const hit = nearestGridIntersection(px, py, page);
+    if (hit) {
+      if (handle.includes("e")) width = Math.max(8, hit.x - left);
+      else {
+        width = Math.max(8, r - hit.x);
+        left = hit.x;
+      }
+      if (handle.includes("s")) height = Math.max(8, hit.y - top);
+      else {
+        height = Math.max(8, b - hit.y);
+        top = hit.y;
+      }
+      guides.length = 0;
+      guides.push(...hit.guides);
     }
   }
 
