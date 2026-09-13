@@ -25,7 +25,7 @@ The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘
 
 **Layers.** Order, lock, hide, opacity, blending modes, transparency, masks (paint a keep-region), borders.
 
-**Motion.** The diamond at the bottom of the left tool rail opens the animation timeline ([). Play interpolates position, scale, rotation, and opacity. Inspect changes (fill, stroke, type, transform) apply to every selected object in a group, not only the first.
+**Motion.** The diamond at the bottom of the left tool rail opens the animation timeline ([). Set duration in the timeline, then play to interpolate position, scale, rotation, and opacity. Inspect changes (fill, stroke, type, transform) apply to every selected object in a group, not only the first.
 
 **Output.** **Save** stores the page on this site (New → On this site). Save as file… writes a `.veillum` on disk. Export PNG, JPEG, WebP, or SVG. Rasterize flattens the page to a single bitmap layer.
 

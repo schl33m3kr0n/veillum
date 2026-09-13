@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
@@ -28,8 +29,26 @@ export function Timeline() {
           Animation
         </span>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {playhead.toFixed(2)}s / {duration.toFixed(1)}s
+          {playhead.toFixed(2)}s
         </span>
+        <label className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Duration
+          <Input
+            type="number"
+            min={0.5}
+            max={600}
+            step={0.5}
+            value={duration}
+            aria-label="Animation duration in seconds"
+            className="h-6 w-16 px-1.5 text-xs tabular-nums"
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (!Number.isFinite(next)) return;
+              useEditorStore.getState().setDuration(next);
+            }}
+          />
+          <span className="normal-case tracking-normal text-muted-foreground">s</span>
+        </label>
         <Button
           size="xs"
           variant="ghost"

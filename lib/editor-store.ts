@@ -406,7 +406,14 @@ export const useEditorStore = create<EditorState>()(
       setPan: (panX, panY) => set({ panX, panY }),
       setPointer: (x, y) => set({ pointer: { x, y } }),
       setPlayhead: (playhead) => set({ playhead }),
-      setDuration: (duration) => set({ duration }),
+      setDuration: (duration) =>
+        set((s) => {
+          const next = Math.max(0.5, Math.min(600, duration));
+          return {
+            duration: next,
+            playhead: Math.min(s.playhead, next),
+          };
+        }),
       setPlaying: (playing) => set({ playing }),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       setSidebarTab: (sidebarTab) => set({ sidebarTab }),
