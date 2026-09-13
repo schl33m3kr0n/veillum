@@ -20,8 +20,17 @@ import { cn } from "@/lib/utils";
 
 export function StartScreen() {
   const open = useEditorStore((s) => s.startOpen);
-  const layers = useEditorStore((s) => s.layers);
+  const ready = useEditorStore((s) => s.sessionReady);
+  const hasDocument = useEditorStore((s) => s.hasDocument);
   const [query, setQuery] = useState("");
+  if (!ready) {
+    return (
+      <div
+        className="absolute inset-0 z-50 bg-[#161310]"
+        aria-hidden
+      />
+    );
+  }
   if (!open) return null;
 
   const q = query.trim().toLowerCase();
@@ -39,7 +48,7 @@ export function StartScreen() {
       t.blurb.toLowerCase().includes(q) ||
       t.group.toLowerCase().includes(q),
   );
-  const canContinue = layers.length > 0;
+  const canContinue = hasDocument;
 
   return (
     <div className="absolute inset-0 z-50 overflow-y-auto bg-[#161310]/95 text-foreground backdrop-blur-sm">
@@ -50,7 +59,7 @@ export function StartScreen() {
               veillum
             </p>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Pick a page size, or start from a layout. Print, screens, and common social frames are here; templates fill the page so you can replace the copy.
+              Pick a page size, or start from a layout. The page in this browser saves itself as you work; New starts another one. Export a veillum JSON file if you want a copy you can move.
             </p>
           </div>
           {canContinue ? (

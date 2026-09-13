@@ -20,12 +20,14 @@ import { TextOverlay } from "./text-overlay";
 import { TextFormatBar } from "./text-format-bar";
 import { StartScreen } from "./start-screen";
 import { useEditorHotkeys } from "./use-hotkeys";
+import { useAutosave } from "./use-autosave";
 import { ShapeWindow } from "./shape-window";
 import { ColorWindow } from "./color-window";
 import HtmlStage from "./html-stage";
 
 export function Studio() {
   useEditorHotkeys();
+  useAutosave();
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 800, height: 600 });
   const [tab, setTab] = useState("properties");

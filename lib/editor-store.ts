@@ -76,6 +76,10 @@ interface EditorState {
   timelineOpen: boolean;
   snapGuides: SnapGuide[];
   startOpen: boolean;
+  sessionReady: boolean;
+  hasDocument: boolean;
+  saveStatus: "idle" | "saving" | "saved" | "error";
+  savedAt: number | null;
   bgBusyId: string | null;
   bgBusyNote: string;
 
@@ -166,6 +170,22 @@ interface EditorState {
   rasterizeSelected: (dataUrl: string, width: number, height: number) => void;
   flattenPage: (dataUrl: string) => void;
   setBgBusy: (id: string | null, note?: string) => void;
+  setSessionReady: (ready: boolean) => void;
+  setSaveStatus: (
+    status: EditorState["saveStatus"],
+    savedAt?: number | null,
+  ) => void;
+  hydrateDraft: (draft: {
+    page: Page;
+    layers: Layer[];
+    recentColors?: string[];
+    duration?: number;
+    zoom?: number;
+    panX?: number;
+    panY?: number;
+    sidebarOpen?: boolean;
+    timelineOpen?: boolean;
+  }) => void;
 }
 
 function selected(state: EditorState): Layer[] {
@@ -218,12 +238,48 @@ export const useEditorStore = create<EditorState>()(
       timelineOpen: true,
       snapGuides: [],
       startOpen: true,
+      sessionReady: false,
+      hasDocument: false,
+      saveStatus: "idle",
+      savedAt: null,
       bgBusyId: null,
       bgBusyNote: "",
 
       setTool: (tool) => set({ tool, editingTextId: null }),
       setBgBusy: (bgBusyId, note) =>
         set({ bgBusyId, bgBusyNote: note ?? (bgBusyId ? "Cutting out…" : "") }),
+      setSessionReady: (sessionReady) => set({ sessionReady }),
+      setSaveStatus: (saveStatus, savedAt) =>
+        set({
+          saveStatus,
+          savedAt: savedAt === undefined ? get().savedAt : savedAt,
+        }),
+      hydrateDraft: (draft) => {
+        const framed = draft.zoom == null ? framePage(draft.page) : null;
+        useEditorStore.temporal.getState().pause();
+        set({
+          page: draft.page,
+          layers: draft.layers,
+          recentColors: draft.recentColors ?? get().recentColors,
+          duration: draft.duration ?? get().duration,
+          zoom: framed ? framed.zoom : (draft.zoom as number),
+          panX: framed ? framed.panX : (draft.panX ?? 0),
+          panY: framed ? framed.panY : (draft.panY ?? 0),
+          sidebarOpen: draft.sidebarOpen ?? true,
+          timelineOpen: draft.timelineOpen ?? true,
+          selectedIds: [],
+          editingTextId: null,
+          startOpen: false,
+          hasDocument: true,
+          sessionReady: true,
+          playing: false,
+          playhead: 0,
+          tool: "select",
+          snapGuides: [],
+        });
+        useEditorStore.temporal.getState().clear();
+        useEditorStore.temporal.getState().resume();
+      },
       setStartOpen: (startOpen) => set({ startOpen }),
       startBlank: (preset) => {
         const page = pageFromSize(preset);
@@ -233,6 +289,7 @@ export const useEditorStore = create<EditorState>()(
           selectedIds: [],
           editingTextId: null,
           startOpen: false,
+          hasDocument: true,
           tool: "select",
           playhead: 0,
           playing: false,
@@ -251,6 +308,7 @@ export const useEditorStore = create<EditorState>()(
           selectedIds: [],
           editingTextId: null,
           startOpen: false,
+          hasDocument: true,
           tool: "select",
           playhead: 0,
           playing: false,
@@ -314,6 +372,7 @@ export const useEditorStore = create<EditorState>()(
         set((s) => ({
           layers: [...s.layers, layer],
           selectedIds: select ? [layer.id] : s.selectedIds,
+          hasDocument: true,
         })),
 
       updateLayer: (id, partial) =>

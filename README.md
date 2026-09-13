@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start screen asks for a blank size (print, screen, social) or a template. **New** in the header (⌘/Ctrl N) opens it again.
+The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). A start screen asks for a blank size (print, screen, social) or a template. **New** in the header (⌘/Ctrl N) opens it again. The current page is saved automatically in this browser as you work; reload to continue. Export a veillum JSON file when you need a copy you can move.
 
 ## What you can do
 

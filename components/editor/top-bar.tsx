@@ -70,6 +70,7 @@ export function TopBar() {
           New
         </Button>
       </div>
+      <SaveStatus />
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -163,6 +164,31 @@ export function TopBar() {
         <ExportMenu />
       </div>
     </header>
+  );
+}
+
+function SaveStatus() {
+  const status = useEditorStore((s) => s.saveStatus);
+  const savedAt = useEditorStore((s) => s.savedAt);
+  const hasDocument = useEditorStore((s) => s.hasDocument);
+  if (!hasDocument || status === "idle") return null;
+  const label =
+    status === "saving"
+      ? "Saving…"
+      : status === "error"
+        ? "Couldn’t save in this browser"
+        : "Saved";
+  return (
+    <span
+      className="hidden truncate px-2 text-[11px] text-muted-foreground sm:inline"
+      title={
+        savedAt
+          ? `Last saved ${new Date(savedAt).toLocaleString()}`
+          : undefined
+      }
+    >
+      {label}
+    </span>
   );
 }
 
