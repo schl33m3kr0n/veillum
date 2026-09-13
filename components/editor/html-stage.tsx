@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/editor-store";
 import { interpolatedLayer, nearPoint, radialGrid, triangleGridLines } from "@/lib/geometry";
-import { rgbToHex } from "@/lib/colors";
 import { extractRawPreview } from "@/lib/raw";
 import { samplePixel } from "@/lib/filters";
 import { cssFontFamily } from "@/lib/fonts";
@@ -17,6 +16,7 @@ import { PAGE_PAD_X, PAGE_PAD_Y } from "@/lib/stage";
 import { layerAabb } from "@/lib/transform";
 import { ColorLoupe, sampleCanvasHex } from "./color-loupe";
 import { applyStudioColor } from "@/lib/apply-color";
+import { pageSnapshotOptions, snapshotPixelAt } from "@/lib/page-snapshot";
 import {
   CompassOverlay,
   hitCompass,
@@ -50,8 +50,8 @@ export default function HtmlStage({
   const colorSnap = useRef<HTMLCanvasElement | null>(null);
   const [colorShot, setColorShot] = useState<HTMLCanvasElement | null>(null);
   const [loupe, setLoupe] = useState<{
-    pageX: number;
-    pageY: number;
+    snapX: number;
+    snapY: number;
     screenX: number;
     screenY: number;
   } | null>(null);
@@ -143,7 +143,10 @@ export default function HtmlStage({
       if (!el) return;
       try {
         const { toCanvas } = await import("html-to-image");
-        const canvas = await toCanvas(el, { pixelRatio: 1, cacheBust: true });
+        const canvas = await toCanvas(
+          el,
+          pageSnapshotOptions(page.width, page.height),
+        );
         if (live) {
           colorSnap.current = canvas;
           setColorShot(canvas);
@@ -156,7 +159,7 @@ export default function HtmlStage({
     return () => {
       live = false;
     };
-  }, [tool]);
+  }, [tool, page.width, page.height]);
 
   useEffect(() => {
     if (!colorLoupe) setLoupe(null);
@@ -335,27 +338,25 @@ export default function HtmlStage({
 
     if (current === "eyedropper") {
       const snap = colorSnap.current;
-      const hex = snap && p ? sampleCanvasHex(snap, p.x, p.y) : null;
+      const pageEl = pageRef.current;
+      const at =
+        snap && pageEl
+          ? snapshotPixelAt(snap, pageEl, e.clientX, e.clientY)
+          : null;
+      const hex = snap && at ? sampleCanvasHex(snap, at.x, at.y) : null;
       if (hex) {
         applyStudioColor(hex);
         setLoupe(null);
-      } else {
-        const pageEl = pageRef.current;
-        if (pageEl) {
-          const { toCanvas } = await import("html-to-image");
-          const shot = await toCanvas(pageEl, { pixelRatio: 1, cacheBust: true });
-          const ctx = shot.getContext("2d");
-          if (ctx) {
-            const pix = ctx.getImageData(
-              Math.max(0, Math.round(p.x)),
-              Math.max(0, Math.round(p.y)),
-              1,
-              1,
-            ).data;
-            applyStudioColor(rgbToHex(pix[0], pix[1], pix[2]));
-            setLoupe(null);
-          }
-        }
+      } else if (pageEl) {
+        const { toCanvas } = await import("html-to-image");
+        const shot = await toCanvas(
+          pageEl,
+          pageSnapshotOptions(store.page.width, store.page.height),
+        );
+        const pixAt = snapshotPixelAt(shot, pageEl, e.clientX, e.clientY);
+        const sampled = sampleCanvasHex(shot, pixAt.x, pixAt.y);
+        if (sampled) applyStudioColor(sampled);
+        setLoupe(null);
       }
       e.stopPropagation();
       return;
@@ -486,11 +487,14 @@ export default function HtmlStage({
 
     if (store.tool === "eyedropper" && store.colorLoupe) {
       const board = boardRef.current;
-      if (p && board) {
+      const pageEl = pageRef.current;
+      const snap = colorSnap.current;
+      if (p && board && pageEl && snap) {
         const rect = board.getBoundingClientRect();
+        const at = snapshotPixelAt(snap, pageEl, e.clientX, e.clientY);
         setLoupe({
-          pageX: p.x,
-          pageY: p.y,
+          snapX: at.x,
+          snapY: at.y,
           screenX: e.clientX - rect.left,
           screenY: e.clientY - rect.top,
         });
@@ -1122,8 +1126,8 @@ export default function HtmlStage({
       {tool === "eyedropper" && colorLoupe && loupe && (
         <ColorLoupe
           snapshot={colorShot}
-          pageX={loupe.pageX}
-          pageY={loupe.pageY}
+          snapX={loupe.snapX}
+          snapY={loupe.snapY}
           screenX={loupe.screenX}
           screenY={loupe.screenY}
         />

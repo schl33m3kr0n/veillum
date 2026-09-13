@@ -5,24 +5,24 @@ import { rgbToHex } from "@/lib/colors";
 
 const SIZE = 11;
 const CELL = 10;
+const MAG = SIZE * CELL;
+const HALF = Math.floor(SIZE / 2);
 
 export function ColorLoupe({
   snapshot,
-  pageX,
-  pageY,
+  snapX,
+  snapY,
   screenX,
   screenY,
 }: {
   snapshot: HTMLCanvasElement | null;
-  pageX: number;
-  pageY: number;
+  snapX: number;
+  snapY: number;
   screenX: number;
   screenY: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const hex =
-    snapshot &&
-    sampleHex(snapshot, Math.round(pageX), Math.round(pageY));
+  const hex = snapshot ? sampleHex(snapshot, snapX, snapY) : null;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,26 +30,21 @@ export function ColorLoupe({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    const px = Math.round(pageX);
-    const py = Math.round(pageY);
-    const half = Math.floor(SIZE / 2);
-    ctx.clearRect(0, 0, SIZE * CELL, SIZE * CELL);
+    ctx.clearRect(0, 0, MAG, MAG);
     for (let y = 0; y < SIZE; y++) {
       for (let x = 0; x < SIZE; x++) {
-        const sx = px + x - half;
-        const sy = py + y - half;
-        ctx.fillStyle = sampleHex(snapshot, sx, sy) ?? "#000";
+        ctx.fillStyle = sampleHex(snapshot, snapX + x - HALF, snapY + y - HALF) ?? "#000";
         ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
       }
     }
-    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    const cell = HALF * CELL;
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(half * CELL + 0.5, half * CELL + 0.5, CELL - 1, CELL - 1);
-    ctx.strokeStyle = "rgba(0,0,0,0.7)";
-    ctx.strokeRect(half * CELL + 2, half * CELL + 2, CELL - 4, CELL - 4);
-  }, [snapshot, pageX, pageY]);
-
-  const MAG = SIZE * CELL;
+    ctx.strokeRect(cell + 0.5, cell + 0.5, CELL - 1, CELL - 1);
+    ctx.strokeStyle = "rgba(0,0,0,0.75)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cell + 2, cell + 2, CELL - 4, CELL - 4);
+  }, [snapshot, snapX, snapY]);
 
   return (
     <div
@@ -65,7 +60,7 @@ export function ColorLoupe({
         ref={canvasRef}
         width={MAG}
         height={MAG}
-        className="rounded-full border-2 border-[#161310] shadow-xl"
+        className="block rounded-full shadow-[0_0_0_2px_#161310,0_10px_24px_rgba(0,0,0,0.45)]"
         style={{ imageRendering: "pixelated" }}
       />
       {hex ? (
@@ -84,8 +79,8 @@ export function ColorLoupe({
 function sampleHex(canvas: HTMLCanvasElement, x: number, y: number): string | null {
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  const sx = Math.max(0, Math.min(canvas.width - 1, x));
-  const sy = Math.max(0, Math.min(canvas.height - 1, y));
+  const sx = Math.max(0, Math.min(canvas.width - 1, Math.floor(x)));
+  const sy = Math.max(0, Math.min(canvas.height - 1, Math.floor(y)));
   const pix = ctx.getImageData(sx, sy, 1, 1).data;
   if (pix[3] === 0) return "#ffffff";
   return rgbToHex(pix[0], pix[1], pix[2]);
@@ -96,5 +91,5 @@ export function sampleCanvasHex(
   x: number,
   y: number,
 ): string | null {
-  return sampleHex(canvas, Math.round(x), Math.round(y));
+  return sampleHex(canvas, x, y);
 }
