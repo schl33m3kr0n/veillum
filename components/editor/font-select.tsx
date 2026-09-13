@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Plus, Search } from "lucide-react";
+import { FolderOpen, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +10,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  getCustomFontFamilies,
   getCustomFonts,
-  importFontFile,
+  importFontFiles,
+  removeCustomFont,
   restoreCustomFonts,
   subscribeCustomFonts,
 } from "@/lib/custom-fonts";
@@ -36,6 +38,8 @@ export function FontSelect({
   const searchRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const custom = useSyncExternalStore(
     subscribeCustomFonts,
     getCustomFonts,
@@ -47,7 +51,7 @@ export function FontSelect({
   }, []);
 
   const bundled = new Set<string>(FONT_OPTIONS.map((f) => f.family));
-  const extras = custom.filter((f) => !bundled.has(f.family));
+  const extras = getCustomFontFamilies().filter((family) => !bundled.has(family));
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const hit = (text: string) => !q || text.toLowerCase().includes(q);
@@ -59,21 +63,39 @@ export function FontSelect({
           (hit(group) || hit(font.label) || hit(font.family)),
       ),
     })).filter((g) => g.fonts.length > 0);
-    const imported = extras.filter((font) => hit(font.family));
+    const imported = extras.filter((family) => hit(family));
     return { groups, imported };
-  }, [query, extras]);
+  }, [query, extras, custom]);
 
   const pick = (family: string) => {
     onValueChange(family);
     setOpen(false);
+    setError(null);
   };
 
   const pinRange = () => {
     pinTextFormatRange(useEditorStore.getState().editingTextId);
   };
 
+  const addFromFiles = async (list: FileList | File[] | null) => {
+    const files = list ? [...list] : [];
+    if (files.length === 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const families = await importFontFiles(files);
+      const next = families[families.length - 1];
+      if (next) onValueChange(next);
+      setQuery("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not add that font.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const firstMatch =
-    filtered.groups[0]?.fonts[0]?.family ?? filtered.imported[0]?.family;
+    filtered.imported[0] ?? filtered.groups[0]?.fonts[0]?.family;
 
   return (
     <div className={cn("flex min-w-0 items-center gap-1", className)}>
@@ -82,7 +104,10 @@ export function FontSelect({
         onOpenChange={(next) => {
           if (next) pinRange();
           setOpen(next);
-          if (!next) setQuery("");
+          if (!next) {
+            setQuery("");
+            setError(null);
+          }
         }}
       >
         <PopoverTrigger asChild>
@@ -112,7 +137,7 @@ export function FontSelect({
           onPointerDown={(event) => {
             pinRange();
             const target = event.target as HTMLElement;
-            if (!target.closest("input, textarea") && event.cancelable) {
+            if (!target.closest("input, textarea, button") && event.cancelable) {
               event.preventDefault();
             }
           }}
@@ -138,6 +163,28 @@ export function FontSelect({
             </div>
           </div>
           <div className="max-h-72 overflow-y-auto p-1">
+            {filtered.imported.length > 0 && (
+              <div className="py-0.5">
+                <p className="px-1.5 py-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                  From files
+                </p>
+                {filtered.imported.map((family) => (
+                  <FontRow
+                    key={family}
+                    label={family}
+                    family={family}
+                    selected={value === family}
+                    stack={`"${family}", serif`}
+                    removable
+                    onPick={pick}
+                    onRemove={() => {
+                      void removeCustomFont(family);
+                      if (value === family) onValueChange("Instrument Sans");
+                    }}
+                  />
+                ))}
+              </div>
+            )}
             {filtered.groups.map((group) => (
               <div key={group.group} className="py-0.5">
                 <p className="px-1.5 py-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
@@ -154,57 +201,43 @@ export function FontSelect({
                 ))}
               </div>
             ))}
-            {filtered.imported.length > 0 && (
-              <div className="py-0.5">
-                <p className="px-1.5 py-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                  Imported
-                </p>
-                {filtered.imported.map((font) => (
-                  <FontRow
-                    key={font.family}
-                    label={font.family}
-                    family={font.family}
-                    selected={value === font.family}
-                    stack={`"${font.family}", serif`}
-                    onPick={pick}
-                  />
-                ))}
-              </div>
-            )}
             {filtered.groups.length === 0 && filtered.imported.length === 0 && (
               <p className="px-2 py-6 text-center text-xs text-muted-foreground">
                 No fonts match "{query.trim()}".
               </p>
             )}
           </div>
+          <div className="border-t border-border/70 p-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="w-full justify-start"
+              disabled={disabled || busy}
+              onClick={() => fileRef.current?.click()}
+            >
+              <FolderOpen />
+              {busy ? "Adding…" : "From file…"}
+            </Button>
+            <p className="px-0.5 pt-1 text-[10px] leading-snug text-muted-foreground">
+              Open a .ttf, .otf, .woff, or .woff2 from this computer. Drop several at once.
+            </p>
+            {error ? (
+              <p className="px-0.5 pt-1 text-[11px] text-destructive">{error}</p>
+            ) : null}
+          </div>
         </PopoverContent>
       </Popover>
-      <Button
-        type="button"
-        size="icon-xs"
-        variant="outline"
-        disabled={disabled}
-        title="Import a font you own (.ttf, .otf, .woff)"
-        aria-label="Import font"
-        onClick={() => fileRef.current?.click()}
-      >
-        <Plus />
-      </Button>
       <input
         ref={fileRef}
         type="file"
+        multiple
         accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2"
         className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
+        onChange={(e) => {
+          const list = e.target.files;
           e.target.value = "";
-          if (!file) return;
-          try {
-            const family = await importFontFile(file);
-            onValueChange(family);
-          } catch (err) {
-            console.error(err);
-          }
+          void addFromFiles(list);
         }}
       />
     </div>
@@ -216,29 +249,50 @@ function FontRow({
   family,
   selected,
   stack,
+  removable,
   onPick,
+  onRemove,
 }: {
   label: string;
   family: string;
   selected: boolean;
   stack?: string;
+  removable?: boolean;
   onPick: (family: string) => void;
+  onRemove?: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
       className={cn(
-        "flex w-full rounded-md px-1.5 py-1 text-left text-sm hover:bg-accent hover:text-accent-foreground",
+        "flex w-full items-center rounded-md hover:bg-accent hover:text-accent-foreground",
         selected && "bg-accent/70",
       )}
-      style={{ fontFamily: stack ?? cssFontFamily(family) }}
-      onPointerDown={(event) => {
-        if (event.cancelable) event.preventDefault();
-        pinTextFormatRange(useEditorStore.getState().editingTextId);
-      }}
-      onClick={() => onPick(family)}
     >
-      {label}
-    </button>
+      <button
+        type="button"
+        className="min-w-0 flex-1 px-1.5 py-1 text-left text-sm"
+        style={{ fontFamily: stack ?? cssFontFamily(family) }}
+        onPointerDown={(event) => {
+          if (event.cancelable) event.preventDefault();
+          pinTextFormatRange(useEditorStore.getState().editingTextId);
+        }}
+        onClick={() => onPick(family)}
+      >
+        <span className="truncate">{label}</span>
+      </button>
+      {removable ? (
+        <button
+          type="button"
+          className="shrink-0 px-1.5 py-1 text-muted-foreground hover:text-destructive"
+          aria-label={`Remove ${family}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove?.();
+          }}
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      ) : null}
+    </div>
   );
 }

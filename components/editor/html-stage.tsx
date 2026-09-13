@@ -5,6 +5,7 @@ import { beginHistoryGesture, endHistoryGesture, useEditorStore } from "@/lib/ed
 import { interpolatedLayer, nearPoint, radialGrid, squareGridLines, triangleGridLines } from "@/lib/geometry";
 import { symmetryGuideLines } from "@/lib/symmetry";
 import { extractRawPreview } from "@/lib/raw";
+import { importFontFiles, isLocalFontFile } from "@/lib/custom-fonts";
 import { samplePixel } from "@/lib/filters";
 import { cssFontFamily } from "@/lib/fonts";
 import type { BezierPoint, Tool } from "@/lib/types";
@@ -753,7 +754,25 @@ export default function HtmlStage({
 
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
+    const files = [...e.dataTransfer.files];
+    if (files.length === 0) return;
+    const fonts = files.filter(isLocalFontFile);
+    const rest = files.filter((file) => !isLocalFontFile(file));
+    if (fonts.length > 0) {
+      try {
+        const families = await importFontFiles(fonts);
+        const family = families[families.length - 1];
+        const store = useEditorStore.getState();
+        if (family) {
+          store.patchSelected((layer) =>
+            layer.type === "text" ? { fontFamily: family } : null,
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    const file = rest[0];
     if (!file) return;
     try {
       const { dataUrl, isRaw } = await extractRawPreview(file);
