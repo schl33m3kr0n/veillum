@@ -51,28 +51,33 @@ import localFont from "next/font/local";
 
 export const instrument = Instrument_Sans({
   subsets: ["latin"],
+  preload: true,
   variable: "--font-instrument",
 });
 
 const fraunces = Fraunces({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-fraunces",
 });
 
 const newsreader = Newsreader({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-newsreader",
 });
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-jetbrains",
 });
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-cormorant",
@@ -80,58 +85,68 @@ const cormorant = Cormorant_Garamond({
 
 const outfit = Outfit({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-outfit",
 });
 
 const avenir = Nunito_Sans({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-avenir",
 });
 
 const futura = Jost({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-futura",
 });
 
 const calisto = Crimson_Pro({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-calisto",
 });
 
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-bodoni",
 });
 
 const centuryGothic = Questrial({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-century-gothic",
 });
 
 const montserrat = Montserrat({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-montserrat",
 });
 
 const cooper = Lilita_One({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-cooper",
 });
 
 const oswald = Oswald({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-oswald",
 });
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-barlow-condensed",
@@ -139,12 +154,14 @@ const barlowCondensed = Barlow_Condensed({
 
 const impact = Anton({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-impact",
 });
 
 const libre = Libre_Baskerville({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "700"],
   style: ["normal", "italic"],
   variable: "--font-libre",
@@ -152,28 +169,33 @@ const libre = Libre_Baskerville({
 
 const bebas = Bebas_Neue({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-bebas",
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
+  preload: false,
   style: ["normal", "italic"],
   variable: "--font-playfair",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-space-grotesk",
 });
 
 const syne = Syne({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-syne",
 });
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   style: ["normal", "italic"],
   variable: "--font-instrument-serif",
@@ -181,6 +203,7 @@ const instrumentSerif = Instrument_Serif({
 
 const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   style: ["normal", "italic"],
   variable: "--font-dm-serif",
@@ -188,33 +211,39 @@ const dmSerif = DM_Serif_Display({
 
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-bricolage",
 });
 
 const cinzel = Cinzel({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-cinzel",
 });
 
 const cinzelDecorative = Cinzel_Decorative({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "700"],
   variable: "--font-cinzel-decorative",
 });
 
 const unbounded = Unbounded({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-unbounded",
 });
 
 const archivoBlack = Archivo_Black({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-archivo-black",
 });
 
 const spectral = Spectral({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-spectral",
@@ -222,23 +251,27 @@ const spectral = Spectral({
 
 const figtree = Figtree({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-figtree",
 });
 
 const greatVibes = Great_Vibes({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-great-vibes",
 });
 
 const youngSerif = Young_Serif({
   subsets: ["latin"],
+  preload: false,
   weight: "400",
   variable: "--font-young-serif",
 });
 
 const campfire = Solway({
   subsets: ["latin"],
+  preload: false,
   weight: ["400", "700"],
   variable: "--font-campfire",
 });
@@ -247,19 +280,20 @@ const flames = localFont({
   src: "../fonts/Flames.ttf",
   variable: "--font-flames",
   display: "swap",
+  preload: false,
 });
 
 const rubikGlitch = Rubik_Glitch({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-rubik-glitch",
 });
 
 const monoton = Monoton({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-monoton",
 });
 
@@ -271,22 +305,22 @@ const orbitron = Orbitron({
 
 const silkscreen = Silkscreen({
   subsets: ["latin"],
-  weight: ["400", "700"],
   preload: false,
+  weight: ["400", "700"],
   variable: "--font-silkscreen",
 });
 
 const pressStart = Press_Start_2P({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-press-start",
 });
 
 const bungeeSpice = Bungee_Spice({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-bungee-spice",
 });
 
@@ -310,15 +344,15 @@ const foldit = Foldit({
 
 const megrim = Megrim({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-megrim",
 });
 
 const shrikhand = Shrikhand({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-shrikhand",
 });
 
@@ -330,15 +364,15 @@ const pixelify = Pixelify_Sans({
 
 const audiowide = Audiowide({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-audiowide",
 });
 
 const creepster = Creepster({
   subsets: ["latin"],
-  weight: "400",
   preload: false,
+  weight: "400",
   variable: "--font-creepster",
 });
 
