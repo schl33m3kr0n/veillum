@@ -6,6 +6,7 @@ import type { ShapeLayer } from "@/lib/types";
 import { pieGeometry, wedgeFromLocal, frameLineFromEndpoints } from "@/lib/shapes";
 import { localToPage, pageToLocal } from "@/lib/transform";
 import { clientToLocal } from "@/lib/pointer-space";
+import { snapPointToGrid } from "@/lib/snap";
 
 const YELLOW = "#e8b923";
 
@@ -32,13 +33,31 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
           kind === "start" ? origin.width : 0,
           midY,
         );
-        const moving = page;
+        const snappedMove = (() => {
+          let moving = { x: page.x, y: page.y };
+          if (e.shiftKey) {
+            const dx = moving.x - fixed.x;
+            const dy = moving.y - fixed.y;
+            const len = Math.hypot(dx, dy);
+            if (len > 0.5) {
+              const step =
+                s.page.grid.snap && s.page.grid.type === "radial"
+                  ? (Math.PI * 2) / Math.max(4, s.page.grid.lines ?? 12)
+                  : Math.PI / 8;
+              const ang = Math.round(Math.atan2(dy, dx) / step) * step;
+              moving = {
+                x: fixed.x + Math.cos(ang) * len,
+                y: fixed.y + Math.sin(ang) * len,
+              };
+            }
+          }
+          return snapPointToGrid(moving.x, moving.y, s.page);
+        })();
+        const moving = { x: snappedMove.x, y: snappedMove.y };
         const start = kind === "start" ? moving : fixed;
         const end = kind === "end" ? moving : fixed;
-        s.updateLayer(
-          origin.id,
-          frameLineFromEndpoints(start, end, origin, e.shiftKey),
-        );
+        s.updateLayer(origin.id, frameLineFromEndpoints(start, end, origin));
+        s.setSnapGuides(snappedMove.guides);
         return;
       }
       if (kind === "radius") {
@@ -82,6 +101,7 @@ export function ShapeAdjustGizmos({ layer }: { layer: ShapeLayer }) {
     const onUp = () => {
       if (!drag.current) return;
       drag.current = null;
+      useEditorStore.getState().setSnapGuides([]);
       endHistoryGesture();
     };
     window.addEventListener("pointermove", onMove);

@@ -120,6 +120,34 @@ function snapCenterToGrid(
   return null;
 }
 
+/** Snap a free page point (line tips, compass, etc.) onto the active grid. */
+export function snapPointToGrid(
+  x: number,
+  y: number,
+  page: Page,
+): { x: number; y: number; guides: SnapGuide[] } {
+  if (!page.grid.snap) return { x, y, guides: [] };
+  if (page.grid.type === "square") {
+    const { xs, ys } = pageSnapLines(page);
+    let nx = x;
+    let ny = y;
+    const guides: SnapGuide[] = [];
+    const hx = uniqueNear(xs, x, THRESHOLD);
+    const hy = uniqueNear(ys, y, THRESHOLD);
+    if (hx !== null) {
+      nx = hx;
+      guides.push({ axis: "x", pos: hx });
+    }
+    if (hy !== null) {
+      ny = hy;
+      guides.push({ axis: "y", pos: hy });
+    }
+    return { x: nx, y: ny, guides };
+  }
+  const hit = snapCenterToGrid(x, y, page);
+  return hit ?? { x, y, guides: [] };
+}
+
 export function pageSizes(page: Page): { widths: number[]; heights: number[] } {
   const widths = [page.width];
   const heights = [page.height];
