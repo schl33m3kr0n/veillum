@@ -15,25 +15,31 @@ export function FillDefs({ layer }: { layer: Fillable }) {
   const stops = resolveStops(layer);
   const id = gradientId(layer.id);
   const angle = layer.fillAngle ?? 0;
+  const pw = Math.max(8, Math.round(layer.width ?? 96));
+  const ph = Math.max(8, Math.round(layer.height ?? 96));
   const raster = useMemo(() => {
     if (!usesRasterFill(style) || typeof document === "undefined") return "";
-    return rasterFillDataUrl(
-      style,
-      stops,
-      angle,
-      layer.width ?? 96,
-      layer.height ?? 96,
-    );
+    return rasterFillDataUrl(style, stops, angle, pw, ph);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [style, angle, layer.width, layer.height, JSON.stringify(stops)]);
+  }, [style, angle, pw, ph, JSON.stringify(stops)]);
 
   if (!layer.fillEnabled || style === "solid") return null;
 
   if (usesRasterFill(style) && raster) {
     return (
       <defs>
-        <pattern id={id} patternUnits="objectBoundingBox" width={1} height={1}>
-          <image href={raster} width={1} height={1} preserveAspectRatio="none" />
+        <pattern
+          id={id}
+          patternUnits="userSpaceOnUse"
+          width={pw}
+          height={ph}
+        >
+          <image
+            href={raster}
+            width={pw}
+            height={ph}
+            preserveAspectRatio="none"
+          />
         </pattern>
       </defs>
     );

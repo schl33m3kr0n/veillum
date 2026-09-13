@@ -35,7 +35,7 @@ export function FillStylePicker({
         >
           <span
             className="block h-8 w-full"
-            style={{ background: cssFillPreview(item.id, resolved, angle ?? 90) }}
+            style={{ background: cssFillPreview(item.id, resolved, angle ?? 0) }}
           />
         </button>
       ))}

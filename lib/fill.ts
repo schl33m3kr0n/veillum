@@ -98,10 +98,20 @@ export function cssFillPreview(
   const list = sorted.map((s) => `${s.color} ${Math.round(s.pos * 100)}%`).join(", ");
   if (style === "solid") return sorted[0]?.color ?? "#c45c26";
   if (style === "radial") return `radial-gradient(circle at 50% 50%, ${list})`;
-  if (style === "diamond") {
-    return `radial-gradient(closest-corner at 50% 50%, ${list})`;
+  if (style === "diamond" || style === "conic") {
+    if (typeof document !== "undefined") {
+      const url = rasterFillDataUrl(style, sorted, angle, 96, 48);
+      if (url) return `center / 100% 100% no-repeat url("${url}")`;
+    }
   }
-  if (style === "conic") return `conic-gradient(from ${angle}deg, ${list})`;
+  if (style === "conic") {
+    const first = sorted[0]?.color;
+    const closed =
+      first && sorted[sorted.length - 1]?.color.toLowerCase() !== first.toLowerCase()
+        ? `${list}, ${first}`
+        : list;
+    return `conic-gradient(from ${angle}deg at 50% 50%, ${closed})`;
+  }
   if (style === "reflected") {
     const half = sorted
       .map((s) => `${s.color} ${Math.round(s.pos * 50)}%`)
@@ -160,8 +170,8 @@ export function rasterFillDataUrl(
   width: number,
   height: number,
 ): string {
-  const w = Math.max(8, Math.min(160, Math.round(width)));
-  const h = Math.max(8, Math.min(160, Math.round(height)));
+  const w = Math.max(8, Math.min(256, Math.round(width)));
+  const h = Math.max(8, Math.min(256, Math.round(height)));
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -171,6 +181,9 @@ export function rasterFillDataUrl(
   const image = ctx.createImageData(w, h);
   const cx = (w - 1) / 2;
   const cy = (h - 1) / 2;
+  const sorted = resolveStops({ fill: "#000", fillStops: stops });
+  const sampleAt =
+    style === "conic" ? conicStops(sorted) : sorted;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const nx = (x - cx) / Math.max(1, cx);
@@ -179,12 +192,12 @@ export function rasterFillDataUrl(
       const ry = nx * Math.sin(-rad) + ny * Math.cos(-rad);
       let t = 0;
       if (style === "diamond") {
-        t = Math.max(Math.abs(rx), Math.abs(ry));
+        t = Math.min(1, (Math.abs(rx) + Math.abs(ry)) / 2);
       } else {
-        let a = Math.atan2(ry, rx);
+        const a = Math.atan2(ry, rx);
         t = (a / (Math.PI * 2) + 1) % 1;
       }
-      const c = sampleStops(stops, t);
+      const c = sampleStops(sampleAt, t);
       const i = (y * w + x) * 4;
       image.data[i] = c.r;
       image.data[i + 1] = c.g;
@@ -196,6 +209,15 @@ export function rasterFillDataUrl(
   return canvas.toDataURL("image/png");
 }
 
+function conicStops(stops: FillStop[]): FillStop[] {
+  const first = stops[0];
+  if (!first) return stops;
+  const next = stops.map((s, i) =>
+    i === stops.length - 1 && s.pos >= 0.999 ? { ...s, pos: 0.999 } : s,
+  );
+  return [...next, { color: first.color, pos: 1 }];
+}
+
 export function fillDefsMarkup(layer: Fillable): string {
   if (!layer.fillEnabled) return "";
   const style = layer.fillStyle ?? "solid";
@@ -205,15 +227,11 @@ export function fillDefsMarkup(layer: Fillable): string {
   const angle = layer.fillAngle ?? 0;
   if (usesRasterFill(style)) {
     if (typeof document === "undefined") return "";
-    const url = rasterFillDataUrl(
-      style,
-      stops,
-      angle,
-      layer.width ?? 96,
-      layer.height ?? 96,
-    );
+    const w = Math.max(8, Math.round(layer.width ?? 96));
+    const h = Math.max(8, Math.round(layer.height ?? 96));
+    const url = rasterFillDataUrl(style, stops, angle, w, h);
     if (!url) return "";
-    return `<defs><pattern id="${id}" patternUnits="objectBoundingBox" width="1" height="1"><image href="${url}" width="1" height="1" preserveAspectRatio="none"/></pattern></defs>`;
+    return `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}"><image href="${url}" width="${w}" height="${h}" preserveAspectRatio="none"/></pattern></defs>`;
   }
   const stopXml = stops
     .map((s) => `<stop offset="${s.pos}" stop-color="${s.color}"/>`)
