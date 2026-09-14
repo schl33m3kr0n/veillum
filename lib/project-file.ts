@@ -42,6 +42,32 @@ function isAbort(err: unknown) {
   return err instanceof DOMException && err.name === "AbortError";
 }
 
+function isFileAccessBlocked(err: unknown) {
+  if (err instanceof DOMException) {
+    if (err.name === "NotAllowedError" || err.name === "SecurityError") {
+      return true;
+    }
+  }
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return /getFile|createWritable|not allowed by the user agent/i.test(msg);
+}
+
+function fileSystemAccessUsable(method: "showOpenFilePicker" | "showSaveFilePicker") {
+  if (typeof window === "undefined") return false;
+  const ua = navigator.userAgent;
+  // Firefox implements the picker in some builds, then rejects getFile/createWritable.
+  if (/firefox/i.test(ua) || /fxios/i.test(ua)) return false;
+  try {
+    if (window.self !== window.top) return false;
+  } catch {
+    return false;
+  }
+  const picker = window as Window & Partial<
+    Record<"showOpenFilePicker" | "showSaveFilePicker", unknown>
+  >;
+  return typeof picker[method] === "function";
+}
+
 async function ensureWrite(handle: FileSystemFileHandle) {
   try {
     const withPerm = handle as FileSystemFileHandle & {
@@ -94,10 +120,17 @@ function pickWithInput(): Promise<File | null> {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = PROJECT_ACCEPT;
-    input.addEventListener("change", () => resolve(input.files?.[0] ?? null), {
+    input.style.position = "fixed";
+    input.style.left = "-9999px";
+    const done = (file: File | null) => {
+      input.remove();
+      resolve(file);
+    };
+    input.addEventListener("change", () => done(input.files?.[0] ?? null), {
       once: true,
     });
-    input.addEventListener("cancel", () => resolve(null), { once: true });
+    input.addEventListener("cancel", () => done(null), { once: true });
+    document.body.appendChild(input);
     input.click();
   });
 }
@@ -113,9 +146,9 @@ export async function readProjectFromDisk(): Promise<{
       types?: { description: string; accept: Record<string, string[]> }[];
     }) => Promise<FileSystemFileHandle[]>;
   };
-  if (typeof picker.showOpenFilePicker === "function") {
+  if (fileSystemAccessUsable("showOpenFilePicker")) {
     try {
-      const [handle] = await picker.showOpenFilePicker({
+      const [handle] = await picker.showOpenFilePicker!({
         multiple: false,
         types: FILE_PICKER_TYPES,
       });
@@ -125,7 +158,8 @@ export async function readProjectFromDisk(): Promise<{
       return { ...parsed, fileName: file.name || DEFAULT_PROJECT_NAME };
     } catch (err) {
       if (isAbort(err)) return null;
-      throw err;
+      if (!isFileAccessBlocked(err)) throw err;
+      fileHandle = null;
     }
   }
   const file = await pickWithInput();
@@ -157,9 +191,9 @@ export async function writeProjectToDisk(
     return null;
   }
 
-  if (typeof picker.showSaveFilePicker === "function") {
+  if (fileSystemAccessUsable("showSaveFilePicker")) {
     try {
-      const handle = await picker.showSaveFilePicker({
+      const handle = await picker.showSaveFilePicker!({
         suggestedName: suggested,
         types: FILE_PICKER_TYPES,
       });

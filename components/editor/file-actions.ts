@@ -7,8 +7,8 @@ import { readProjectFromDisk, writeProjectToDisk } from "@/lib/project-file";
 
 function humanFileError(err: unknown, fallback: string) {
   const msg = err instanceof Error ? err.message : "";
-  if (/createWritable|NotAllowedError|NotFoundError|security/i.test(msg)) {
-    return "Could not write that file. Try Save as…";
+  if (/getFile|createWritable|NotAllowedError|NotFoundError|user agent or the platform|security/i.test(msg)) {
+    return "Could not use the system file picker here. Try again, or use Save as file…";
   }
   return err instanceof Error && err.message ? err.message : fallback;
 }
