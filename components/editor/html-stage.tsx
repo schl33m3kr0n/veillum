@@ -34,6 +34,7 @@ import {
 import { shortestAngleDelta } from "@/lib/compass";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { LayerContextItems, prepareLayerContextAtPage } from "./layer-context-menu";
+import { historyFieldProps } from "./fields";
 
 export default function HtmlStage({
   width,
@@ -935,36 +936,6 @@ export default function HtmlStage({
                       : "crosshair",
           }}
         >
-          {page.header.enabled && (
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                left: page.margins.left,
-                top: 14,
-                width: page.width - page.margins.left - page.margins.right,
-                color: page.header.color,
-                fontFamily: cssFontFamily(page.header.fontFamily),
-                fontSize: page.header.fontSize,
-              }}
-            >
-              {page.header.text}
-            </div>
-          )}
-          {page.footer.enabled && (
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                left: page.margins.left,
-                bottom: 12,
-                width: page.width - page.margins.left - page.margins.right,
-                color: page.footer.color,
-                fontFamily: cssFontFamily(page.footer.fontFamily),
-                fontSize: page.footer.fontSize,
-              }}
-            >
-              {page.footer.text}
-            </div>
-          )}
           <svg className="pointer-events-none absolute inset-0 h-full w-full">
             {gridLines.map((pts, i) => (
               <line
@@ -1021,6 +992,28 @@ export default function HtmlStage({
               />
             ),
           )}
+          <PageChromeLine
+            kind="header"
+            enabled={page.header.enabled}
+            text={page.header.text}
+            color={page.header.color}
+            fontFamily={page.header.fontFamily}
+            fontSize={page.header.fontSize}
+            left={page.margins.left}
+            width={page.width - page.margins.left - page.margins.right}
+            top={14}
+          />
+          <PageChromeLine
+            kind="footer"
+            enabled={page.footer.enabled}
+            text={page.footer.text}
+            color={page.footer.color}
+            fontFamily={page.footer.fontFamily}
+            fontSize={page.footer.fontSize}
+            left={page.margins.left}
+            width={page.width - page.margins.left - page.margins.right}
+            bottom={12}
+          />
           {draftPts && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible">
               <polyline
@@ -1222,4 +1215,59 @@ function toPairs(pts: number[]): string {
   const out: string[] = [];
   for (let i = 0; i < pts.length; i += 2) out.push(`${pts[i]},${pts[i + 1]}`);
   return out.join(" ");
+}
+
+function PageChromeLine({
+  kind,
+  enabled,
+  text,
+  color,
+  fontFamily,
+  fontSize,
+  left,
+  width,
+  top,
+  bottom,
+}: {
+  kind: "header" | "footer";
+  enabled: boolean;
+  text: string;
+  color: string;
+  fontFamily: string;
+  fontSize: number;
+  left: number;
+  width: number;
+  top?: number;
+  bottom?: number;
+}) {
+  const hist = historyFieldProps<HTMLInputElement>();
+  if (!enabled) return null;
+  return (
+    <input
+      value={text}
+      placeholder={kind === "header" ? "Title" : "Footer"}
+      aria-label={kind === "header" ? "Page header title" : "Page footer"}
+      className="absolute z-30 border-0 bg-transparent p-0 outline-none placeholder:opacity-40"
+      style={{
+        left,
+        width,
+        top,
+        bottom,
+        color,
+        fontFamily: cssFontFamily(fontFamily),
+        fontSize,
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onFocus={hist.onFocus}
+      onBlur={hist.onBlur}
+      onKeyDown={hist.onKeyDown}
+      onChange={(e) => {
+        const page = useEditorStore.getState().page;
+        const key = kind === "header" ? "header" : "footer";
+        useEditorStore.getState().updatePage({
+          [key]: { ...page[key], text: e.target.value },
+        });
+      }}
+    />
+  );
 }

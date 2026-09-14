@@ -47,6 +47,8 @@ import { SymmetryTools } from "./symmetry-tools";
 import { PageControls } from "./page-controls";
 import { openProjectFile, saveProjectFile } from "./file-actions";
 import { isFullscreen, toggleFullscreen } from "@/lib/fullscreen";
+import { displayPageName } from "@/lib/site-pages";
+import { renameSitePage } from "@/lib/site-library";
 import Link from "next/link";
 
 export function TopBar() {
@@ -233,6 +235,12 @@ function SaveStatus() {
   const hasDocument = useEditorStore((s) => s.hasDocument);
   const fileName = useEditorStore((s) => s.fileName);
   const fileError = useEditorStore((s) => s.fileError);
+  const [draft, setDraft] = useState(fileName ?? "");
+
+  useEffect(() => {
+    setDraft(fileName ?? "");
+  }, [fileName]);
+
   if (fileError) {
     return (
       <span className="hidden max-w-[220px] truncate px-2 text-[11px] text-destructive sm:inline" title={fileError}>
@@ -240,26 +248,45 @@ function SaveStatus() {
       </span>
     );
   }
-  if (!hasDocument || (status === "idle" && !fileName)) return null;
-  const label =
+  if (!hasDocument) return null;
+
+  const commit = async () => {
+    const next = displayPageName(draft);
+    setDraft(next);
+    const store = useEditorStore.getState();
+    if ((store.fileName ?? "") === next) return;
+    store.setFileName(next);
+    if (store.siteId) {
+      try {
+        await renameSitePage(store.siteId, next);
+      } catch {
+        store.setFileError("Could not rename that page.");
+      }
+    }
+  };
+
+  const hint =
     status === "saving"
       ? "Saving…"
       : status === "error"
         ? "Couldn’t save in this browser"
-        : fileName
-          ? fileName
-          : "Saved";
-  return (
-    <span
-      className="hidden truncate px-2 text-[11px] text-muted-foreground sm:inline"
-      title={
-        savedAt
+        : savedAt
           ? `Last saved ${new Date(savedAt).toLocaleString()}`
-          : undefined
-      }
-    >
-      {label}
-    </span>
+          : "Page title";
+
+  return (
+    <input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => void commit()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }}
+      aria-label="Page title"
+      placeholder="Untitled"
+      title={hint}
+      className="hidden h-7 min-w-[7rem] max-w-[14rem] truncate rounded-md border border-transparent bg-transparent px-2 text-[12px] text-muted-foreground outline-none placeholder:text-muted-foreground/70 sm:inline focus-visible:border-input focus-visible:text-foreground"
+    />
   );
 }
 

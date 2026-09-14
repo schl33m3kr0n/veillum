@@ -273,7 +273,7 @@ export function PageControls() {
       )}
       <div className="space-y-2 border-t border-border/50 pt-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs">Header</span>
+          <span className="text-xs">Header title</span>
           <Switch
             checked={page.header.enabled}
             onCheckedChange={(enabled) =>
@@ -286,6 +286,8 @@ export function PageControls() {
           onChange={(e) =>
             updatePage({ header: { ...page.header, text: e.target.value } })
           }
+          placeholder="Title"
+          aria-label="Header title"
           className="h-7 text-xs"
           {...historyFieldProps<HTMLInputElement>()}
         />

@@ -299,11 +299,12 @@ function SitePageCard({
   );
 
   return (
+    <div className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 transition hover:border-primary/50 hover:bg-card">
     <Dialog>
       <DialogTrigger asChild>
         <button
           type="button"
-          className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 text-left transition hover:border-primary/50 hover:bg-card"
+          className="flex flex-col text-left"
         >
           <span className="flex w-full items-center justify-center p-3">
             {failed ? (
@@ -314,7 +315,7 @@ function SitePageCard({
               thumb
             )}
           </span>
-          <span className="min-w-0 p-3 pt-0">
+          <span className="min-w-0 px-3 pb-2">
             <span className="block truncate text-sm font-medium">{meta.name}</span>
             <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground">
               {meta.width} × {meta.height}
@@ -332,20 +333,30 @@ function SitePageCard({
             Last saved {new Date(meta.savedAt).toLocaleString()}.
           </DialogDescription>
         </DialogHeader>
-        <label className="grid gap-1.5">
-          <span className="text-[11px] font-medium text-muted-foreground">Name</span>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                void saveName();
-              }
-            }}
-            aria-label="Page name"
-          />
-        </label>
+        <div className="flex items-end gap-2">
+          <label className="grid min-w-0 flex-1 gap-1.5">
+            <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void saveName();
+                }
+              }}
+              aria-label="Page name"
+            />
+          </label>
+          <Button
+            variant="outline"
+            className="shrink-0"
+            disabled={renameBusy || !name.trim() || name.trim() === meta.name}
+            onClick={() => void saveName()}
+          >
+            {renameBusy ? "Renaming…" : "Save name"}
+          </Button>
+        </div>
         {renameError ? (
           <p className="text-[11px] text-destructive">{renameError}</p>
         ) : null}
@@ -376,13 +387,6 @@ function SitePageCard({
           >
             Remove
           </Button>
-          <Button
-            variant="outline"
-            disabled={renameBusy || !name.trim() || name.trim() === meta.name}
-            onClick={() => void saveName()}
-          >
-            {renameBusy ? "Renaming…" : "Save name"}
-          </Button>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
           </DialogClose>
@@ -390,6 +394,12 @@ function SitePageCard({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+      <div className="flex justify-end px-3 pb-3">
+        <Button size="sm" onClick={() => void openSitePage(meta.id)}>
+          Open
+        </Button>
+      </div>
+    </div>
   );
 }
 
