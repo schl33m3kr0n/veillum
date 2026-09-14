@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘/Ctrl S) stores the page on this site under New → On this site. **Save as file…** / ⌘⇧S writes a `.veillum` file on disk; **Open** reads one. Templates show a live thumbnail. The current page also autosaves in this browser.
+The app listens on [http://127.0.0.1:4781](http://127.0.0.1:4781). **Save** (⌘/Ctrl S) stores the page on this site under New → On this site. **Save as file…** / ⌘⇧S writes a `.veillum` file on disk; **Open** reads one. Templates and pages saved On this site show a live thumbnail; click one to preview, then open. The current page also autosaves in this browser.
 
 ## What you can do
 

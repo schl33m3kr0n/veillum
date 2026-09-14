@@ -19,8 +19,9 @@ import {
 } from "@/lib/templates";
 import { PagePreview } from "./page-preview";
 import { openProjectFile, openSitePage } from "./file-actions";
-import { fetchSitePages, removeSitePage } from "@/lib/site-library";
-import type { SitePageMeta } from "@/lib/site-pages";
+import { fetchSitePage, fetchSitePages, removeSitePage } from "@/lib/site-library";
+import type { SitePageMeta, SitePageRecord } from "@/lib/site-pages";
+import { migrateDocument } from "@/lib/document";
 import {
   Dialog,
   DialogClose,
@@ -37,6 +38,7 @@ export function StartScreen() {
   const ready = useEditorStore((s) => s.sessionReady);
   const hasDocument = useEditorStore((s) => s.hasDocument);
   const [query, setQuery] = useState("");
+  const [siteHits, setSiteHits] = useState(0);
   if (!ready) {
     return (
       <div
@@ -100,7 +102,7 @@ export function StartScreen() {
           aria-label="Search sizes and templates"
         />
 
-        <SitePagesPanel query={q} />
+        <SitePagesPanel query={q} onFilteredCount={setSiteHits} />
 
         <section>
           <h2 className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -144,7 +146,7 @@ export function StartScreen() {
           })}
         </section>
 
-        {sizes.length === 0 && templates.length === 0 ? (
+        {sizes.length === 0 && templates.length === 0 && siteHits === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing matches that search.</p>
         ) : null}
       </div>
@@ -152,7 +154,13 @@ export function StartScreen() {
   );
 }
 
-function SitePagesPanel({ query }: { query: string }) {
+function SitePagesPanel({
+  query,
+  onFilteredCount,
+}: {
+  query: string;
+  onFilteredCount: (n: number) => void;
+}) {
   const [pages, setPages] = useState<SitePageMeta[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -178,13 +186,17 @@ function SitePagesPanel({ query }: { query: string }) {
       p.name.toLowerCase().includes(query) ||
       p.id.toLowerCase().includes(query),
   );
+
+  useEffect(() => {
+    onFilteredCount(pages === null ? 1 : filtered.length);
+  }, [pages, filtered.length, onFilteredCount]);
+
   if (error) {
     return <p className="text-sm text-destructive">{error}</p>;
   }
-  if (pages !== null && filtered.length === 0 && !query) {
+  if (pages !== null && filtered.length === 0) {
     return null;
   }
-  if (pages !== null && filtered.length === 0) return null;
 
   return (
     <section>
@@ -195,40 +207,133 @@ function SitePagesPanel({ query }: { query: string }) {
       {pages === null ? (
         <p className="text-sm text-muted-foreground">Loading saved pages…</p>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((page) => (
-            <div
+            <SitePageCard
               key={page.id}
-              className="flex items-center gap-3 rounded-xl border border-border/70 bg-card/90 px-3 py-2"
-            >
-              <button
-                type="button"
-                className="min-w-0 flex-1 text-left"
-                onClick={() => void openSitePage(page.id)}
-              >
-                <span className="block text-sm font-medium">{page.name}</span>
-                <span className="block text-[11px] tabular-nums text-muted-foreground">
-                  {page.width} × {page.height}
-                  <span className="ml-2 font-normal">
-                    {new Date(page.savedAt).toLocaleString()}
-                  </span>
-                </span>
-              </button>
-              <Button
-                size="xs"
-                variant="ghost"
-                onClick={async () => {
-                  await removeSitePage(page.id);
-                  setPages((cur) => (cur ?? []).filter((p) => p.id !== page.id));
-                }}
-              >
-                Remove
-              </Button>
-            </div>
+              meta={page}
+              onRemoved={() =>
+                setPages((cur) => (cur ?? []).filter((p) => p.id !== page.id))
+              }
+            />
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+function SitePageCard({
+  meta,
+  onRemoved,
+}: {
+  meta: SitePageMeta;
+  onRemoved: () => void;
+}) {
+  const [record, setRecord] = useState<SitePageRecord | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    void fetchSitePage(meta.id)
+      .then((raw) => {
+        if (!live) return;
+        const migrated = migrateDocument(raw.page, raw.layers);
+        setRecord({ ...raw, page: migrated.page, layers: migrated.layers });
+      })
+      .catch(() => {
+        if (live) setFailed(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [meta.id]);
+
+  const thumb = record ? (
+    <PagePreview
+      page={record.page}
+      layers={record.layers}
+      maxWidth={280}
+      maxHeight={196}
+    />
+  ) : (
+    <span
+      className="rounded-sm border border-foreground/15 bg-card"
+      style={{
+        width: Math.min(160, meta.width / 4),
+        height: Math.min(160, meta.height / 4),
+      }}
+    />
+  );
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 text-left transition hover:border-primary/50 hover:bg-card"
+        >
+          <span className="flex h-52 items-center justify-center bg-black/35 p-3">
+            {failed ? (
+              <span className="px-3 text-center text-[11px] text-muted-foreground">
+                Could not load this preview.
+              </span>
+            ) : (
+              thumb
+            )}
+          </span>
+          <span className="min-w-0 p-3">
+            <span className="block truncate text-sm font-medium">{meta.name}</span>
+            <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground">
+              {meta.width} × {meta.height}
+            </span>
+            <span className="mt-1 block text-[11px] text-muted-foreground/80">
+              {new Date(meta.savedAt).toLocaleString()}
+            </span>
+          </span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="z-[80] max-h-[min(92dvh,900px)] overflow-y-auto sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{meta.name}</DialogTitle>
+          <DialogDescription>
+            Saved on this site {new Date(meta.savedAt).toLocaleString()}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex max-h-[min(64vh,640px)] items-center justify-center overflow-auto rounded-lg bg-black/40 p-3">
+          {record ? (
+            <PagePreview
+              page={record.page}
+              layers={record.layers}
+              maxWidth={720}
+              maxHeight={560}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {failed ? "Could not load this preview." : "Loading preview…"}
+            </p>
+          )}
+        </div>
+        <p className="text-[11px] tabular-nums text-muted-foreground">
+          {meta.width} × {meta.height}
+        </p>
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              await removeSitePage(meta.id);
+              onRemoved();
+            }}
+          >
+            Remove
+          </Button>
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+          <Button onClick={() => void openSitePage(meta.id)}>Open this page</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
