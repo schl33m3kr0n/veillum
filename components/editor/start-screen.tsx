@@ -19,7 +19,7 @@ import {
 } from "@/lib/templates";
 import { PagePreview } from "./page-preview";
 import { openProjectFile, openSitePage } from "./file-actions";
-import { fetchSitePage, fetchSitePages, removeSitePage } from "@/lib/site-library";
+import { fetchSitePage, fetchSitePages, removeSitePage, renameSitePage } from "@/lib/site-library";
 import type { SitePageMeta, SitePageRecord } from "@/lib/site-pages";
 import { migrateDocument } from "@/lib/document";
 import {
@@ -215,6 +215,13 @@ function SitePagesPanel({
               onRemoved={() =>
                 setPages((cur) => (cur ?? []).filter((p) => p.id !== page.id))
               }
+              onRenamed={(name, savedAt) =>
+                setPages((cur) =>
+                  (cur ?? []).map((p) =>
+                    p.id === page.id ? { ...p, name, savedAt } : p,
+                  ),
+                )
+              }
             />
           ))}
         </div>
@@ -226,12 +233,21 @@ function SitePagesPanel({
 function SitePageCard({
   meta,
   onRemoved,
+  onRenamed,
 }: {
   meta: SitePageMeta;
   onRemoved: () => void;
+  onRenamed: (name: string, savedAt: number) => void;
 }) {
   const [record, setRecord] = useState<SitePageRecord | null>(null);
   const [failed, setFailed] = useState(false);
+  const [name, setName] = useState(meta.name);
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setName(meta.name);
+  }, [meta.name]);
 
   useEffect(() => {
     let live = true;
@@ -249,20 +265,36 @@ function SitePageCard({
     };
   }, [meta.id]);
 
-  const thumb = record ? (
+  const saveName = async () => {
+    const next = name.trim();
+    if (!next || next === meta.name) return;
+    setRenameBusy(true);
+    setRenameError(null);
+    try {
+      const result = await renameSitePage(meta.id, next);
+      onRenamed(result.name, result.savedAt);
+      setName(result.name);
+      const store = useEditorStore.getState();
+      if (store.siteId === meta.id) store.setFileName(result.name);
+    } catch (err) {
+      setRenameError(err instanceof Error ? err.message : "Could not rename that page.");
+    } finally {
+      setRenameBusy(false);
+    }
+  };
+
+  const page = record?.page;
+  const thumb = record && page ? (
     <PagePreview
-      page={record.page}
+      page={page}
       layers={record.layers}
-      maxWidth={280}
-      maxHeight={196}
+      maxWidth={320}
+      maxHeight={320}
     />
   ) : (
     <span
-      className="rounded-sm border border-foreground/15 bg-card"
-      style={{
-        width: Math.min(160, meta.width / 4),
-        height: Math.min(160, meta.height / 4),
-      }}
+      className="block w-full rounded-sm border border-foreground/15 bg-card"
+      style={{ aspectRatio: `${meta.width} / ${meta.height}` }}
     />
   );
 
@@ -273,7 +305,7 @@ function SitePageCard({
           type="button"
           className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 text-left transition hover:border-primary/50 hover:bg-card"
         >
-          <span className="flex h-52 items-center justify-center bg-black/35 p-3">
+          <span className="flex w-full items-center justify-center p-3">
             {failed ? (
               <span className="px-3 text-center text-[11px] text-muted-foreground">
                 Could not load this preview.
@@ -282,7 +314,7 @@ function SitePageCard({
               thumb
             )}
           </span>
-          <span className="min-w-0 p-3">
+          <span className="min-w-0 p-3 pt-0">
             <span className="block truncate text-sm font-medium">{meta.name}</span>
             <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground">
               {meta.width} × {meta.height}
@@ -295,12 +327,29 @@ function SitePageCard({
       </DialogTrigger>
       <DialogContent className="z-[80] max-h-[min(92dvh,900px)] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{meta.name}</DialogTitle>
+          <DialogTitle>Saved page</DialogTitle>
           <DialogDescription>
-            Saved on this site {new Date(meta.savedAt).toLocaleString()}.
+            Last saved {new Date(meta.savedAt).toLocaleString()}.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex max-h-[min(64vh,640px)] items-center justify-center overflow-auto rounded-lg bg-black/40 p-3">
+        <label className="grid gap-1.5">
+          <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void saveName();
+              }
+            }}
+            aria-label="Page name"
+          />
+        </label>
+        {renameError ? (
+          <p className="text-[11px] text-destructive">{renameError}</p>
+        ) : null}
+        <div className="flex justify-center overflow-auto">
           {record ? (
             <PagePreview
               page={record.page}
@@ -326,6 +375,13 @@ function SitePageCard({
             }}
           >
             Remove
+          </Button>
+          <Button
+            variant="outline"
+            disabled={renameBusy || !name.trim() || name.trim() === meta.name}
+            onClick={() => void saveName()}
+          >
+            {renameBusy ? "Renaming…" : "Save name"}
           </Button>
           <DialogClose asChild>
             <Button variant="outline">Close</Button>
@@ -374,12 +430,12 @@ function TemplateCard({ item }: { item: StudioTemplate }) {
           type="button"
           className="flex flex-col overflow-hidden rounded-xl border border-border/70 bg-card/90 text-left transition hover:border-primary/50 hover:bg-card"
         >
-          <span className="flex h-52 items-center justify-center bg-black/35 p-3">
+          <span className="flex w-full items-center justify-center p-3">
             <PagePreview
               page={page}
               layers={layers}
-              maxWidth={280}
-              maxHeight={196}
+              maxWidth={320}
+              maxHeight={320}
             />
           </span>
           <span className="min-w-0 p-3">
@@ -398,7 +454,7 @@ function TemplateCard({ item }: { item: StudioTemplate }) {
           <DialogTitle>{item.name}</DialogTitle>
           <DialogDescription>{item.blurb}</DialogDescription>
         </DialogHeader>
-        <div className="flex max-h-[min(64vh,640px)] items-center justify-center overflow-auto rounded-lg bg-black/40 p-3">
+        <div className="flex justify-center overflow-auto">
           <PagePreview
             page={page}
             layers={layers}

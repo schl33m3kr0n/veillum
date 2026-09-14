@@ -40,3 +40,16 @@ export async function removeSitePage(id: string) {
   });
   if (!res.ok) throw new Error("Could not remove that page.");
 }
+
+export async function renameSitePage(id: string, name: string) {
+  const res = await fetch(`/api/pages?id=${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(err?.error || "Could not rename that page.");
+  }
+  return (await res.json()) as { id: string; name: string; savedAt: number };
+}

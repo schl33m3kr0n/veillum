@@ -83,6 +83,20 @@ export async function writeSitePage(input: {
   return record;
 }
 
+export async function renameSitePage(id: string, name: string): Promise<SitePageRecord | null> {
+  const existing = await readSitePage(id);
+  if (!existing) return null;
+  const title = displayPageName(name);
+  if (!title) return existing;
+  const record: SitePageRecord = {
+    ...existing,
+    name: title,
+    savedAt: Date.now(),
+  };
+  await fs.writeFile(filePath(id), JSON.stringify(record), "utf8");
+  return record;
+}
+
 export async function deleteSitePage(id: string) {
   try {
     await fs.unlink(filePath(id));
