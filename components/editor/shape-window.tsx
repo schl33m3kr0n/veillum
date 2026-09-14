@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
-import { BookmarkPlus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { BookmarkPlus, FolderOpen, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,8 +15,16 @@ import {
   type SavedElement,
 } from "@/lib/elements";
 import { useEditorStore } from "@/lib/editor-store";
-import type { ShapeKind } from "@/lib/types";
+import { isSvgFile, svgMarkFromRaw } from "@/lib/svg-import";
+import type { ShapeKind, SvgNode } from "@/lib/types";
 import { SvgMarkContent } from "./html-layer";
+
+type RemoteIcon = {
+  id: string;
+  name: string;
+  viewBox: string;
+  nodes: SvgNode[];
+};
 
 export function ShapeWindow() {
   const tool = useEditorStore((s) => s.tool);
@@ -36,6 +44,11 @@ export function ShapeWindow() {
 
   const [query, setQuery] = useState("");
   const [pos, setPos] = useState({ x: 16, y: 16 });
+  const [icons, setIcons] = useState<RemoteIcon[]>([]);
+  const [iconNote, setIconNote] = useState("");
+  const [iconBusy, setIconBusy] = useState(false);
+  const [iconError, setIconError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const drag = useRef<{
     ox: number;
     oy: number;
@@ -66,8 +79,65 @@ export function ShapeWindow() {
   const catalog = ELEMENT_CATALOG.filter((item) => matches(item.label));
   const savedVisible = saved.filter((item) => matches(item.name));
 
+  useEffect(() => {
+    const ac = new AbortController();
+    const wait = query.trim() ? 280 : 0;
+    const timer = window.setTimeout(async () => {
+      setIconBusy(true);
+      setIconError(null);
+      try {
+        const res = await fetch(
+          `/api/icons/search?q=${encodeURIComponent(query.trim())}`,
+          { signal: ac.signal },
+        );
+        if (!res.ok) throw new Error("bad status");
+        const data = (await res.json()) as {
+          icons?: RemoteIcon[];
+          note?: string;
+        };
+        setIcons(data.icons ?? []);
+        setIconNote(data.note ?? "");
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setIcons([]);
+        setIconNote("");
+        setIconError("Could not load icons.");
+      } finally {
+        if (!ac.signal.aborted) setIconBusy(false);
+      }
+    }, wait);
+    return () => {
+      ac.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
   const place = (item: CatalogElement) => {
     useEditorStore.getState().placeCatalogItem(item.id);
+  };
+
+  const placeIcon = (icon: RemoteIcon) => {
+    const outlined = icon.nodes.every((node) => node.fill === "none");
+    const parts = icon.viewBox.split(/[\s,]+/).map(Number);
+    const vw = parts[2] || 24;
+    const vh = parts[3] || 24;
+    const scale = 160 / Math.max(vw, vh, 1);
+    useEditorStore.getState().placeSvgMark({
+      name: icon.name,
+      viewBox: icon.viewBox,
+      nodes: icon.nodes,
+      width: Math.max(48, Math.round(vw * scale)),
+      height: Math.max(48, Math.round(vh * scale)),
+      outlined,
+    });
+  };
+
+  const addSvgFiles = async (list: FileList | null) => {
+    const files = list ? [...list].filter(isSvgFile) : [];
+    for (const file of files) {
+      const mark = svgMarkFromRaw(await file.text(), file.name);
+      if (mark) useEditorStore.getState().placeSvgMark(mark);
+    }
   };
 
   const saveSelection = () => {
@@ -104,7 +174,7 @@ export function ShapeWindow() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search the library"
+            placeholder="Search icons or paste an SVG Repo link"
             className="h-8 pl-7 text-xs"
             aria-label="Search elements"
           />
@@ -120,7 +190,77 @@ export function ShapeWindow() {
             <BookmarkPlus className="size-3.5" />
             Save selection
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[11px]"
+            onClick={() => fileRef.current?.click()}
+          >
+            <FolderOpen className="size-3.5" />
+            SVG
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".svg,image/svg+xml"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const list = e.target.files;
+              e.target.value = "";
+              void addSvgFiles(list);
+            }}
+          />
         </div>
+
+        <section className="space-y-1.5">
+          <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Icons
+          </h3>
+          {iconBusy ? (
+            <p className="text-[11px] text-muted-foreground">Loading icons…</p>
+          ) : iconError ? (
+            <p className="text-[11px] text-destructive">{iconError}</p>
+          ) : icons.length === 0 ? (
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              {q
+                ? `No icons match “${query.trim()}”. Drop a .svg from SVG Repo onto the page.`
+                : "Search for a name, or paste an SVG Repo URL."}
+            </p>
+          ) : (
+            <div className="grid grid-cols-4 gap-1.5">
+              {icons.map((icon) => (
+                <button
+                  key={icon.id}
+                  type="button"
+                  title={icon.name}
+                  onClick={() => placeIcon(icon)}
+                  className="flex aspect-square flex-col items-center justify-center rounded-lg border border-border/70 bg-[#f7f1e6] px-0.5 transition-colors hover:border-primary/50"
+                >
+                  <SvgMarkContent
+                    className="size-8"
+                    layer={{
+                      svgNodes: icon.nodes,
+                      svgViewBox: icon.viewBox,
+                      fill: fillEnabled ? color : "none",
+                      stroke: strokeEnabled ? shapeStroke : color,
+                      fillEnabled: !icon.nodes.every((n) => n.fill === "none"),
+                      fillStyle: "solid",
+                      fillTo: "#f4d8a8",
+                      fillAngle: 0,
+                      strokeEnabled: icon.nodes.some((n) => n.stroke === "stroke"),
+                      strokeWidth: 2,
+                      dash: "solid",
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+          {iconNote ? (
+            <p className="text-[10px] leading-snug text-muted-foreground">{iconNote}</p>
+          ) : null}
+        </section>
 
         {ELEMENT_GROUPS.map((group) => {
           if (group === "Saved") {
@@ -174,7 +314,7 @@ export function ShapeWindow() {
           );
         })}
 
-        {catalog.length === 0 && savedVisible.length === 0 ? (
+        {catalog.length === 0 && savedVisible.length === 0 && icons.length === 0 && !iconBusy ? (
           <p className="text-[11px] text-muted-foreground">
             No elements match “{query}”.
           </p>

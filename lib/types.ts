@@ -113,6 +113,15 @@ export type SvgNode =
       strokeWidth?: number;
     };
 
+export type SvgMarkPlacement = {
+  name: string;
+  viewBox: string;
+  nodes: SvgNode[];
+  width: number;
+  height: number;
+  outlined?: boolean;
+};
+
 export type BlendMode =
   | "source-over"
   | "multiply"

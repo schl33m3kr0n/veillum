@@ -29,6 +29,7 @@ import type {
   Layer,
   Page,
   ShapeKind,
+  SvgMarkPlacement,
   TextAlign,
   Tool,
 } from "./types";
@@ -173,6 +174,7 @@ interface EditorState {
   ) => string;
   placeCatalogItem: (id: string) => void;
   placeSavedElement: (id: string) => void;
+  placeSvgMark: (mark: SvgMarkPlacement) => void;
 
   cut: () => void;
   copy: () => void;
@@ -765,6 +767,33 @@ export const useEditorStore = create<EditorState>()(
         if (!item) return;
         const page = get().page;
         get().addLayer(cloneLayerOntoPage(item.layer, page.width, page.height));
+      },
+
+      placeSvgMark: (mark) => {
+        if (mark.nodes.length === 0) return;
+        const s = get();
+        const width = mark.width;
+        const height = mark.height;
+        const outlined = !!mark.outlined;
+        const layer = createShapeLayer("svg", {
+          name: mark.name,
+          x: Math.round((s.page.width - width) / 2),
+          y: Math.round((s.page.height - height) / 2),
+          width,
+          height,
+          fill: s.color,
+          stroke: s.shapeStroke,
+          fillEnabled: outlined ? false : s.shapeFillEnabled,
+          strokeEnabled: outlined ? true : s.shapeStrokeEnabled,
+          strokeWidth: outlined ? Math.max(1.5, s.shapeStrokeWidth) : s.shapeStrokeWidth,
+          fillStyle: s.shapeFillStyle,
+          fillTo: s.shapeFillTo,
+          fillStops: s.shapeFillStops,
+          fillAngle: s.shapeFillAngle,
+          svgViewBox: mark.viewBox,
+          svgNodes: mark.nodes,
+        });
+        get().addLayer(layer);
       },
 
       cut: () => {

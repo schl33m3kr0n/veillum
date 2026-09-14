@@ -6,6 +6,7 @@ import { interpolatedLayer, nearPoint, radialGrid, squareGridLines, triangleGrid
 import { symmetryGuideLines } from "@/lib/symmetry";
 import { extractRawPreview } from "@/lib/raw";
 import { importFontFiles, isLocalFontFile } from "@/lib/custom-fonts";
+import { isSvgFile, svgMarkFromRaw } from "@/lib/svg-import";
 import { samplePixel } from "@/lib/filters";
 import { cssFontFamily } from "@/lib/fonts";
 import type { BezierPoint, Tool } from "@/lib/types";
@@ -772,7 +773,17 @@ export default function HtmlStage({
         console.error(err);
       }
     }
-    const file = rest[0];
+    const svgs = rest.filter(isSvgFile);
+    const images = rest.filter((file) => !isSvgFile(file));
+    for (const file of svgs) {
+      try {
+        const mark = svgMarkFromRaw(await file.text(), file.name);
+        if (mark) useEditorStore.getState().placeSvgMark(mark);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    const file = images[0];
     if (!file) return;
     try {
       const { dataUrl, isRaw } = await extractRawPreview(file);
