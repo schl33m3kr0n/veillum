@@ -1241,21 +1241,23 @@ function PageChromeLine({
   bottom?: number;
 }) {
   const hist = historyFieldProps<HTMLInputElement>();
-  if (!enabled) return null;
+  if (!enabled && kind === "footer") return null;
   return (
     <input
-      value={text}
+      value={enabled ? text : ""}
       placeholder={kind === "header" ? "Title" : "Footer"}
       aria-label={kind === "header" ? "Page header title" : "Page footer"}
-      className="absolute z-30 border-0 bg-transparent p-0 outline-none placeholder:opacity-40"
+      className="absolute z-30 cursor-text border-0 bg-transparent p-0 outline-none placeholder:opacity-50"
       style={{
         left,
         width,
         top,
         bottom,
+        height: 28,
         color,
         fontFamily: cssFontFamily(fontFamily),
         fontSize,
+        opacity: enabled ? 1 : 0.55,
       }}
       onPointerDown={(e) => e.stopPropagation()}
       onFocus={hist.onFocus}
@@ -1265,7 +1267,11 @@ function PageChromeLine({
         const page = useEditorStore.getState().page;
         const key = kind === "header" ? "header" : "footer";
         useEditorStore.getState().updatePage({
-          [key]: { ...page[key], text: e.target.value },
+          [key]: {
+            ...page[key],
+            enabled: true,
+            text: e.target.value,
+          },
         });
       }}
     />
