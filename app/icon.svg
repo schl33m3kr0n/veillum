@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Browser tab / SVG icon: rounded tile -->
+  <rect width="32" height="32" rx="7" fill="#161310"/>
+  <path
+    d="M7.5 8.5 L16 24.5 L24.5 8.5"
+    stroke="#f7f1e6"
+    stroke-width="3.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="16" cy="24.5" r="2.15" fill="#c45c26"/>
+</svg>
